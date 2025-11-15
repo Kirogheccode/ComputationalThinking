@@ -30,6 +30,23 @@ except FileNotFoundError as e:
 
 # --- 2. THE "ROUTER" - DECIDES THE USER'S INTENT ---
 
+def handle_culture_query(prompt):
+    """
+    Mission 1: Answers general cultural questions.
+    """
+    print("-> Executing: Culture Query")
+    system_context = (
+        "You are a friendly and knowledgeable Vietnamese cultural expert. "
+        "Answer the user's question clearly, concisely, and with a respectful tone."
+    )
+
+    # --- FIX ---
+    model = genai.GenerativeModel('gemini-2.5-flash')  # Changed from gemini-pro
+    # --- END FIX ---
+
+    response = model.generate_content([system_context, prompt])
+    return response.text
+
 def route_user_request(prompt):
     """
     Uses Gemini to classify the user's intent and extract key entities.
