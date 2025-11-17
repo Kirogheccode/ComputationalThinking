@@ -62,3 +62,78 @@ body {
     padding-top: 24px;
     border-top: 3px solid #ffb347; /* border ngang màu cam ấm nổi bật */
 }
+
+/* Kiểu dáng chung cho card trên trang đăng nhập/đăng ký/tài khoản */
+.card.shadow-lg {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background-color: var(--color-card); /* Sử dụng biến đã định nghĩa */
+    color: var(--color-text); /* Sử dụng biến đã định nghĩa */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Kiểu dáng cho form controls */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+}
+
+/* Nút primary */
+.btn-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn-primary:hover {
+    background-color: #e66a00; /* Màu tối hơn của brand-primary */
+    border-color: #e66a00;
+    transform: translateY(-2px);
+}
+
+/* Nút success */
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #218838;
+    transform: translateY(-2px);
+}
+
+/* Trang account - post card */
+.post-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.post-card img.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+.post-card .card-body {
+    padding: 1rem;
+}
+.post-card .card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.post-card .card-text.small {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
