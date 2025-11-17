@@ -1,0 +1,60 @@
+/* --- DARK MODE --- */
+body.dark {
+    background-color: #121212;
+    color: #eee;
+}
+
+/* Navbar Dark Theme */
+body.dark .navbar {
+    background-color: #222 !important;
+}
+
+/* Cards + Chat background đổi chất */
+body.dark .food-card,
+body.dark .chatbot-container {
+    background-color: #1e1e1e;
+    color: #ddd;
+    border-color: #444;
+}
+
+body.dark .bot-message {
+    background-color: #1e1e1e;
+}
+
+body.dark .user-message {
+    background-color: #1e1e1e;
+}
+
+body.dark .bot-message {
+    background-color: blacks;
+}
+
+body.dark .bot-message p{
+    background-color: gray;
+}
+
+body.dark .food-name{
+    color: black;
+}
+
+body.dark {
+    background: linear-gradient(135deg, #2a3a2d, #4b3a1b, #1e2a20);
+    color: #e0e0e0; /* chữ sáng */
+}
+
+body.dark .navbar{
+    background: rgba(40, 40, 40, 0.75);
+}
+
+body.dark .modal-content{
+  background: black;
+  color:white;
+}
+
+body.dark .brand-title{
+    color:white;
+}
+
+body.dark .nav-link{
+    color: white;
+}
