@@ -379,8 +379,8 @@ function renderFoodCards(container, data) {
             </div>
             <button class="location-btn location-dot"
                     title="Xem trên bản đồ"
-                    data-lat="10.780615"
-                    data-lng="106.695574"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#mapModal"
                     data-name="${food.Name}"
                     data-description="${food.Description}"
                     data-location="${food.Address}"
@@ -427,7 +427,6 @@ function renderFoodCards(container, data) {
     //     });
     // });
 }
-renderFoodCards(track, foodData);
 renderFoodCards(track, foodData);
 
 const pauseBtn = document.querySelector('.pause');
@@ -522,7 +521,7 @@ function updateFoodModal(dataArray) {
     });
 
 
-    console.log(`✅ Đã cập nhật ${totalCards} card với ${totalData} dữ liệu (ghi đè lặp lại nếu thiếu).`);
+    console.log(` Đã cập nhật ${totalCards} card với ${totalData} dữ liệu (ghi đè lặp lại nếu thiếu).`);
 }
 
 
