@@ -101,6 +101,7 @@ def get_routes_from_json(index: int):
         "route": selected.get("Route", []),
     }
 
+
 def create_dummy_data():
     """Tạo file restaurants.json mẫu để test"""
     dummy_data = [
@@ -116,6 +117,7 @@ def create_dummy_data():
     with open("restaurants.json", "w", encoding="utf-8") as f:
         json.dump(dummy_data, f, ensure_ascii=False, indent=4)
     print("Đã tạo file 'restaurants.json' mẫu.")
+
 
 def main():
     print("--- BẮT ĐẦU TEST ROUTING MODULE ---")
