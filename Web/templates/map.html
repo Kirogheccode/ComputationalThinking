@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Bản đồ Ẩm thực{% endblock %}
+
+{% block content %}
+<div class="text-center my-5">
+    <h1>Bản đồ Ẩm thực</h1>
+    <p class="lead">Khám phá các địa điểm ăn uống nổi bật trên bản đồ.</p>
+</div>
+
+<!-- Map Placeholder -->
+<div id="map" style="height: 500px; width: 100%; background-color: #e9e9e9; border: 1px solid #ccc;">
+    <p class="text-center" style="padding-top: 220px; font-size: 1.2rem; color: #666;">
+        Khu vực hiển thị bản đồ (Có thể tích hợp Google Maps API hoặc Leaflet.js tại đây)
+    </p>
+</div>
+<p class="text-center mt-3">
+    <em>Gợi ý: Tích hợp API bản đồ để đánh dấu vị trí các quán ăn được gợi ý.</em>
+</p>
+{% endblock %}
