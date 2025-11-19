@@ -2,7 +2,7 @@
 import sqlite3
 from datetime import datetime
 
-DATABASE = 'smart_tourism.db'
+DATABASE = 'Integrate UI and Chatbot\smart_tourism.db'
 
 def get_db_connection():
     """Tạo và trả về kết nối đến cơ sở dữ liệu."""
