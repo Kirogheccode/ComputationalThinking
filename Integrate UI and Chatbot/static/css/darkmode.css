@@ -1,0 +1,115 @@
+/* --- DARK MODE --- */
+body.dark {
+    background-color: #121212;
+    color: #eee;
+}
+
+/* Navbar Dark Theme */
+body.dark .navbar {
+    background-color: #222 !important;
+}
+
+/* Cards + Chat background đổi chất */
+body.dark .food-card,
+body.dark .chatbot-container {
+    background-color: #1e1e1e;
+    color: #ddd;
+    border-color: #444;
+}
+
+body.dark .bot-message {
+    background-color: #1e1e1e;
+}
+
+body.dark .user-message {
+    background-color: #1e1e1e;
+}
+
+body.dark .bot-message {
+    background-color: blacks;
+}
+
+body.dark .bot-message p{
+    background-color: gray;
+}
+
+body.dark .food-name{
+    color: black;
+}
+
+body.dark {
+    background: linear-gradient(135deg, #2a3a2d, #4b3a1b, #1e2a20);
+    color: #e0e0e0; /* chữ sáng */
+}
+
+body.dark .navbar{
+    background: rgba(40, 40, 40, 0.75);
+}
+
+body.dark .modal-content{
+  background: black;
+  color:white;
+}
+
+body.dark .brand-title{
+    color:white;
+}
+
+body.dark .nav-link{
+    color: white;
+}
+
+/* Dark mode cho auth/account cards */
+body.dark .card.shadow-lg {
+    background-color: #1e1e1e; 
+    color: #eee;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+body.dark .form-label {
+    color: #ccc;
+}
+
+body.dark .form-control {
+    background-color: #333;
+    border-color: #555;
+    color: #eee;
+}
+body.dark .form-control::placeholder {
+    color: #aaa;
+}
+
+body.dark .btn-primary {
+    background-color: var(--brand-primary); 
+    border-color: var(--brand-primary);
+    color: #fff;
+}
+body.dark .btn-primary:hover {
+    background-color: #e66a00;
+    border-color: #e66a00;
+}
+
+body.dark .btn-success {
+    background-color: #218838;
+    border-color: #218838;
+    color: #fff;
+}
+body.dark .btn-success:hover {
+    background-color: #1e7e34;
+    border-color: #1e7e34;
+}
+
+body.dark .post-card {
+    background-color: #2b2b2b;
+    border-color: #444;
+    color: #eee;
+}
+body.dark .post-card .card-title {
+    color: #fff;
+}
+body.dark .post-card .card-text {
+    color: #ccc;
+}
+body.dark .post-card .card-text.small {
+    color: #a0a0a0;
+}
