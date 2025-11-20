@@ -6,6 +6,7 @@ from database import init_db, add_food_post, get_food_posts_by_user, get_user_by
 import os
 from werkzeug.utils import secure_filename
 
+
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
 
