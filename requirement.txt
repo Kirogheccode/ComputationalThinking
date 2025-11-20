@@ -1,0 +1,8 @@
+flask
+google-generativeai
+dotenv
+numpy
+tensorflow
+matplotlib
+requests
+openrouteservice   

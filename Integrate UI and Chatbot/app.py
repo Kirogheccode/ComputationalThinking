@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, flash, redirect, url_for
 import Routing
 import SearchModule
+from FoodRecognition import replyToImage
 from auth import auth_bp, login_required # Import auth blueprint và decorator
 from database import init_db, add_food_post, get_food_posts_by_user, get_user_by_id # Import các hàm DB mới
 import os
@@ -148,7 +149,13 @@ def find_path():
 def get_coordinates(): 
     data = request.get_json()
     return Routing.drawMarkerByCoordinate(data)
-    
+
+# Nhận ảnh thức ăn và nhận diện
+@app.route('/api/predict', methods=['POST'])
+def predict_food():
+    img_file = request.files["image"]
+    return replyToImage(img_file)
+
 # Chạy ứng dụng
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

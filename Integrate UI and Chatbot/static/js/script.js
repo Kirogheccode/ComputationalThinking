@@ -507,7 +507,44 @@ function updateFoodModal(dataArray) {
 
     console.log(` Đã cập nhật ${totalCards} card với ${totalData} dữ liệu (ghi đè lặp lại nếu thiếu).`);
 }
+function displayBotMessage(botText) 
+{
+    const chatWindow = document.getElementById('chat-window');
 
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
+    botMessageDiv.innerHTML = `
+        <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
+        <p>${botText}</p>
+    `;
+    chatWindow.appendChild(botMessageDiv);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function foodRecognize()
+{
+    document.getElementById('imageInputBtn').onclick = () => {
+    document.getElementById('imageInput').click();
+    };
+
+    document.getElementById('imageInput').addEventListener('change', async function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const response = await fetch("/api/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        displayBotMessage(result.message);
+    });
+}
 function main()
 {
     document.addEventListener('DOMContentLoaded', function () {
@@ -540,6 +577,7 @@ function main()
             fastCheck(track)
             restartCheck()
         }
+        foodRecognize()
         //=========================================================================
 
     });
