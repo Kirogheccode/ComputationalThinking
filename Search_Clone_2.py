@@ -1,14 +1,20 @@
 import os
 import json
+import sqlite3
+import math
+import requests  # <--- Added missing import
+import chromadb
 import pandas as pd
 from dotenv import load_dotenv
 import google.generativeai as genai
+from sentence_transformers import SentenceTransformer
 
 # --- 1. CONFIGURATION AND GLOBAL DATA LOADING ---
 
 # Load .env file (for GOOGLE_API_KEY)
 load_dotenv()
 GOOGLE_API = os.getenv("GOOGLE_API_KEY")
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")  # <--- Added back
 
 if GOOGLE_API:
     genai.configure(api_key=GOOGLE_API)
@@ -16,69 +22,121 @@ else:
     print("Error: GOOGLE_API_KEY not found. Please check your .env file.")
     exit()
 
-# Load all CSV data into memory (as pandas DataFrames)
-try:
-    print("Loading CSV data...")
-    savourthepho_recipes_df = pd.read_csv("savourthepho_recipes.csv")
-    foody_data_df = pd.read_csv("foody_data_manual.csv")
-    print("Data loaded successfully.")
-except FileNotFoundError as e:
-    print(f"Error: Could not find a required CSV file. {e}")
-    print("Please make sure 'savourthepho_recipes.csv' and 'foody_data_manual.csv' are in the same directory.")
+if not GEOAPIFY_API_KEY:
+    print("Error: GEOAPIFY_API_KEY not found. Please check your .env file.")
     exit()
 
+# Load the embedding model once when the bot starts
+print("Loading embedding model...")
+embedder = SentenceTransformer('all-MiniLM-L6-v2')
+print("Model loaded.")
 
-# --- 2. THE "ROUTER" - DECIDES THE USER'S INTENT ---
+
+# --- 2. HELPER FUNCTIONS (These were missing!) ---
+
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great circle distance in kilometers between two points
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians
+    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    c = 2 * math.asin(math.sqrt(a))
+    r = 6371  # Radius of earth in kilometers.
+    return c * r
+
+
+def get_coords_for_location(location_name):
+    """
+    Uses Geoapify to geocode a user's location query (e.g., "District 1")
+    """
+    # Bias search results to Ho Chi Minh City
+    HCMC_LON = 106.660172
+    HCMC_LAT = 10.762622
+
+    try:
+        url = "https://api.geoapify.com/v1/geocode/search"
+        params = {
+            'text': f"{location_name}, Ho Chi Minh City",
+            'apiKey': GEOAPIFY_API_KEY,
+            'limit': 1,
+            'bias': f'proximity:{HCMC_LON},{HCMC_LAT}'
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        if data['features']:
+            geometry = data['features'][0]['geometry']
+            if geometry['type'] == 'Point':
+                lon, lat = geometry['coordinates']
+                return lat, lon
+        return None, None
+
+    except Exception as e:
+        print(f"Error geocoding user location: {e}")
+        return None, None
+
+
+def get_bounding_box(lat, lon, distance_km):
+    """
+    Creates a square bounding box around a point.
+    1 degree of latitude is ~111km.
+    """
+    lat_change = distance_km / 111.0
+    # Longitude change depends on the latitude (cosine factor)
+    lon_change = distance_km / (111.0 * math.cos(math.radians(lat)))
+
+    return {
+        "min_lat": lat - lat_change,
+        "max_lat": lat + lat_change,
+        "min_lon": lon - lon_change,
+        "max_lon": lon + lon_change
+    }
+
+
+# --- 3. MISSION HANDLERS ---
 
 def handle_culture_query(prompt):
-    """
-    Mission 1: Answers general cultural questions.
-    """
     print("-> Executing: Culture Query")
     system_context = (
         "You are a friendly and knowledgeable Vietnamese cultural expert. "
         "Answer the user's question clearly, concisely, and with a respectful tone."
     )
-
-    # --- FIX ---
-    model = genai.GenerativeModel('gemini-2.5-flash')  # Changed from gemini-pro
-    # --- END FIX ---
-
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content([system_context, prompt])
     return response.text
 
+
 def route_user_request(prompt):
-    """
-    Uses Gemini to classify the user's intent and extract key entities.
-    This is the "brain" of the chatbot.
-    """
     system_context = (
         "You are a helpful travel assistant AI for Vietnam. "
         "Your job is to analyze the user's prompt and classify their intent into one of three tasks. "
         "You must also extract any relevant entities."
         "\n"
         "The 3 tasks are:\n"
-        "1. 'culture_query': User is asking for general information (culture, holidays, festivals, habits, history, how-tos, explainers). (e.g., 'what is Tet?')\n"
-        "2. 'food_recommendation': User is asking for a *type* of food (e.g., 'something vegetarian', 'a popular noodle soup', 'what should I eat for breakfast').\n"
-        "3. 'restaurant_recommendation': User is asking for a specific *place* to eat (e.g., 'where can I find Banh Mi in District 1', 'best pho restaurant', 'Cơm tấm in district 5').\n"
+        "1. 'culture_query': User is asking for general information.\n"
+        "2. 'food_recommendation': User is asking for a *type* of food.\n"
+        "3. 'restaurant_recommendation': User is asking for a specific *place* to eat.\n"
         "\n"
         "**Extraction Rules:**\n"
-        "- If the task is 'restaurant_recommendation', the 'cuisine' is the specific food they are looking for (e.g., 'Cơm tấm', 'Pho', 'Banh Mi').\n"
-        "- The 'location' is the geographical area (e.g., 'district 5', 'Hanoi').\n"
+        "- If the task is 'restaurant_recommendation', the 'cuisine' is the specific food (e.g., 'Cơm tấm').\n"
+        "- The 'location' is the geographical area (e.g., 'district 5').\n"
         "- If a field is not present, set its value to 'none'."
     )
 
     schema = {
         "type": "OBJECT",
         "properties": {
-            "task": {"type": "STRING",
-                     "description": "One of: 'culture_query', 'food_recommendation', 'restaurant_recommendation', or 'unknown'."},
-            "location": {"type": "STRING",
-                         "description": "Any location mentioned, e.g., 'District 5', 'Hanoi'. Default 'none'."},
-            "cuisine": {"type": "STRING",
-                        "description": "Any specific food or dish, e.g., 'Cơm tấm', 'Pho'. Default 'none'."},
-            "diet_ingredient": {"type": "STRING",
-                                "description": "Any dietary restrictions, e.g., 'vegetarian', 'no peanuts'. Default 'none'."}
+            "task": {"type": "STRING"},
+            "location": {"type": "STRING"},
+            "cuisine": {"type": "STRING"},
+            "diet_ingredient": {"type": "STRING"}
         },
         "required": ["task"]
     }
@@ -94,166 +152,128 @@ def route_user_request(prompt):
 
     try:
         return json.loads(response.text)
-    except (json.JSONDecodeError, Exception) as e:
+    except Exception as e:
         print(f"Error parsing router response: {e}")
         return {"task": "unknown"}
-# --- 3. MISSION-SPECIFIC HANDLERS ---
+
 
 def handle_restaurant_recommendation(prompt, entities):
-    """
-    Mission 3: Recommends a restaurant, using foody_data_manual.csv for context.
-    """
-    print(
-        f"-> Executing: Restaurant Recommendation (Location: {entities.get('location')}, Cuisine: {entities.get('cuisine')})")
-
-    # --- FIX: Changed column names to match your CSV ---
-    ADDRESS_COL = 'Location'
-    NAME_COL = 'Name'
-    RATING_COL = 'Rating'
-    # --- END FIX ---
-
-    filtered_df = foody_data_df.copy()
-
     location = entities.get('location')
     cuisine = entities.get('cuisine')
 
-    try:
-        if location and location.lower() != 'none':
-            # Search for location in the 'Location' column
-            filtered_df = filtered_df[filtered_df[ADDRESS_COL].str.contains(location, case=False, na=False)]
+    print(f"-> Executing: Restaurant Recommendation (Location: {location}, Cuisine: {cuisine})")
 
-        if cuisine and cuisine.lower() != 'none':
-            # Search for cuisine in the 'Name' column
-            filtered_df = filtered_df[filtered_df[NAME_COL].str.contains(cuisine, case=False, na=False)]
+    user_lat, user_lon = None, None
+    if location and location.lower() != 'none':
+        user_lat, user_lon = get_coords_for_location(location)
 
-        if filtered_df.empty:
-            return f"I'm sorry, I couldn't find any restaurants matching '{cuisine}' in '{location}' in my database."
+    conn = sqlite3.connect('foody_data.sqlite')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
 
-        # Sort by rating and take the top 50 as context
-        filtered_df = filtered_df.sort_values(by=RATING_COL, ascending=False).head(50)
+    query = "SELECT * FROM Restaurants"
+    params = []
+    conditions = []
 
-        # Select only the columns Gemini needs, to save tokens
-        context_df = filtered_df[[NAME_COL, ADDRESS_COL, RATING_COL]]
-        restaurant_context = context_df.to_json(orient='records', force_ascii=False)
+    if user_lat and user_lon:
+        bbox = get_bounding_box(user_lat, user_lon, distance_km=10)
+        conditions.append("Latitude BETWEEN ? AND ?")
+        conditions.append("Longitude BETWEEN ? AND ?")
+        params.extend([bbox['min_lat'], bbox['max_lat'], bbox['min_lon'], bbox['max_lon']])
 
-    except KeyError as e:
-        print(f"--- FATAL ERROR ---")
-        print(f"A column is missing from your 'foody_data_manual.csv' file.")
-        print(f"The code tried to find: {e}")
-        print(
-            f"Please check the headers in your CSV and update the variables (ADDRESS_COL, NAME_COL, RATING_COL) in this function.")
-        return f"I'm sorry, I have a configuration error. My 'foody_data_manual.csv' file seems to be missing the {e} column."
+    if cuisine and cuisine.lower() != 'none':
+        conditions.append("Name LIKE ?")
+        params.append(f"%{cuisine}%")
 
-    # --- FIX: Updated system prompt with correct column names ---
-    system_context = (
-        "You are a local restaurant guide. Your job is to recommend 3-5 top restaurants to the user. "
-        "You must ONLY use the restaurants from the JSON list provided below. "
-        f"Rank your recommendations by '{RATING_COL}' (highest first). "
-        f"For each restaurant, list its '{NAME_COL}', '{ADDRESS_COL}', and '{RATING_COL}'.\n"
-        f"USER'S LOCATION: {location}\n"
-        f"USER'S CUISINE: {cuisine}\n\n"
-        f"RESTAURANT DATABASE:\n{restaurant_context}"
-    )
-    # --- END FIX ---
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
 
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    response = model.generate_content([system_context, "User's request: " + prompt])
-    return response.text
-def handle_food_recommendation(prompt, entities):
-    """
-    Mission 2: Recommends a dish, using savourthepho_recipes.csv for context.
-    """
-    print(f"-> Executing: Food Recommendation (Diet: {entities.get('diet_ingredient')})")
+    print(f"   Running Query: {query} | Params: {params}")
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
 
-    # Get a relevant sample from the recipe data
-    # We sample to keep the prompt size efficient
-    if len(savourthepho_recipes_df) > 100:
-        recipe_sample_df = savourthepho_recipes_df.sample(100)
-    else:
-        recipe_sample_df = savourthepho_recipes_df
+    if not rows:
+        return f"I couldn't find any restaurants matching '{cuisine}' near '{location}'."
 
-    recipe_context = recipe_sample_df.to_json(orient='records', force_ascii=False)
+    results = []
+    for row in rows:
+        rest = dict(row)
+        if user_lat and user_lon:
+            dist = haversine(user_lat, user_lon, rest['Latitude'], rest['Longitude'])
+            rest['distance_km'] = round(dist, 2)
+        else:
+            rest['distance_km'] = 0
+        results.append(rest)
+
+    results.sort(key=lambda x: (-x['Rating'], x['distance_km']))
+    top_results = results[:50]
+
+    restaurant_context = json.dumps(top_results, ensure_ascii=False)
 
     system_context = (
-        "You are a Vietnamese food blogger. Your job is to recommend a specific dish to the user. "
-        "You should consider their request, especially any dietary needs or ingredient preferences.\n"
-        f"USER'S DIET/PREFERENCE: {entities.get('diet_ingredient')}\n\n"
-        "Use the following JSON list of recipes as your knowledge base. "
-        "Recommend one or two dishes, explain what they are, and why they fit the user's request.\n"
-        f"RECIPE KNOWLEDGE BASE:\n{recipe_context}"
+        "You are a local restaurant guide. Recommend 3-5 top restaurants from the list below. "
+        "Mention distance if available.\n"
+        f"USER LOCATION: {location}\n"
+        f"DATABASE:\n{restaurant_context}"
     )
 
     model = genai.GenerativeModel('gemini-2.5-flash')
-    response = model.generate_content([system_context, "User's request: " + prompt])
+    response = model.generate_content([system_context, prompt])
     return response.text
 
 
 def handle_food_recommendation(prompt, entities):
-    """
-    Mission 2: Recommends a dish, using savourthepho_recipes.csv for context.
-    """
-    print(f"-> Executing: Food Recommendation (Diet: {entities.get('diet_ingredient')})")
+    diet = entities.get('diet_ingredient')
+    print(f"-> Executing: Food Recommendation (Diet: {diet})")
 
-    # --- FIX: Select only the relevant columns ---
-    recipe_df_filtered = savourthepho_recipes_df[['name', 'description', 'ingredients']]
-    # --- END FIX ---
+    db_client = chromadb.PersistentClient(path="chroma_db")
+    collection = db_client.get_collection(name="recipes")
 
-    # Get a relevant sample from the recipe data
-    if len(recipe_df_filtered) > 100:
-        recipe_sample_df = recipe_df_filtered.sample(100)
-    else:
-        recipe_sample_df = recipe_df_filtered
+    search_text = f"{prompt} {diet}"
+    query_embedding = embedder.encode(search_text).tolist()
 
-    recipe_context = recipe_sample_df.to_json(orient='records', force_ascii=False)
+    results = collection.query(query_embeddings=[query_embedding], n_results=5)
+    found_recipes_text = results['documents'][0]
+
+    if not found_recipes_text:
+        return "I'm sorry, I couldn't find any recipes."
 
     system_context = (
-        "You are a Vietnamese food blogger. Your job is to recommend a specific dish to the user. "
-        "You should consider their request, especially any dietary needs or ingredient preferences.\n"
-        f"USER'S DIET/PREFERENCE: {entities.get('diet_ingredient')}\n\n"
-        "Use the following JSON list of recipes as your knowledge base. "
-        "Recommend one or two dishes, explain what they are (using 'description'), what they contain (using 'ingredients'), "
-        "and why they fit the user's request.\n"
-        f"RECIPE KNOWLEDGE BASE:\n{recipe_context}"
+            "You are a Vietnamese food expert. Recommend a dish based on the results below.\n"
+            "SEARCH RESULTS (RAG Context):\n" +
+            "\n---\n".join(found_recipes_text)
     )
 
     model = genai.GenerativeModel('gemini-2.5-flash')
-    response = model.generate_content([system_context, "User's request: " + prompt])
+    response = model.generate_content([system_context, "User Request: " + prompt])
     return response.text
-# --- 4. MAIN CHATBOT LOOP ---
+
+
+# --- 4. MAIN LOOP ---
 
 def main_chatbot():
     print("\n--- 🤖 Welcome to the Vietnam Cultural & Food Consultant ---")
-    print("I can help you with culture, food, or restaurant recommendations.")
-    print("Type 'exit' or 'quit' to end the chat.\n")
-
     while True:
         prompt = input("You: ")
         if prompt.lower() in ['exit', 'quit']:
-            print("Gemini: Cảm ơn! (Thank you!) See you again!")
             break
 
-        # --- Step 1: Route the request ---
         task_data = route_user_request(prompt)
         task_type = task_data.get('task')
 
-        # --- Step 2: Execute the correct handler ---
         try:
             if task_type == 'culture_query':
                 response = handle_culture_query(prompt)
-
             elif task_type == 'food_recommendation':
                 response = handle_food_recommendation(prompt, task_data)
-
             elif task_type == 'restaurant_recommendation':
                 response = handle_restaurant_recommendation(prompt, task_data)
-
-            else:  # 'unknown' or other
-                response = "I'm sorry, I'm not sure how to help with that. Could you rephrase your request?"
-
+            else:
+                response = "I'm sorry, I'm not sure how to help with that."
             print(f"\nGemini: {response}\n")
-
         except Exception as e:
-            print(f"\nGemini: I'm sorry, an error occurred: {e}\n")
+            print(f"\nGemini: Error: {e}\n")
 
 
 if __name__ == "__main__":
