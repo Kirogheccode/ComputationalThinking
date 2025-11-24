@@ -22,7 +22,7 @@ Quantity = 5
 genai.configure(api_key=GOOGLE_API)
 
 def geminiNLP(prompt):
-    with open("Integrate UI and Chatbot\RestaurantFormat.txt", "r", encoding="utf-8") as f:
+    with open("RestaurantFormat.txt", "r", encoding="utf-8") as f:
         cat_file = f.read()
 
     system_context = (

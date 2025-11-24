@@ -4,7 +4,7 @@ from tensorflow import keras
 from keras.preprocessing import image
 from flask import jsonify
 
-MODEL_PATH = "Integrate UI and Chatbot/fine_tune_model_best.keras"
+MODEL_PATH = "fine_tune_model_best.keras"
 TARGET_SIZE = (224, 224)
 
 classes = [

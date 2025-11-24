@@ -1,48 +1,3 @@
-// import {sendQueryToGemini} from './gemini.js'
-
-const foodData = [
-    {
-        Name: "Phở Bò Gánh",
-        Address: "123 Đường ABC, Hà Nội",
-        Description: "Phở truyền thống Việt Nam, nước dùng đậm đà.",
-        Image: "images/pho_bo.jpg",
-        OpeningTime: "Mo-Su 10:00-21:00",
-        Cuisine: "vietnamese"
-    },
-    {
-        Name: "Bún Chả Hương Liên",
-        Address: "24 Lê Văn Hưu, Hà Nội",
-        Description: "Bún chả thơm ngon với chả nướng và nước chấm đậm vị.",
-        Image: "images/bun.jpg",
-        OpeningTime: "Mo-Su 10:00-21:00",
-        Cuisine: "vietnamese"
-    },
-    {
-        Name: "Cơm Tấm Sài Gòn",
-        Address: "56 Nguyễn Trãi, TP.HCM",
-        Description: "Cơm tấm với sườn nướng và trứng ốp la hấp dẫn.",
-        Image: "images/com_tam.jpg",
-        OpeningTime: "Mo-Su 10:00-21:00",
-        Cuisine: "vietnamese"
-    },
-    {
-        Name: "Bánh Mì Phượng",
-        Address: "2B Phan Chu Trinh, Đà Nẵng",
-        Description: "Bánh mì giòn tan, pate thơm ngon và thịt nướng đậm vị.",
-        Image: "images/banh_mi_thit.jpg",
-        OpeningTime: "Mo-Su 10:00-21:00",
-        Cuisine: "vietnamese"
-    },
-    {
-        Name: "Chè Hẻm",
-        Address: "37 Lê Thánh Tôn, TP.HCM",
-        Description: "Các loại chè truyền thống, ngọt dịu và thanh mát.",
-        Image: "images/che.jpg",
-        OpeningTime: "Mo-Su 10:00-21:00",
-        Cuisine: "vietnamese"
-    }
-];
-
 function scrollAnimation() {
     // Initialize AOS for scroll animations
     if (window.AOS) {
@@ -253,57 +208,7 @@ function mapModal() {
         }
     }
 }
-function pauseCheck(track)
-{
-    const pauseBtn = document.querySelector('.pause');
 
-    pauseBtn.addEventListener('click', () => {
-        // Kiểm tra animation đang paused hay chưa
-        const isPaused = track.classList.toggle('paused'); // toggle trả về true nếu vừa add class
-
-        // Thay đổi iconto
-        if (isPaused) 
-        {
-            // Nếu paused → hiển thị icon play
-            pauseBtn.innerHTML = '<i class="fa-regular fa-square-caret-right"></i>';
-        } else 
-        {
-            // Nếu đang chạy → hiển thị icon pause
-            pauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        }
-    });
-}
-function fastCheck(track)
-{
-    const fastBtn = document.querySelector('.fast');
-
-    let isFast = false; // trạng thái fast forward
-
-    fastBtn.addEventListener('click', () => {
-        isFast = !isFast; // toggle trạng thái
-
-        if (isFast) 
-        {
-            // tua nhanh 1.5x → giảm duration xuống 2/3
-            track.style.animationDuration = '5s'; // ví dụ gốc 10s / 1.5
-            fastBtn.style.backgroundColor = 'rgba(255, 165, 0, 0.7)'; // highlight nút (tuỳ chọn)
-        }
-        else 
-        {
-            // trở về tốc độ bình thường
-            track.style.animationDuration = '20s';
-            fastBtn.style.backgroundColor = ''; // reset
-        }
-    });
-}
-function restartCheck()
-{
-    // === SỰ KIỆN NÚT RELOAD ===
-    const reloadBtn = document.querySelector('.restart');
-    reloadBtn.addEventListener("click", () => {
-    updateFoodModal(foodData);
-    });
-}
 function chatBot() {
     // --- Simple Chatbot UI Logic ---
     const sendMessageBtn = document.getElementById('sendMessageBtn');
@@ -363,16 +268,15 @@ function chatBot() {
             // Nhận dữ liệu JSON trả về
             const data = await response.json();
             console.log("DEBUG: toàn bộ data nhận về từ API:", data);
-
+            
             // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
-            // botText = data.reply;
-            botText = "Đây là một vài đề xuất phù hợp với yêu cầu của bạn!"
-
+            botText = data.reply;
 
             // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
             // để chúng hiển thị đúng trong HTML
-            // botText = botText.replace(/\n/g, '<br>');
-            updateFoodModal(data.food_data);
+            botText = botText.replace(/\n/g, '<br>');
+            const container = document.getElementById("carousel");
+            renderFoodCards(container, data.food_data);
 
         }
         catch (err) {
@@ -423,90 +327,62 @@ function themeMode() {
         });
     }
 }
+
 function renderFoodCards(container, data) {
+    const placeholder = document.getElementById("food-placeholder");
+
+    // 1. XÓA các card cũ trước khi render mới
+    container.innerHTML = "";
+
+    // 2. Nếu có data → ẩn placeholder
+    if (data && data.length > 0) {
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
+    } 
+    // 3. Nếu KHÔNG có dữ liệu → hiện placeholder và thoát hàm
+    else {
+        if (placeholder) {
+            placeholder.style.display = "flex"; // dùng flex để căn giữa
+        }
+        return;
+    }
+
+    // 4. Render các card mới
     data.forEach(food => {
-        const card = document.createElement('div');
-        card.classList.add('card-food');
-        card.innerHTML = `
-            <img src="/static/${food.Image}" alt="${food.Name}">
-            <div class="food-info">
-                <h5 class="food-name">${food.Name}</h5>
-                <p class="food-location">Địa chỉ: ${food.Address}</p>
-                <p class="food-description">${food.Description}</p>
-                <p class="food-open-time">Giờ mở cửa: ${food.OpeningTime}</p>
-                <p class="cuisine">Ẩm thực: ${food.Cuisine}</p>
-            </div>
-            <button class="location-btn location-dot"
-                    title="Xem trên bản đồ"
-                    data-bs-toggle="modal" 
-                    data-bs-target="#mapModal"
-                    data-name="${food.Name}"
-                    data-description="${food.Description}"
-                    data-location="${food.Address}"
-                    data-image="/static/${food.Image}">
-                <i class="fa-solid fa-location-dot"></i>
-            </button>
-        `;
-        container.appendChild(card);
-    });
+    const card = document.createElement('div');
+    card.classList.add('card-food');
+
+    // Fallback ảnh mặc định
+    const imageSrc = food.Image && food.Image.trim() !== ""
+        ? `/static/${food.Image}`
+        : "/static/images/default_food.jpg";
+
+    card.innerHTML = `
+        <img src="${imageSrc}" alt="${food.Name}">
+        <div class="food-info">
+            <h5 class="food-name">${food.Name}</h5>
+            <p class="food-location">Địa chỉ: ${food.Address}</p>
+            <p class="food-rating">Đánh giá: ${food.Rating} ⭐</p>
+            <p class="food-distance">Khoảng cách: ${food.distance_km} km</p>
+        </div>
+        <button class="location-btn location-dot"
+                title="Xem trên bản đồ"
+                data-bs-toggle="modal"
+                data-bs-target="#mapModal"
+                data-name="${food.Name}"
+                data-rating="${food.Rating}"
+                data-location="${food.Address}"
+                data-image="${imageSrc}">
+            <i class="fa-solid fa-location-dot"></i>
+        </button>
+    `;
+    container.appendChild(card);
+});
+
 }
-function updateFoodModal(dataArray) {
-    // Lấy tất cả thẻ card hiện có trong modal
-    const cards = document.querySelectorAll('.card-food');
-
-    if (!cards || cards.length === 0) {
-        console.warn("Không có thẻ card-food nào để cập nhật.");
-        return;
-    }
-
-    if (!dataArray || dataArray.length === 0) {
-        console.warn("Dữ liệu cập nhật rỗng, không thể ghi đè modal.");
-        return;
-    }
-    // Nếu số dữ liệu ít hơn số card → lặp lại dữ liệu cho đủ
-    const totalCards = cards.length;
-    const totalData = dataArray.length;
-    const repeatedData = [];
-
-    for (let i = 0; i < totalCards; i++) {
-        repeatedData.push(dataArray[i % totalData]);
-    }
-
-    // Ghi đè nội dung từng card theo dữ liệu mới
-    cards.forEach((card, index) => {
-        const food = repeatedData[index];
-        const img = card.querySelector('img');
-        const name = card.querySelector('.food-name');
-        const location = card.querySelector('.food-location');
-        const description = card.querySelector('.food-description');
-        const openTime = card.querySelector('.food-open-time');
-        const cuisine = card.querySelector('.cuisine');
-        const button = card.querySelector('.location-btn');
-
-        // Xử lý ảnh: nếu food.image không tồn tại, dùng ảnh mặc định
-        const imageSrc = food && food.Image ? `/static/${food.Image}` : '/static/images/default_food.jpg';
-
-        if (img) {
-            img.src = imageSrc;
-            img.alt = food.Name || "Ẩm thực";
-        }
-        if (name) name.textContent = food.Name || "Tên chưa có";
-        if (location) location.textContent = `Địa chỉ: ${food.Address || "Chưa có địa chỉ"}`;
-        if (description) description.textContent = food.Description || "Không có mô tả";
-        if (openTime) openTime.textContent = `Giờ mở cửa: ${food.OpeningTime || "Chưa có giờ mở cửa"}`;
-        if (cuisine) cuisine.textContent = `Ẩm thực: ${food.Cuisine || "Chưa rõ"}`;
-
-        if (button) {
-            button.dataset.name = food.Name || "";
-            button.dataset.description = food.Description || "";
-            button.dataset.location = food.Address || "";
-            button.dataset.image = imageSrc;
-        }
-    });
 
 
-    console.log(` Đã cập nhật ${totalCards} card với ${totalData} dữ liệu (ghi đè lặp lại nếu thiếu).`);
-}
 function displayBotMessage(botText) 
 {
     const chatWindow = document.getElementById('chat-window');
@@ -569,14 +445,6 @@ function main()
 
         //=================================CHATBOT=================================
         chatBot()
-        const track = document.getElementById('food-track');
-        if (track)
-        {
-            renderFoodCards(track, foodData);
-            pauseCheck(track)
-            fastCheck(track)
-            restartCheck()
-        }
         foodRecognize()
         //=========================================================================
 
@@ -584,8 +452,3 @@ function main()
 }
 
 main()
-
-
-
-
-

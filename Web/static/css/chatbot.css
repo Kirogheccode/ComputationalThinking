@@ -124,9 +124,9 @@ body.dark #themeToggleBtn {
 }
 
 .carousel {
-    height: 55vh;
+    height: 60vh;
     width: 100%;
-    overflow: hidden;
+    overflow-y: auto;
     position: relative;
 }
 
@@ -137,16 +137,9 @@ body.dark #themeToggleBtn {
 }
 
 /* Wrap tất cả các card vào 1 container duy nhất */
-/* Keyframes cuộn liên tục */
-@keyframes scrollUp {
-    0% { transform: translateY(0);}
-    100% {transform: translateY(-50%); /* -50% = chiều cao tổng của nửa danh sách (clone) */}
-}
-
 .food-track {
     display: flex;
     flex-direction: column;
-    animation: scrollUp 20s linear infinite;
 }
 
 .card-food {
@@ -179,7 +172,7 @@ body.dark #themeToggleBtn {
 }
 
 .card-food .food-location,
-.card-food .food-description, .food-open-time, .cuisine {
+.card-food .food-location, .food-rating, .food-distance {
     margin: 0.2em 0;
     font-size: 0.95rem;
     color: #555;
@@ -234,9 +227,6 @@ body.dark #themeToggleBtn {
     color: black;
 }
 
-.paused {
-    animation-play-state: paused;
-}
 /* Màu mặc định cho bong bóng chat của Bot (khi ở chế độ Sáng) */
 .bot-bubble {
     background-color: #fff; /* Màu trắng mặc định */
@@ -302,10 +292,7 @@ body.dark .card-food .food-name {
 }
 
 /* Các thông tin phụ (Địa chỉ, giờ mở, v.v.) */
-body.dark .card-food .food-location,
-body.dark .card-food .food-description,
-body.dark .card-food .food-open-time,
-body.dark .card-food .cuisine {
+body.dark .card-food .food-location {
     color: #ccc; /* Màu xám sáng dễ đọc */
 }
 
@@ -320,4 +307,34 @@ body.dark .location-btn:hover {
 
 body.dark .modal .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.food-placeholder {
+    position: absolute;
+    inset: 0; /* bằng với top:0; left:0; right:0; bottom:0 */
+    width: 100%;
+    height: 100%;
+
+    display: flex;              /* căn giữa nội dung */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    color: #777;
+    font-size: 1.2rem;
+    opacity: 0.95;
+
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(6px);
+
+    /* Bạn có thể tùy chỉnh padding nếu muốn */
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.food-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #999;
 }

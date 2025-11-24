@@ -8,19 +8,13 @@
 
         <div class="col-md-6">
             <h2>Gợi ý món ăn</h2>
-            <div class="carousel">
-                <div class="food-track" id="food-track"></div>
-            </div>
-            <div class="carousel-buttons mt-3 text-center">
-                <button class="carousel-btn restart btn btn-outline-primary">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
-                <button class="carousel-btn pause btn btn-outline-secondary">
-                    <i class="fa-solid fa-pause"></i>
-                </button>
-                <button class="carousel-btn fast btn btn-outline-warning">
-                    <i class="fa-solid fa-forward-fast"></i>
-                </button>
+            <div class="carousel" id="carousel">
+                <!-- PLACEHOLDER mặc định -->
+                <div id="food-placeholder" class="food-placeholder">
+                    <i class="fa-solid fa-utensils"></i>
+                    <p>Chưa có món ăn gợi ý</p>
+                </div>
+
             </div>
         </div>
 
@@ -33,9 +27,7 @@
                         <img src="{{ url_for('static', filename='images/jane.jpg') }}" 
                             class="bot-avatar rounded-circle me-2" style="width: 40px; height: 40px;" alt="Bot">
                         
-                        <div class="bot-bubble p-2 rounded shadow-sm">
-                            <p class="mb-0">Xin chào! Tôi có thể giúp gì cho bạn hôm nay?</p>
-                        </div>
+                        <p class="mb-0">Xin chào! Tôi có thể giúp gì cho bạn hôm nay?</p>
                     </div>
                 </div>
 

@@ -6,7 +6,9 @@ from auth import auth_bp, login_required # Import auth blueprint và decorator
 from database import init_db, add_food_post, get_food_posts_by_user, get_user_by_id # Import các hàm DB mới
 import os
 from werkzeug.utils import secure_filename
+import sys
 
+import requests
 
 # Khởi tạo ứng dụng Flask
 app = Flask(__name__)
@@ -132,11 +134,27 @@ def your_account():
     return redirect(url_for('your_account'))
 
 
+
 # Phản hồi câu hỏi của user (Gemini + OpenStreetMap + Geoapify) về quán ăn
+MICROSERVICE_URL = "http://127.0.0.1:5001/api/chat"  # microservice chạy port 5001
+
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     data = request.get_json()
-    return SearchModule.replyToUser(data)
+
+    try:
+        # Gọi microservice riêng chạy port 5001
+        resp = requests.post(MICROSERVICE_URL, json=data)
+        resp.raise_for_status()
+        response_data = resp.json()
+        return jsonify(response_data)
+
+    except requests.exceptions.RequestException as e:
+        print("Error calling microservice 5001:", e)
+        return jsonify({
+            "reply": "Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau.",
+            "food_data": []
+        }), 500
 
 # Tìm đường ngắn nhất tới quán ăn (ORS) qua vị trí user nhập vào
 @app.route('/api/find_path', methods=['POST'])
@@ -158,4 +176,4 @@ def predict_food():
 
 # Chạy ứng dụng
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)
