@@ -10,7 +10,7 @@ print("Loading local embedding model... (this happens only once)")
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Initialize ChromaDB
-client = chromadb.PersistentClient(path="chroma_db")
+client = chromadb.PersistentClient(path="../chroma_db")
 # Delete old collection if it exists to avoid mixing Google embeddings with Local ones
 try:
     client.delete_collection(name="recipes")
