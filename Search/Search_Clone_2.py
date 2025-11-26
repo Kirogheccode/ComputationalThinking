@@ -217,8 +217,9 @@ def handle_restaurant_recommendation(prompt, entities):
     restaurant_context = json.dumps(top_results, ensure_ascii=False)
 
     system_context = (
-        "You are a local restaurant guide. Recommend 3-5 top restaurants from the list below. Response in user's language.\n"
-        "Mention distance if available.\n"
+        "You are a local restaurant guide. Recommend 3-5 top restaurants "
+        "from the list below. Response in user's language.\n"
+        "For each restaurant, include a short description explaining what's special about it.\n"
         f"USER LOCATION: {location}\n"
         f"DATABASE:\n{restaurant_context}"
     )
@@ -237,7 +238,8 @@ def handle_restaurant_recommendation(prompt, entities):
                         "Name": {"type": "STRING"},
                         "Address": {"type": "STRING"},
                         "Rating": {"type": "NUMBER"},
-                        "distance_km": {"type": "NUMBER"}
+                        "distance_km": {"type": "NUMBER"},
+                        "Description": {"type": "STRING"}   # <--- THÊM Ở ĐÂY
                     },
                     "required": ["Name"]
                 }
@@ -245,6 +247,7 @@ def handle_restaurant_recommendation(prompt, entities):
         },
         "required": ["recommendations"]
     }
+
 
     response = model.generate_content(
         [system_context, prompt],

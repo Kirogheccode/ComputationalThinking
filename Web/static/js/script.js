@@ -1,3 +1,7 @@
+let loadingDiv = null;
+let uploadedImage = null;
+let isProcess = false;
+
 function scrollAnimation() {
     // Initialize AOS for scroll animations
     if (window.AOS) {
@@ -18,6 +22,7 @@ function scrollAnimation() {
     });
 
 }
+
 function foodModal() {
     // --- Logic for Food Modal on Homepage (improved) ---
     var foodModal = document.getElementById('foodModal');
@@ -209,97 +214,254 @@ function mapModal() {
     }
 }
 
+function displayUserMessage(messageText, chatWindow){
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.classList.add('message', 'user-message');
+    userMessageDiv.innerHTML = `<p>${messageText}</p>`;
+    chatWindow.appendChild(userMessageDiv);
+    userInput.value = '';
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function createLoadingBubble(chatWindow){
+    loadingDiv = document.createElement('div');
+    loadingDiv.classList.add('message', 'bot-message', 'loading-message');
+    loadingDiv.innerHTML = `<p></p>`;
+    chatWindow.appendChild(loadingDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function removeLoadingBubble(){
+    if (loadingDiv) {
+        loadingDiv.remove();
+        loadingDiv = null; // tránh lỗi nếu gọi remove nhiều lần
+    }
+}
+
+function displayBotMessage(botText, chatWindow) 
+{
+    if(botText=="")
+        return;
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
+    botMessageDiv.innerHTML = `
+        <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
+        <p>${botText}</p>
+    `;
+    chatWindow.appendChild(botMessageDiv);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+async function sendText(messageText, displayUser = true){
+    isProcess = true;
+    const imageBtn = document.getElementById('imageInputBtn');
+    const imageInput = document.getElementById('imageInput');
+    const previewWrapper = document.getElementById('imagePreviewWrapper')
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('userInput');
+
+
+    // Display user message
+    if(displayUser == true){
+        displayUserMessage(messageText, chatWindow);
+    }
+
+    if (userInput) {
+        userInput.value = '';
+    }
+
+    // Create loading bubble
+    createLoadingBubble(chatWindow);
+
+    // Call Gemini API
+    // 3. GỌI API BACKEND (thay vì gọi gemini.js)
+    let botText = ""; // Biến để lưu tin nhắn trả lời
+    try {
+        // Gửi yêu cầu POST đến endpoint /api/chat của Flask
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // Gửi tin nhắn dưới dạng JSON
+            body: JSON.stringify({ message: messageText })
+        });
+
+        if (!response.ok) {
+            // Xử lý lỗi nếu server trả về 4xx, 5xx
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Nhận dữ liệu JSON trả về
+        const data = await response.json();
+        console.log("DEBUG: toàn bộ data nhận về từ API:", data);
+            
+        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
+        botText = data.reply;
+
+        // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
+        // để chúng hiển thị đúng trong HTML
+        botText = botText.replace(/\n/g, '<br>');
+        const container = document.getElementById("carousel");
+        renderFoodCards(container, data.food_data);
+
+    }
+    catch (err) {
+        console.error("Lỗi khi gọi API:", err);
+        botText = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
+    }
+
+    // Remove loading bubble
+    removeLoadingBubble();
+
+    // Display bot response
+    displayBotMessage(botText, chatWindow);
+    isProcess = false;
+}
+
+async function sendImage(text) {
+    isProcess = true;
+    const chatWindow = document.getElementById('chat-window');
+    const imageInput = document.getElementById('imageInput');
+    const previewWrapper = document.getElementById('imagePreviewWrapper');
+    const previewImg = document.getElementById('imagePreview');
+
+    if (!uploadedImage) return;
+
+    // 1. Hiển thị ảnh trong chat
+    const imgURL = URL.createObjectURL(uploadedImage);
+
+    const imageBubble = document.createElement('div');
+    imageBubble.classList.add('message', 'user-message');
+
+    imageBubble.innerHTML = `
+        <div class="user-image-wrapper">
+            <img src="${imgURL}" class="user-chat-image" alt="uploaded image">
+        </div>
+    `;
+
+    chatWindow.appendChild(imageBubble);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    // 2. Tạo loading bubble cho bot
+    createLoadingBubble(chatWindow);
+
+    // 3. Gửi ảnh lên backend (nếu có API)
+    let botText = "";
+    let food_predict = "";
+    try {
+        const formData = new FormData();
+        formData.append("image", uploadedImage);
+
+        const response = await fetch('/api/predict', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        botText = data.message;
+        food_predict = data.food_name;
+    } catch (err) {
+        console.error("Lỗi khi gửi ảnh:", err);
+        botText = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
+    }
+
+    // 4. Xoá loading bubble
+    removeLoadingBubble();
+
+    // 5. Hiển thị tin nhắn trả lời từ bot
+    displayBotMessage(botText, chatWindow);
+
+    // 6. Reset preview và input
+    uploadedImage = null;
+    previewImg.src = '';
+    previewWrapper.classList.add('d-none');
+    imageInput.value = '';
+
+    const combinedText = (food_predict || '') + " " + (text || '') ;
+    sendText(combinedText, false);
+}
+
+function showNotification(text) {
+    const container = document.getElementById('notificationContainer');
+    if (!container) {
+        console.error("Notification container not found!");
+        return;
+    }
+
+    // 1. Tạo phần tử thông báo
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = text;
+    
+    // Thêm icon nếu cần (tùy chọn)
+    notification.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i>${text}`;
+
+    // 2. Thêm vào container và hiển thị
+    container.appendChild(notification);
+    
+    // Sử dụng setTimeout để thêm class 'show' sau một chút để kích hoạt transition
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10); // Độ trễ nhỏ
+
+    // 3. Thiết lập tự động biến mất sau 2 giây (2000ms)
+    setTimeout(() => {
+        // Bắt đầu hiệu ứng ẩn
+        notification.classList.remove('show');
+        
+        // Sau khi hiệu ứng ẩn hoàn tất (0.3s theo CSS), loại bỏ phần tử khỏi DOM
+        setTimeout(() => {
+            if (container.contains(notification)) {
+                container.removeChild(notification);
+            }
+        }, 300); // 300ms phải khớp với transition trong CSS
+        
+    }, 2000); // Thời gian hiển thị (2 giây)
+}
+
+async function sendMessage(uploadedImage, text) {
+    if(isProcess){
+        showNotification("Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!");
+        return;
+    }
+
+    if(text == ""){
+        showNotification("Hãy nhập liệu vào ô input.");
+        return;
+    }
+
+    // Nếu có ảnh -> gửi ảnh
+    if (uploadedImage && text!=="") {
+        await sendImage(text);
+        return;
+    }
+
+    // Nếu không có ảnh -> gửi text
+    if (text !== "") {
+        await sendText(text);
+        return;
+    }
+}
+
 function chatBot() {
-    // --- Simple Chatbot UI Logic ---
     const sendMessageBtn = document.getElementById('sendMessageBtn');
     const userInput = document.getElementById('userInput');
     const chatWindow = document.getElementById('chat-window');
 
-    if (sendMessageBtn && userInput && chatWindow) {
-        sendMessageBtn.addEventListener('click', function () {
-            sendMessage();
-        });
-
-        userInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-    }
-
-    async function sendMessage() {
-        const messageText = userInput.value.trim();
-        if (messageText === '') return;
-
-        // Display user message
-        const userMessageDiv = document.createElement('div');
-        userMessageDiv.classList.add('message', 'user-message');
-        userMessageDiv.innerHTML = `<p>${messageText}</p>`;
-        chatWindow.appendChild(userMessageDiv);
-        userInput.value = '';
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-
-        // Create loading bubble
-        const loadingDiv = document.createElement('div');
-        loadingDiv.classList.add('message', 'bot-message', 'loading-message');
-        loadingDiv.innerHTML = `<p></p>`;
-        chatWindow.appendChild(loadingDiv);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-
-        // Call Gemini API
-        // 3. GỌI API BACKEND (thay vì gọi gemini.js)
-        let botText = ""; // Biến để lưu tin nhắn trả lời
-        try {
-            // Gửi yêu cầu POST đến endpoint /api/chat của Flask
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                // Gửi tin nhắn dưới dạng JSON
-                body: JSON.stringify({ message: messageText })
-            });
-
-            if (!response.ok) {
-                // Xử lý lỗi nếu server trả về 4xx, 5xx
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            // Nhận dữ liệu JSON trả về
-            const data = await response.json();
-            console.log("DEBUG: toàn bộ data nhận về từ API:", data);
-            
-            // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
-            botText = data.reply;
-
-            // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
-            // để chúng hiển thị đúng trong HTML
-            botText = botText.replace(/\n/g, '<br>');
-            const container = document.getElementById("carousel");
-            renderFoodCards(container, data.food_data);
-
+    sendMessageBtn.addEventListener('click', () => {
+        const text = userInput.value.trim();
+        sendMessage(uploadedImage, text);
+    });
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const text = userInput.value.trim();
+            sendMessage(uploadedImage, text);
         }
-        catch (err) {
-            console.error("Lỗi khi gọi API:", err);
-            botText = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
-        }
-
-        // Remove loading bubble
-        loadingDiv.remove();
-
-        // Display bot response
-        const botMessageDiv = document.createElement('div');
-        botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
-        botMessageDiv.innerHTML = `
-            <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
-            <p>${botText}</p>
-        `;
-        chatWindow.appendChild(botMessageDiv);
-
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
+    });
 }
+
 function themeMode() {
     // --- Theme toggle (dark mode) ---
     const themeToggleBtn = document.getElementById("themeToggleBtn");
@@ -332,7 +494,8 @@ function renderFoodCards(container, data) {
     const placeholder = document.getElementById("food-placeholder");
 
     // 1. XÓA các card cũ trước khi render mới
-    container.innerHTML = "";
+    const cards = container.querySelectorAll('.card-food');
+    cards.forEach(card => card.remove()); // xóa card cũ, giữ placeholder
 
     // 2. Nếu có data → ẩn placeholder
     if (data && data.length > 0) {
@@ -364,6 +527,7 @@ function renderFoodCards(container, data) {
             <h5 class="food-name">${food.Name}</h5>
             <p class="food-location">Địa chỉ: ${food.Address}</p>
             <p class="food-rating">Đánh giá: ${food.Rating} ⭐</p>
+            <p class="food-description">Mô tả: ${food.Description}</p>
             <p class="food-distance">Khoảng cách: ${food.distance_km} km</p>
         </div>
         <button class="location-btn location-dot"
@@ -382,45 +546,66 @@ function renderFoodCards(container, data) {
 
 }
 
+function displayImage(chatWindow, uploadedImage) {
+    if (!uploadedImage) return;
 
-function displayBotMessage(botText) 
-{
-    const chatWindow = document.getElementById('chat-window');
+    const imgURL = URL.createObjectURL(uploadedImage);
 
-    const botMessageDiv = document.createElement('div');
-    botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
-    botMessageDiv.innerHTML = `
-        <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
-        <p>${botText}</p>
+    const imageBubble = document.createElement('div');
+    imageBubble.classList.add('message', 'user-message');
+
+    imageBubble.innerHTML = `
+        <img src="${imgURL}" class="chat-image" alt="uploaded image">
     `;
-    chatWindow.appendChild(botMessageDiv);
 
+    chatWindow.appendChild(imageBubble);
+
+    // Tự động cuộn xuống
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function foodRecognize()
-{
-    document.getElementById('imageInputBtn').onclick = () => {
-    document.getElementById('imageInput').click();
-    };
 
-    document.getElementById('imageInput').addEventListener('change', async function () {
-        const file = this.files[0];
+function uploadImageFeature() {
+    const imageBtn = document.getElementById('imageInputBtn');
+    const imageInput = document.getElementById('imageInput');
+    const previewWrapper = document.getElementById('imagePreviewWrapper');
+    const previewImg = document.getElementById('imagePreview');
+    const removeBtn = document.getElementById('removeImageBtn');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const userInput = document.getElementById('userInput');
+    const chatWindow = document.getElementById('chat-window');
+
+    // --- Mở file picker ---
+    imageBtn.addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    // --- Khi chọn ảnh ---
+    imageInput.addEventListener('change', () => {
+        const file = imageInput.files[0];
         if (!file) return;
 
-        const formData = new FormData();
-        formData.append("image", file);
+        // Giới hạn 1 ảnh
+        uploadedImage = file;
 
-        const response = await fetch("/api/predict", {
-            method: "POST",
-            body: formData
-        });
+        // Hiển thị preview
+        const url = URL.createObjectURL(file);
+        previewImg.src = url;
 
-        const result = await response.json();
-
-        displayBotMessage(result.message);
+        previewWrapper.classList.remove('d-none');
     });
+
+    // --- Xoá ảnh ---
+    removeBtn.addEventListener('click', () => {
+        uploadedImage = null;
+        previewImg.src = '';
+        previewWrapper.classList.add('d-none');
+        imageInput.value = ''; // reset input file
+    });
+    const text = userInput.value.trim();
+
 }
+
 function main()
 {
     document.addEventListener('DOMContentLoaded', function () {
@@ -445,7 +630,7 @@ function main()
 
         //=================================CHATBOT=================================
         chatBot()
-        foodRecognize()
+        uploadImageFeature()
         //=========================================================================
 
     });

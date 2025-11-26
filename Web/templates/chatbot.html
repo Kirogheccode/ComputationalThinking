@@ -12,7 +12,7 @@
                 <!-- PLACEHOLDER mặc định -->
                 <div id="food-placeholder" class="food-placeholder">
                     <i class="fa-solid fa-utensils"></i>
-                    <p>Chưa có món ăn gợi ý</p>
+                    <p>Chưa có quán ăn gợi ý</p>
                 </div>
 
             </div>
@@ -28,6 +28,15 @@
                             class="bot-avatar rounded-circle me-2" style="width: 40px; height: 40px;" alt="Bot">
                         
                         <p class="mb-0">Xin chào! Tôi có thể giúp gì cho bạn hôm nay?</p>
+                    </div>
+                </div>
+                
+                <div id="imagePreviewWrapper" class="mb-2 d-none">
+                    <div class="position-relative" style="width: 180px;">
+                        <img id="imagePreview" class="img-thumbnail rounded" alt="Preview">
+                        <button id="removeImageBtn"
+                                class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                style="border-radius: 50%; width: 28px; height: 28px;">×</button>
                     </div>
                 </div>
 
@@ -74,4 +83,6 @@
         </div>
     </div>
 </div>
+
+<div id="notificationContainer" class="notification-container"></div>
 {% endblock %}
