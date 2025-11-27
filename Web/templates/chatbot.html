@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Chatbot Gợi ý{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+
+        <div class="col-md-6">
+            <h2>Gợi ý món ăn</h2>
+            <div class="carousel" id="carousel">
+                <!-- PLACEHOLDER mặc định -->
+                <div id="food-placeholder" class="food-placeholder">
+                    <i class="fa-solid fa-utensils"></i>
+                    <p>Chưa có quán ăn gợi ý</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h2>Chatbot</h2>
+            
+            <div class="chatbot-container">
+                <div class="chat-window" id="chat-window" style="height: 450px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                    <div class="message bot-message d-flex align-items-start mb-3">
+                        <img src="{{ url_for('static', filename='images/jane.jpg') }}" 
+                            class="bot-avatar rounded-circle me-2" style="width: 40px; height: 40px;" alt="Bot">
+                        
+                        <p class="mb-0">Xin chào! Tôi có thể giúp gì cho bạn hôm nay?</p>
+                    </div>
+                </div>
+                
+                <div id="imagePreviewWrapper" class="mb-2 d-none">
+                    <div class="position-relative" style="width: 180px;">
+                        <img id="imagePreview" class="img-thumbnail rounded" alt="Preview">
+                        <button id="removeImageBtn"
+                                class="btn btn-danger btn-sm position-absolute top-0 end-0"
+                                style="border-radius: 50%; width: 28px; height: 28px;">×</button>
+                    </div>
+                </div>
+
+                <div class="chat-input-area d-flex align-items-center gap-2 mt-3">
+                    <input type="text" id="userInput" class="form-control" placeholder="Hỏi về quán phở, bún chả...">
+                    <button id="sendMessageBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                    <button id="imageInputBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-image"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tìm đường đến quán ăn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="mb-3">
+                    <label for="userOriginInput" class="form-label fw-bold">Vị trí xuất phát:</label>
+                    <div class="input-group">
+                        <input type="text" id="userOriginInput" class="form-control" placeholder="Nhập vị trí của bạn (VD: Chợ Bến Thành)...">
+                        <button class="btn btn-primary" id="btnFindRoute">
+                            <i class="fa-solid fa-route"></i> Tìm đường
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" id="destinationHidden">
+
+                <div id="map" style="height: 450px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notificationContainer" class="notification-container"></div>
+{% endblock %}
