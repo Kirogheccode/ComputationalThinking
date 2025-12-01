@@ -1,52 +1,44 @@
 from io import BytesIO
-import numpy as np
-from tensorflow import keras
-from keras.preprocessing import image
+import os
 from flask import jsonify
+from dotenv import load_dotenv
+import google.generativeai as genai
 
-MODEL_PATH = "Web/fine_tune_model_best.keras"
-TARGET_SIZE = (224, 224)
+load_dotenv()
+GOOGLE_API = os.getenv("GOOGLE_API")
 
-classes = [
-    'Bánh bèo','Bánh bột lọc','Bánh căn','Bánh canh','Bánh chưng','Bánh cuốn',
-    'Bánh đúc','Bánh giò','Bánh khọt','Bánh mì','Bánh pía','Bánh tét',
-    'Bánh tráng nướng','Bánh xèo','Bún bò Huế','Bún đậu mắm tôm','Bún mắm',
-    'Bún riêu','Bún thịt nướng','Cá kho tộ','Canh chua','Cao lầu','Cháo lòng',
-    'Cơm tấm','Gỏi cuốn','Hủ tiếu','Mì Quảng','Nem chua','Phở','Xôi xéo'
-]
+if GOOGLE_API:
+    genai.configure(api_key=GOOGLE_API)
+else:
+    print("Error: GOOGLE_API_KEY not found. Please check your .env file.")
+    exit()
 
-# --- Load model 1 lần duy nhất ---
-print("Đang load mô hình món ăn...")
-food_model = keras.models.load_model(MODEL_PATH)
-print("✔ Mô hình đã load xong!")
-
-# --- API predict ---
 def replyToImage(img_file):
     try:
-
-        # --- Dùng BytesIO đọc ảnh trực tiếp ---
+        # Đọc ảnh raw bytes
         img_bytes = img_file.read()
-        img_stream = BytesIO(img_bytes)
 
-        # Load ảnh
-        img = image.load_img(img_stream, target_size=TARGET_SIZE)
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        prompt = (
+            "Bạn là hệ thống nhận diện món ăn Việt Nam. "
+            "Chỉ trả về đúng 1 tên món ăn trong danh sách sau đây, không mô tả thêm:\n\n"
+            "Nếu món ăn không có trong danh sách, hãy chọn món giống nhất."
+        )
 
-        # Predict
-        pred = food_model.predict(img_array)[0]
-        idx = np.argmax(pred)
-        confidence = float(pred[idx])
-        food_name = classes[idx]
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
-        message = f"Tôi đoán đây là **{food_name}** (xác suất {confidence:.2%})."
+        response = model.generate_content([
+            prompt,
+            {"mime_type": img_file.mimetype, "data": img_bytes}
+        ])
+
+        food_name = response.text.strip()
+        message = f"The food you are looking for is {food_name}."
 
         return jsonify({
             "food_name": food_name,
-            "confidence": confidence,
             "message": message
         })
 
     except Exception as e:
-        print("Lỗi predict:", e)
+        print("Lỗi AI predict:", e)
         return jsonify({"error": str(e)}), 500

@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_super_secret_key_here_for_session_management' 
 
 # Cấu hình thư mục tải lên ảnh
-UPLOAD_FOLDER = 'Integrate UI and Chatbot/static/images/user_uploads'
+UPLOAD_FOLDER = 'Web/Integrate UI and Chatbot/static/images/user_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -137,17 +137,15 @@ def your_account():
 # Phản hồi câu hỏi của user (Gemini + OpenStreetMap + Geoapify) về quán ăn
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    data = request.get_json()
-
     try:
         data = request.get_json()
-        print(replyToUser(data))
-        return jsonify(replyToUser(data))
+        result = replyToUser(data)
+        return jsonify(result)
 
-    except requests.exceptions.RequestException as e:
-        print("Error calling microservice 5001:", e)
+    except Exception as e:
+        print("Lỗi xử lý chat:", e)
         return jsonify({
-            "reply": "Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau.",
+            "reply": "Xin lỗi, hệ thống đang gặp sự cố.",
             "food_data": []
         }), 500
 

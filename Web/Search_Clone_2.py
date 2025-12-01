@@ -170,7 +170,7 @@ def handle_restaurant_recommendation(prompt, entities):
     if location and location.lower() != 'none':
         user_lat, user_lon = get_coords_for_location(location)
 
-    conn = sqlite3.connect('foody_data.sqlite')
+    conn = sqlite3.connect('Web/foody_data.sqlite')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
