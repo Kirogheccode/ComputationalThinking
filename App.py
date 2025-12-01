@@ -106,17 +106,17 @@ def handle_culture_query(prompt):
 def route_user_request(prompt):
     system_context = (
         "You are a helpful travel assistant AI for Vietnam. "
-        "Your job is to analyze the user's prompt and classify their intent into one of three tasks. "
+        "Your job is to analyze the user's prompt and classify their intent into one of four tasks. "
         "You must also extract any relevant entities."
         "\n"
-        "The 3 tasks are:\n"
+        "The 4 tasks are:\n"
         "1. 'culture_query': User is asking for general information.\n"
         "2. 'food_recommendation': User is asking for a *type* of food (recipe or dish suggestion).\n"
         "3. 'restaurant_recommendation': User is asking for a specific *place* to eat.\n"
+        "4. 'daily_menu': User wants a 1-day meal plan or food tour (e.g., 'plan a menu for me in District 1', 'what to eat today').\n"
         "\n"
         "**Extraction Rules:**\n"
-        "- If the task is 'restaurant_recommendation', the 'cuisine' is the specific food (e.g., 'Cơm tấm').\n"
-        "- The 'location' is the geographical area (e.g., 'district 5').\n"
+        "- If the task is 'restaurant_recommendation' or 'daily_menu', 'location' is the key area (e.g. 'District 1').\n"
         "- If a field is not present, set its value to 'none'."
     )
 
@@ -212,21 +212,18 @@ def handle_restaurant_recommendation(prompt, entities):
 
         results.append(rest)
 
-    # --- FALLBACK LOGIC STARTS HERE ---
+    # Fallback
     model = genai.GenerativeModel('gemini-2.5-flash')
-
     if not results:
         print("-> No matches in DB. Switching to Cultural Fallback.")
         fallback_system_context = (
             "You are a knowledgeable local guide for Vietnam. "
             "The user asked for a specific restaurant or dish in a specific location, but your local database returned ZERO matches. "
-            "1. First, politely inform the user that you don't have specific restaurant data for that request in your current database. "
-            "2. Then, pivot to providing helpful **General/Cultural Knowledge** about the food they asked for. "
-            "Describe what the dish is, its history, or general tips on where to find it in Vietnam (e.g., 'You can usually find this dish in street stalls...')."
+            "1. First, politely inform the user that you don't have specific restaurant data for that request. "
+            "2. Then, pivot to providing helpful **General/Cultural Knowledge** about the food they asked for."
         )
         response = model.generate_content([fallback_system_context, f"User Query: {prompt}"])
         return response.text
-    # --- FALLBACK LOGIC ENDS HERE ---
 
     # 4. Rank
     results.sort(key=lambda x: (-x['Rating'], x['distance_km']))
@@ -238,8 +235,6 @@ def handle_restaurant_recommendation(prompt, entities):
     system_context = (
         "You are a local restaurant guide. Your job is to recommend 3-5 top restaurants to the user. "
         "Use the provided JSON database. "
-        "The JSON includes a 'distance_km' field showing how far the restaurant is from the user. "
-        "Mention this distance in your answer. "
         f"USER LOCATION: {location}\n"
         f"USER CUISINE: {cuisine}\n"
         f"DATABASE:\n{restaurant_context}"
@@ -249,10 +244,86 @@ def handle_restaurant_recommendation(prompt, entities):
     return response.text
 
 
+def handle_daily_menu(prompt, entities):
+    """
+    Mission 4: Generates a 1-Day Food Tour by picking 3 distinct restaurants from the DB.
+    """
+    location = entities.get('location')
+    print(f"-> Executing: Daily Food Tour (Location: {location})")
+
+    # 1. Geocode (Crucial for a "Tour")
+    user_lat, user_lon = None, None
+    if location and location.lower() != 'none':
+        user_lat, user_lon = get_coords_for_location(location)
+
+    # 2. Get CANDIDATES from SQLite (Broad search, no cuisine filter)
+    conn = sqlite3.connect('foody_data.sqlite')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    query = "SELECT * FROM Restaurants"
+    params = []
+
+    # Filter by location if available (Radius 5km for a walkable/driveable tour)
+    if user_lat and user_lon:
+        bbox = get_bounding_box(user_lat, user_lon, distance_km=5)
+        query += " WHERE Latitude BETWEEN ? AND ? AND Longitude BETWEEN ? AND ?"
+        params = [bbox['min_lat'], bbox['max_lat'], bbox['min_lon'], bbox['max_lon']]
+
+    # Get high-rated places only
+    # Note: We can't sort by Rating easily in SQL because it's text, so we fetch more and sort in Python
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    # 3. Process Candidates
+    candidates = []
+    for row in rows:
+        rest = dict(row)
+        try:
+            rest['Rating'] = float(rest['Rating'])
+        except:
+            rest['Rating'] = 0.0
+
+        # Add distance
+        if user_lat and user_lon:
+            rest['distance_km'] = round(haversine(user_lat, user_lon, rest['Latitude'], rest['Longitude']), 2)
+        else:
+            rest['distance_km'] = 0
+
+        candidates.append(rest)
+
+    # Sort by Rating and take top 30 diverse options
+    candidates.sort(key=lambda x: x['Rating'], reverse=True)
+    top_candidates = candidates[:30]
+
+    if not top_candidates:
+        return "I couldn't find enough restaurants in that area to build a tour. Try a different location!"
+
+    # 4. Let Gemini Build the Menu
+    restaurant_context = json.dumps(top_candidates, ensure_ascii=False)
+
+    system_context = (
+        "You are a local tour guide planning a **1-Day Food Tour** for a tourist. "
+        "You have a list of the top-rated restaurants nearby (DATABASE). "
+        "**Your Goal:** Select exactly 3 restaurants from the list to form a perfect Breakfast, Lunch, and Dinner plan.\n"
+        "**Rules:**\n"
+        "1. **Breakfast:** Pick a place serving Pho, Bun, Xoi, or Banh Mi.\n"
+        "2. **Lunch:** Pick a place serving Com (Rice) or Noodles.\n"
+        "3. **Dinner:** Pick a place serving Hotpot (Lau), BBQ (Nuong), or Seafood (Oc).\n"
+        "4. If no perfect match exists for a slot, pick the next best high-rated option.\n"
+        "5. Explain WHY you chose each place (e.g. 'Famous for its broth', 'Great atmosphere').\n\n"
+        f"DATABASE:\n{restaurant_context}"
+    )
+
+    model = genai.GenerativeModel('gemini-2.5-flash')
+    response = model.generate_content([system_context, f"User Request: {prompt}"])
+    return response.text
+
+
 def handle_food_recommendation(prompt, entities):
     """
-    Mission 2: Recommends a dish using RAG.
-    Smartly falls back to General Knowledge within the same prompt if RAG fails.
+    Mission 2: Recommends a dish using RAG. Smart Fallback.
     """
     diet = entities.get('diet_ingredient')
     print(f"-> Executing: Food Recommendation (Diet: {diet})")
@@ -263,31 +334,24 @@ def handle_food_recommendation(prompt, entities):
         db_client = chromadb.PersistentClient(path="chroma_db")
         collection = db_client.get_collection(name="recipes")
 
-        # Embed Search
         search_text = f"{prompt} {diet}"
         query_embedding = embedder.encode(search_text).tolist()
 
-        # Query (Always returns results even if irrelevant)
-        results = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=5
-        )
-
+        results = collection.query(query_embeddings=[query_embedding], n_results=5)
         if results['documents']:
             found_recipes_text = results['documents'][0]
 
     except Exception as e:
-        print(f"Warning: RAG Error ({e}). Proceeding to fallback.")
+        print(f"Warning: RAG Error ({e}).")
 
-    # --- THE FIX: A "Smart" Prompt that handles both cases ---
     system_context = (
             "You are a Vietnamese food expert. The user is asking for: " + prompt + "\n"
                                                                                     "Below are recipes from your local database that matched the keywords (RAG Context).\n\n"
                                                                                     "**CRITICAL INSTRUCTION:**\n"
-                                                                                    "1. check if the 'SEARCH RESULTS' actually contain the specific dish the user asked for.\n"
+                                                                                    "1. Check if the 'SEARCH RESULTS' actually contain the specific dish the user asked for.\n"
                                                                                     "2. **IF MATCH FOUND:** Use the search results to recommend the dish.\n"
-                                                                                    "3. **IF NO MATCH FOUND:** IGNORE the search results completely. Do NOT say 'I don't have information'. "
-                                                                                    "Instead, use your own **General Cultural Knowledge** to describe the dish, its ingredients, and how it is eaten.\n\n"
+                                                                                    "3. **IF NO MATCH FOUND:** IGNORE the search results. Do NOT say 'I don't have information'. "
+                                                                                    "Instead, use your own **General Cultural Knowledge** to describe the dish.\n\n"
                                                                                     "SEARCH RESULTS (RAG Context):\n" +
             "\n---\n".join(found_recipes_text)
     )
@@ -322,6 +386,8 @@ def main_chatbot():
                 response = handle_food_recommendation(prompt, task_data)
             elif task_type == 'restaurant_recommendation':
                 response = handle_restaurant_recommendation(prompt, task_data)
+            elif task_type == 'daily_menu':
+                response = handle_daily_menu(prompt, task_data)
             else:
                 response = "I'm sorry, I'm not sure how to help with that."
 
