@@ -253,7 +253,7 @@ function displayBotMessage(botText, chatWindow)
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-async function sendText(messageText, displayUser = true){
+async function sendText(messageText){
     isProcess = true;
     const imageBtn = document.getElementById('imageInputBtn');
     const imageInput = document.getElementById('imageInput');
@@ -263,9 +263,7 @@ async function sendText(messageText, displayUser = true){
 
 
     // Display user message
-    if(displayUser == true){
-        displayUserMessage(messageText, chatWindow);
-    }
+    displayUserMessage(messageText, chatWindow)
 
     if (userInput) {
         userInput.value = '';
@@ -326,6 +324,11 @@ async function sendImage(text) {
     const imageInput = document.getElementById('imageInput');
     const previewWrapper = document.getElementById('imagePreviewWrapper');
     const previewImg = document.getElementById('imagePreview');
+    const userInput = document.getElementById('userInput');
+
+    if (userInput) {
+        userInput.value = '';
+    }
 
     if (!uploadedImage) return;
 
@@ -343,6 +346,10 @@ async function sendImage(text) {
 
     chatWindow.appendChild(imageBubble);
     chatWindow.scrollTop = chatWindow.scrollHeight;
+
+    previewImg.src = '';
+    previewWrapper.classList.add('d-none');
+    imageInput.value = '';
 
     // 2. Tạo loading bubble cho bot
     createLoadingBubble(chatWindow);
@@ -375,12 +382,9 @@ async function sendImage(text) {
 
     // 6. Reset preview và input
     uploadedImage = null;
-    previewImg.src = '';
-    previewWrapper.classList.add('d-none');
-    imageInput.value = '';
 
     const combinedText = (food_predict || '') + " " + (text || '') ;
-    sendText(combinedText, false);
+    sendText(combinedText);
 }
 
 function showNotification(text) {
