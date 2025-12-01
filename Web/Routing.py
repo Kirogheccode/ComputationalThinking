@@ -41,7 +41,7 @@ def get_coordinates_from_db(location: str):
     """
     Lấy trực tiếp Latitude/Longitude của nhà hàng từ SQLite
     """
-    conn = sqlite3.connect('Search\\foody_data.sqlite')
+    conn = sqlite3.connect('Web/foody_data.sqlite')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 

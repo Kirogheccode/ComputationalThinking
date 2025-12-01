@@ -2,7 +2,7 @@
 import sqlite3
 from datetime import datetime, timedelta
 
-DATABASE = 'Integrate UI and Chatbot\smart_tourism.db'
+DATABASE = 'Web/Integrate UI and Chatbot/smart_tourism.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
