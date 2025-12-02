@@ -1,0 +1,36 @@
+<!-- templates/verify_otp.html -->
+{% extends "base.html" %}
+
+{% block title %}Xác thực OTP{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg p-4">
+                <h2 class="text-center mb-4">Xác thực Email</h2>
+                <p class="text-center text-muted">
+                    Chúng tôi đã gửi mã OTP 6 chữ số đến <strong>{{ email }}</strong>.<br>
+                    Vui lòng nhập mã vào bên dưới.
+                </p>
+                <form method="POST" action="{{ url_for('auth.verify_otp') }}">
+                    <div class="mb-3">
+                        <label for="otp" class="form-label">Mã OTP</label>
+                        <input type="text" class="form-control text-center" id="otp" name="otp" 
+                               placeholder="######" maxlength="6" required style="font-size: 1.5rem; letter-spacing: 5px;">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mt-3">Xác thực & Tạo tài khoản</button>
+                </form>
+                
+                <div class="text-center mt-4">
+                    <small>Bạn chưa nhận được mã?</small><br>
+                    <a href="{{ url_for('auth.resend_otp') }}" class="btn btn-link btn-sm">Gửi lại mã</a>
+                </div>
+                <div class="text-center mt-2">
+                    <a href="{{ url_for('auth.register') }}" class="text-muted small">Đăng ký lại / Đổi Email</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

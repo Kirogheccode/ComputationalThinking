@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Trang chủ - Gợi ý món ăn{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero d-flex align-items-center justify-content-center text-center">
+  <div class="container">
+    <div class="hero-inner" data-aos="fade-up">
+      <h1 class="display-5 hero-title">Khám phá tinh hoa ẩm thực<br class="d-none d-md-block"> TP.HCM</h1>
+      <p class="lead hero-sub">Gợi ý quán ngon, địa điểm nổi bật và trải nghiệm ẩm thực không thể bỏ lỡ.</p>
+      <div class="mt-4">
+        <a href="#featured" class="btn btn-warning btn-lg me-2 hero-cta">Bắt đầu hành trình 🍜</a>
+        <a href="{{ url_for('map_page') }}" class="btn btn-outline-light btn-lg">Xem trên bản đồ</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-4 filter-bar" id="filterBar">
+  <div class="container d-flex flex-column flex-md-row align-items-center gap-3">
+
+    <!-- Chọn khu vực -->
+    <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+      <select id="areaSelect" class="form-select form-select-sm">
+        <option value="all" {% if area_selected == 'all' %}selected{% endif %}>Tất cả khu vực</option>
+        <option value="Quận 1" {% if area_selected == 'Quận 1' %}selected{% endif %}>Quận 1</option>
+        <option value="Quận 3" {% if area_selected == 'Quận 3' %}selected{% endif %}>Quận 3</option>
+        <option value="Quận 4" {% if area_selected == 'Quận 4' %}selected{% endif %}>Quận 4</option>
+        <option value="Quận 5" {% if area_selected == 'Quận 5' %}selected{% endif %}>Quận 5</option>
+        <option value="Quận 6" {% if area_selected == 'Quận 6' %}selected{% endif %}>Quận 6</option>
+        <option value="Quận 7" {% if area_selected == 'Quận 7' %}selected{% endif %}>Quận 7</option>
+        <option value="Quận 8" {% if area_selected == 'Quận 8' %}selected{% endif %}>Quận 8</option>
+        <option value="Quận 10" {% if area_selected == 'Quận 10' %}selected{% endif %}>Quận 10</option>
+        <option value="Quận 11" {% if area_selected == 'Quận 11' %}selected{% endif %}>Quận 11</option>
+        <option value="Quận 12" {% if area_selected == 'Quận 12' %}selected{% endif %}>Quận 12</option>
+        <option value="Bình Tân" {% if area_selected == 'Bình Tân' %}selected{% endif %}>Bình Tân</option>
+        <option value="Bình Thạnh" {% if area_selected == 'Bình Thạnh' %}selected{% endif %}>Bình Thạnh</option>
+        <option value="Gò Vấp" {% if area_selected == 'Gò Vấp' %}selected{% endif %}>Gò Vấp</option>
+        <option value="Phú Nhuận" {% if area_selected == 'Phú Nhuận' %}selected{% endif %}>Phú Nhuận</option>
+        <option value="Tân Bình" {% if area_selected == 'Tân Bình' %}selected{% endif %}>Tân Bình</option>
+        <option value="Tân Phú" {% if area_selected == 'Tân Phú' %}selected{% endif %}>Tân Phú</option>
+        <option value="Thủ Đức" {% if area_selected == 'Thủ Đức' %}selected{% endif %}>Thủ Đức</option>
+      </select>
+    </div>
+
+    <!-- Tìm kiếm -->
+    <div class="flex-fill">
+      <input id="searchInput" class="form-control form-control-sm" type="text"
+             placeholder="Tìm món hoặc tên quán..."
+             value="{{ search_query }}">
+    </div>
+
+    <!-- Xóa -->
+    <div>
+      <button id="clearFilters" class="btn btn-sm btn-outline-light">Xóa</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURED FOODS -->
+<section class="py-5" id="featured">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Món ăn nổi bật</h2>
+      <small class="text-muted">Gợi ý cho bạn</small>
+    </div>
+
+    <div class="row" id="foodsGrid">
+      {% for food in foods %}
+      <div class="col-lg-4 col-md-6 mb-4 food-item" data-area="{{ food.location }}" data-name="{{ food.name | lower }}">
+        <div class="card h-100 food-card"
+             data-name="{{ food.name }}"
+             data-image="{{ url_for('static', filename=food.image) }}"
+             data-aos="fade-up"
+             data-aos-delay="{{ loop.index0 * 60 }}">
+          <div class="card-img-wrap">
+            <img loading="lazy" src="{{ url_for('static', filename=food.image) }}" class="card-img-top" alt="{{ food.name }}">
+            <div class="card-overlay">
+              <div class="overlay-text">
+                <h5 class="mb-0">{{ food.name }}</h5>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="card-text mb-1 text-truncate">Địa chỉ: {{ food.location }}</p>
+            <p class="card-text mb-0 text-truncate">Đánh giá: {{ food.rating }} ⭐</p>
+          </div>
+          <div class="card-footer d-flex justify-content-end align-items-center">
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-1 location-dot" 
+                      title="Xem trên bản đồ" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#mapModal"
+                      data-location="{{ food.location }}">
+                  <i class="fa-solid fa-location-dot"></i>
+              </button>
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#foodModal"
+                      data-name="{{ food.name }}"
+                      data-location="{{ food.location }}"
+                      data-image="{{ url_for('static', filename=food.image) }}"
+                      data-rating="{{ food.rating }}⭐">Chi tiết</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- PAGINATION -->
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+
+    <!-- Previous -->
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" 
+         href="?page={{ page - 1 }}&area={{ area_selected }}&q={{ search_query }}">« Trước</a>
+    </li>
+
+    <!-- First page -->
+    {% if page > 3 %}
+      <li class="page-item">
+        <a class="page-link" href="?page=1&area={{ area_selected }}&q={{ search_query }}">1</a>
+      </li>
+      {% if page > 4 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endif %}
+
+    <!-- Pages around current -->
+    {% for p in range(page-2, page+3) %}
+      {% if p >= 1 and p <= total_pages %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" 
+             href="?page={{ p }}&area={{ area_selected }}&q={{ search_query }}">{{ p }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+
+    <!-- Last page -->
+    {% if page < total_pages - 2 %}
+      {% if page < total_pages - 3 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ total_pages }}&area={{ area_selected }}&q={{ search_query }}">{{ total_pages }}</a>
+      </li>
+    {% endif %}
+
+    <!-- Next -->
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" 
+         href="?page={{ page + 1 }}&area={{ area_selected }}&q={{ search_query }}">Sau »</a>
+    </li>
+
+  </ul>
+</nav>
+
+<div class="modal fade" id="foodModal" tabindex="-1" aria-labelledby="foodModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="modalFoodName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <img id="modalFoodImage" src="" class="img-fluid rounded" alt="Food Image">
+                    </div>
+
+                    <div class="col-md-6">
+                        <p><strong>Địa điểm:</strong> <span id="modalFoodLocation"></span></p>
+                        <p><strong>Đánh giá:</strong> <span id="modalFoodRating"></span></p>
+
+                        <div class="mt-3">
+                            <a id="openMapBtn" class="btn btn-outline-primary btn-sm me-2">
+                                <i class="fa-solid fa-map-location-dot"></i> Xem bản đồ
+                            </a>
+                            <button class="btn btn-warning btn-sm">Lưu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tìm đường đến quán ăn</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="mb-3">
+                    <label for="userOriginInput" class="form-label fw-bold">Vị trí của bạn:</label>
+                    <div class="input-group">
+                        <input type="text" id="userOriginInput" class="form-control" placeholder="VD: Chợ Bến Thành, Quận 1...">
+                        <button class="btn btn-primary" id="btnFindRoute">
+                            <i class="fa-solid fa-route"></i> Tìm đường
+                        </button>
+                    </div>
+                    <small class="text-muted">Nhập địa chỉ hiện tại của bạn để xem đường đi.</small>
+                </div>
+
+                <input type="hidden" id="destinationHidden">
+
+                <div id="map" style="height: 450px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
