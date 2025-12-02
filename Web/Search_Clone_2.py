@@ -306,7 +306,7 @@ def handle_food_recommendation(prompt, entities):
     # Connect to ChromaDB
     found_recipes_text = []
     try:
-        db_client = chromadb.PersistentClient(path="chroma_db")
+        db_client = chromadb.PersistentClient(path="Web/chroma_db")
         collection = db_client.get_collection(name="recipes")
 
         # Embed Search

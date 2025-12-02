@@ -1,6 +1,9 @@
 # database.py
 import sqlite3
 from datetime import datetime, timedelta
+import uuid 
+import random
+from werkzeug.security import generate_password_hash
 
 DATABASE = 'Web/Integrate UI and Chatbot/smart_tourism.db'
 
@@ -135,6 +138,49 @@ def get_food_posts_by_user(user_id):
     conn.close()
     return posts
 
+def get_or_create_oauth_user(username, email):
+    """
+    Tìm user theo email. Nếu chưa có thì tạo mới.
+    Dùng cho Google/Facebook login.
+    """
+    conn = get_db_connection()
+    try:
+        # 1. Kiểm tra email
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+
+        if user:
+            return user # User đã tồn tại, trả về thông tin
+        
+        # 2. Nếu chưa có, tạo user mới
+        # Tạo password ngẫu nhiên (vì user này dùng OAuth)
+        dummy_password = str(uuid.uuid4())
+        hashed_password = generate_password_hash(dummy_password)
+        
+        # Xử lý trùng Username: Nếu username trùng, thêm số ngẫu nhiên
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            username = f"{username}_{random.randint(1000, 9999)}"
+
+        # verified = 1 vì Google/FB đã xác thực email
+        cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, 1)",
+                       (username, email, hashed_password))
+        conn.commit()
+        
+        # Lấy lại user vừa tạo
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        new_user = cursor.fetchone()
+        return new_user
+
+    except Exception as e:
+        print(f"Lỗi DB OAuth: {e}")
+        return None
+    finally:
+        conn.close()
+
 if __name__ == '__main__':
     init_db()
     print("Database initialized with OTP support.")
+
+    

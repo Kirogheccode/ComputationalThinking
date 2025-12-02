@@ -1,0 +1,93 @@
+/* static/css/verify_otp.css */
+
+.otp-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.otp-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Thanh trang trí trên đầu card */
+.otp-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #0d6efd, #0dcaf0);
+}
+
+.otp-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(13, 110, 253, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem auto;
+    color: #0d6efd;
+    font-size: 2rem;
+}
+
+/* Ô nhập OTP đặc biệt */
+.otp-input {
+    font-size: 2rem;
+    letter-spacing: 15px; /* Giãn cách số */
+    text-align: center;
+    font-weight: bold;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 10px;
+    transition: all 0.3s;
+    color: #495057;
+}
+
+.otp-input:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    outline: none;
+}
+
+.otp-input::placeholder {
+    font-size: 1.5rem;
+    letter-spacing: 5px;
+    color: #adb5bd;
+    font-weight: normal;
+}
+
+/* Dark Mode */
+body.dark .otp-card {
+    background-color: #2d3436;
+    color: #dfe6e9;
+}
+
+body.dark .otp-input {
+    background-color: #1e2526;
+    border-color: #636e72;
+    color: #0dcaf0; /* Màu số sáng hơn cho nổi */
+}
+
+body.dark .otp-input:focus {
+    border-color: #0dcaf0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.2);
+}
+
+body.dark .otp-icon-wrapper {
+    background-color: rgba(13, 202, 240, 0.15);
+    color: #0dcaf0;
+}
+
+body.dark .text-muted {
+    color: #b2bec3 !important;
+}

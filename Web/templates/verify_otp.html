@@ -1,36 +1,48 @@
-<!-- templates/verify_otp.html -->
 {% extends "base.html" %}
 
 {% block title %}Xác thực OTP{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg p-4">
-                <h2 class="text-center mb-4">Xác thực Email</h2>
-                <p class="text-center text-muted">
-                    Chúng tôi đã gửi mã OTP 6 chữ số đến <strong>{{ email }}</strong>.<br>
-                    Vui lòng nhập mã vào bên dưới.
+<link rel="stylesheet" href="{{ url_for('static', filename='css/verify_otp.css') }}">
+
+<div class="container otp-container">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="card otp-card">
+                
+                <div class="otp-icon-wrapper">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+
+                <h3 class="fw-bold mb-2">Xác thực Email</h3>
+                <p class="text-muted mb-4">
+                    Chúng tôi đã gửi mã 6 số đến<br>
+                    <strong class="text-primary">{{ email }}</strong>
                 </p>
+
                 <form method="POST" action="{{ url_for('auth.verify_otp') }}">
-                    <div class="mb-3">
-                        <label for="otp" class="form-label">Mã OTP</label>
-                        <input type="text" class="form-control text-center" id="otp" name="otp" 
-                               placeholder="######" maxlength="6" required style="font-size: 1.5rem; letter-spacing: 5px;">
-                    </div>
-                    <button type="submit" class="btn btn-success w-100 mt-3">Xác thực & Tạo tài khoản</button>
+                    <div class="mb-4">
+                        <input type="text" class="form-control otp-input" id="otp" name="otp" 
+                               placeholder="------" maxlength="6" required autocomplete="off"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm mb-3">
+                        XÁC THỰC
+                    </button>
                 </form>
                 
-                <div class="text-center mt-4">
-                    <small>Bạn chưa nhận được mã?</small><br>
-                    <a href="{{ url_for('auth.resend_otp') }}" class="btn btn-link btn-sm">Gửi lại mã</a>
-                </div>
-                <div class="text-center mt-2">
-                    <a href="{{ url_for('auth.register') }}" class="text-muted small">Đăng ký lại / Đổi Email</a>
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-light">
+                    <a href="{{ url_for('auth.resend_otp') }}" class="btn btn-link text-decoration-none btn-sm px-0">
+                        <i class="fas fa-redo me-1"></i> Gửi lại mã
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-link text-decoration-none text-muted btn-sm px-0">
+                        Nhập sai Email?
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}

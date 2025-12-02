@@ -4,13 +4,19 @@ from FoodRecognition import replyToImage
 from auth import auth_bp, login_required # Import auth blueprint và decorator
 from database import init_db, add_food_post, get_food_posts_by_user, get_user_by_id # Import các hàm DB mới
 import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from werkzeug.utils import secure_filename
 import sys
 import requests
 from Search_Clone_2 import replyToUser
+from extensions import oauth
 
 # Khởi tạo ứng dụng Flask
-app = Flask(__name__)
+app = Flask(
+    __name__,
+)
+
+oauth.init_app(app)
 
 # Cấu hình Secret Key cho session
 # Rất quan trọng cho bảo mật, thay đổi chuỗi này trong môi trường production!
@@ -169,4 +175,4 @@ def predict_food():
 
 # Chạy ứng dụng
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='127.0.0.1', port=5000, debug=True)
