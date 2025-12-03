@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, session, flash, redi
 import Routing
 from FoodRecognition import replyToImage
 from auth import auth_bp, login_required # Import auth blueprint và decorator
-from database import init_db, add_food_post, get_food_posts_by_user, get_user_by_id # Import các hàm DB mới
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from werkzeug.utils import secure_filename
@@ -10,20 +9,25 @@ import sys
 import requests
 from Search_Clone_2 import replyToUser
 from extensions import oauth
-
-# Khởi tạo ứng dụng Flask
-app = Flask(
-    __name__,
+from database import (
+    init_db, 
+    add_food_post, 
+    get_food_posts_by_user, 
+    get_user_by_id,
+    add_favorite,
+    get_favorites_by_user,
+    remove_favorite
 )
 
+# Khởi tạo ứng dụng Flask
+app = Flask(__name__)
 oauth.init_app(app)
 
-# Cấu hình Secret Key cho session
-# Rất quan trọng cho bảo mật, thay đổi chuỗi này trong môi trường production!
+# Secret key session
 app.config['SECRET_KEY'] = 'your_super_secret_key_here_for_session_management' 
 
-# Cấu hình thư mục tải lên ảnh
-UPLOAD_FOLDER = 'Web/Integrate UI and Chatbot/static/images/user_uploads'
+# Cấu hình thư mục upload (fix path tuyệt đối)
+UPLOAD_FOLDER = os.path.join(app.root_path, "static/images/user_uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -36,8 +40,7 @@ app.register_blueprint(auth_bp)
 
 # Hàm kiểm tra đuôi file
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Khởi tạo database khi ứng dụng chạy
 with app.app_context():
@@ -172,6 +175,47 @@ def get_coordinates():
 def predict_food():
     img_file = request.files["image"]
     return replyToImage(img_file)
+
+# ⭐ LƯU NHÀ HÀNG YÊU THÍCH
+@app.route("/favorite/add", methods=["POST"])
+@login_required
+def api_add_favorite():
+    data = request.get_json()
+
+    place_id = data.get("place_id")
+    place_name = data.get("place_name")
+
+    if not place_id or not place_name:
+        return jsonify({"error": "missing place_id or place_name"}), 400
+
+    user_id = session["user_id"]
+    add_favorite(user_id, place_id, place_name)
+
+    return jsonify({"status": "success", "message": "Saved to favorites!"})
+
+
+@app.route("/favorite/list", methods=["GET"])
+@login_required
+def api_get_favorites():
+    user_id = session["user_id"]
+    result = get_favorites_by_user(user_id)
+    return jsonify(result)
+
+
+@app.route("/favorite/remove", methods=["POST"])
+@login_required
+def api_remove_favorite():
+    data = request.get_json()
+    place_id = data.get("place_id")
+
+    if not place_id:
+        return jsonify({"error": "missing place_id"}), 400
+
+    user_id = session["user_id"]
+    remove_favorite(user_id, place_id)
+
+    return jsonify({"status": "success"})
+
 
 # Chạy ứng dụng
 if __name__ == '__main__':

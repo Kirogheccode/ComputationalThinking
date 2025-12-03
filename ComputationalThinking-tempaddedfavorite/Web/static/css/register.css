@@ -1,0 +1,86 @@
+/* static/css/register.css */
+
+.register-container {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* Ảnh bên phải (đổi vị trí so với login cho lạ mắt) hoặc giữ bên trái */
+.register-image-side {
+    /* Ảnh nguyên liệu/nấu ăn */
+    background-image: url('https://images.unsplash.com/photo-1556910103-1c02745a30bf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background-size: cover;
+    background-position: center;
+    min-height: 550px;
+    position: relative;
+}
+
+.register-image-side::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.1));
+}
+
+.form-side {
+    padding: 40px 50px;
+}
+
+/* Input Styles - Giống Login để đồng bộ */
+.input-group-text {
+    background: transparent;
+    border-right: none;
+    color: #6c757d;
+}
+
+.form-control {
+    border-left: none;
+    padding-left: 0;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-radius: 0.375rem;
+}
+
+.input-group:focus-within .form-control, 
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+/* Dark Mode */
+body.dark .register-card {
+    background-color: #2d3436;
+    color: #dfe6e9;
+}
+
+body.dark .form-control {
+    background-color: transparent;
+    color: #dfe6e9;
+    border-color: #636e72;
+}
+
+body.dark .input-group-text {
+    border-color: #636e72;
+    color: #b2bec3;
+}
+
+body.dark .text-muted {
+    color: #b2bec3 !important;
+}

@@ -27,7 +27,7 @@ def init_db():
         )
     """)
 
-    # Bảng OTP (Lưu mã OTP và thời gian hết hạn)
+    # Bảng OTP
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS email_otp (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +37,7 @@ def init_db():
         )
     """)
 
-    # Bảng bài đăng (Giữ nguyên)
+    # Bảng bài đăng
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS food_posts (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,16 +49,32 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
+
+    # Bảng lưu nhà hàng yêu thích (có chống trùng)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS favorites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            place_id TEXT NOT NULL,
+            place_name TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE (user_id, place_id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
-# --- User Functions ---
+
+# ======================================
+# USER FUNCTIONS
+# ======================================
+
 def add_user(username, email, password_hash):
-    """Thêm người dùng đã xác thực vào DB."""
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        # verified = 1 vì chỉ add khi đã verify xong
         cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, 1)",
                        (username, email, password_hash))
         conn.commit()
@@ -86,14 +102,16 @@ def get_user_by_id(user_id):
     conn.close()
     return user
 
-# --- OTP Functions ---
+
+# ======================================
+# OTP FUNCTIONS
+# ======================================
+
 def save_otp(email, otp_code):
-    """Lưu OTP mới, xóa OTP cũ nếu có."""
     conn = get_db_connection()
-    # Xóa OTP cũ của email này
+    
     conn.execute("DELETE FROM email_otp WHERE email = ?", (email,))
     
-    # OTP hết hạn sau 5 phút
     expired_at = (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S")
     
     conn.execute("INSERT INTO email_otp (email, otp_code, expired_at) VALUES (?, ?, ?)",
@@ -101,8 +119,8 @@ def save_otp(email, otp_code):
     conn.commit()
     conn.close()
 
+
 def verify_otp_code(email, otp_input):
-    """Kiểm tra OTP có đúng và còn hạn không."""
     conn = get_db_connection()
     row = conn.execute("SELECT * FROM email_otp WHERE email = ?", (email,)).fetchone()
     conn.close()
@@ -110,7 +128,6 @@ def verify_otp_code(email, otp_input):
     if row:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if row['otp_code'] == otp_input and row['expired_at'] > now:
-            # OTP đúng và còn hạn -> Xóa OTP để không dùng lại được
             conn = get_db_connection()
             conn.execute("DELETE FROM email_otp WHERE email = ?", (email,))
             conn.commit()
@@ -118,14 +135,23 @@ def verify_otp_code(email, otp_input):
             return True
     return False
 
-# --- Food Post Functions (Giữ nguyên) ---
+
+# ======================================
+# FOOD POST FUNCTIONS
+# ======================================
+
 def add_food_post(user_id, food_name, description, image_filename):
     conn = get_db_connection()
     posted_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    conn.execute("INSERT INTO food_posts (user_id, food_name, description, image_filename, posted_at) VALUES (?, ?, ?, ?, ?)",
-                 (user_id, food_name, description, image_filename, posted_at))
+
+    conn.execute("""
+        INSERT INTO food_posts (user_id, food_name, description, image_filename, posted_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (user_id, food_name, description, image_filename, posted_at))
+
     conn.commit()
     conn.close()
+
 
 def get_food_posts_by_user(user_id):
     conn = get_db_connection()
@@ -135,40 +161,37 @@ def get_food_posts_by_user(user_id):
         WHERE fp.user_id = ? 
         ORDER BY posted_at DESC
     """, (user_id,)).fetchall()
+
     conn.close()
     return posts
 
+
+# ======================================
+# OAUTH USER
+# ======================================
+
 def get_or_create_oauth_user(username, email):
-    """
-    Tìm user theo email. Nếu chưa có thì tạo mới.
-    Dùng cho Google/Facebook login.
-    """
     conn = get_db_connection()
     try:
-        # 1. Kiểm tra email
         cursor = conn.cursor()
+
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
 
         if user:
-            return user # User đã tồn tại, trả về thông tin
+            return user
         
-        # 2. Nếu chưa có, tạo user mới
-        # Tạo password ngẫu nhiên (vì user này dùng OAuth)
         dummy_password = str(uuid.uuid4())
         hashed_password = generate_password_hash(dummy_password)
         
-        # Xử lý trùng Username: Nếu username trùng, thêm số ngẫu nhiên
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
             username = f"{username}_{random.randint(1000, 9999)}"
 
-        # verified = 1 vì Google/FB đã xác thực email
         cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, 1)",
                        (username, email, hashed_password))
         conn.commit()
         
-        # Lấy lại user vừa tạo
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         new_user = cursor.fetchone()
         return new_user
@@ -176,11 +199,72 @@ def get_or_create_oauth_user(username, email):
     except Exception as e:
         print(f"Lỗi DB OAuth: {e}")
         return None
+
     finally:
         conn.close()
 
+
+
+# ======================================
+# FAVORITE FUNCTIONS
+# ======================================
+
+def add_favorite(user_id, place_id, place_name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    try:
+        cursor.execute("""
+            INSERT INTO favorites (user_id, place_id, place_name, created_at)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, place_id, place_name, created_at))
+    except sqlite3.IntegrityError:
+        # Nếu trùng (user_id + place_id), bỏ qua
+        pass
+
+    conn.commit()
+    conn.close()
+
+
+def get_favorites_by_user(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    rows = cursor.execute("""
+        SELECT place_id, place_name, created_at
+        FROM favorites
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+    """, (user_id,)).fetchall()
+
+    conn.close()
+
+    # Chuyển sqlite Row -> dict để jsonify được
+    return [
+        {
+            "place_id": row["place_id"],
+            "place_name": row["place_name"],
+            "created_at": row["created_at"]
+        }
+        for row in rows
+    ]
+
+
+def remove_favorite(user_id, place_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM favorites 
+        WHERE user_id = ? AND place_id = ?
+    """, (user_id, place_id))
+
+    conn.commit()
+    conn.close()
+
+
 if __name__ == '__main__':
     init_db()
-    print("Database initialized with OTP support.")
-
-    
+    print("Database initialized with OTP + Favorites support.")

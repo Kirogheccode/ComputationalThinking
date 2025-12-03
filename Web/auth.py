@@ -8,6 +8,9 @@ import os
 import uuid
 from extensions import oauth
 from dotenv import load_dotenv
+from extensions import oauth
+from dotenv import load_dotenv
+from database import get_or_create_oauth_user
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
