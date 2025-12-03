@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Hoàn tất đăng ký{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+<div class="container login-container my-4">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-8">
+            <div class="card login-card">
+                <div class="row g-0 justify-content-center">
+                    <div class="col-md-8 form-side">
+                        <div class="mb-4 text-center">
+                            <h2 class="fw-bold">Hoàn tất đăng ký</h2>
+                            <p class="text-muted">Bạn đang đăng nhập bằng <strong class="text-primary">{{ provider }}</strong>.</p>
+                            <p class="small">Vui lòng chọn tên đăng nhập để hoàn tất.</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('auth.complete_oauth') }}">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Email của bạn</label>
+                                <input type="text" class="form-control py-2 bg-light" value="{{ email }}" disabled readonly>
+                                <div class="form-text">Email được lấy từ tài khoản mạng xã hội của bạn.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="username" class="form-label fw-bold small text-uppercase text-muted">Tên đăng nhập mong muốn</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control py-2" id="username" name="username" 
+                                           placeholder="Ví dụ: dulich123" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm">
+                                TẠO TÀI KHOẢN
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

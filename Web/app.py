@@ -109,7 +109,7 @@ def account_page():
     username = session['username']
 
     user_posts = get_food_posts_by_user(user_id)
-    return render_template('account.html', username=username,p osts=user_posts)
+    return render_template('account.html', username=username,posts=user_posts)
 
 
 # User đăng bài đánh giá các món ăn, kết quả trả về là quay lại trang your_account
