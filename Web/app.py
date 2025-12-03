@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_super_secret_key_here_for_session_management' 
 
 # Cấu hình thư mục tải lên ảnh
-UPLOAD_FOLDER = 'Web/Integrate UI and Chatbot/static/images/user_uploads'
+UPLOAD_FOLDER = 'static/images/user_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 

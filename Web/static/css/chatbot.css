@@ -171,7 +171,7 @@ body.dark #themeToggleBtn {
     font-size: 1.1rem;
 }
 
-.card-food .food-location, .food-rating, .food-distance, .food-description {
+.card-food .food-location, .food-rating, .food-distance, .food-description, .food-budget {
     margin: 0.2em 0;
     font-size: 0.95rem;
     color: #0e0d0d;
@@ -379,10 +379,10 @@ body.dark .card-food .food-name {
     color: #fff;
 }
 
-/* Các thông tin phụ (Địa chỉ, giờ mở, v.v.) */
+/* Các thông tin phụ (Địa chỉ, giờ mở, v.v.)
 body.dark .card-food .food-location {
-    color: #ccc; /* Màu xám sáng dễ đọc */
-}
+    color: #ccc; /* Màu xám sáng dễ đọc
+} */
 
 /* Nút Location tròn trên thẻ */
 body.dark .location-btn {
@@ -400,7 +400,8 @@ body.dark .modal .btn-close {
 body.dark .food-location,
 body.dark .food-rating,
 body.dark .food-distance,
-body.dark .food-description {
+body.dark .food-description,
+body.dark .food-budget {
     margin: 0.2em 0;
     font-size: 0.95rem;
     color: whitesmoke;

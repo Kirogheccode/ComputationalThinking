@@ -545,6 +545,7 @@ function renderFoodCards(container, data) {
             <h5 class="food-name">${food.Name}</h5>
             <p class="food-location">Địa chỉ: ${food.Address}</p>
             <p class="food-rating">Đánh giá: ${food.Rating} ⭐</p>
+            <p class = "food-budget">Mức giá: ${food.Budget} </p>
             <p class="food-description">Mô tả: ${food.Description}</p>
             <p class="food-distance">Khoảng cách: ${food.distance_km} km</p>
         </div>

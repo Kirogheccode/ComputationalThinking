@@ -5,11 +5,9 @@ import json
 import sqlite3
 import math
 import requests  
-import chromadb
 import pandas as pd
 from dotenv import load_dotenv
 import google.generativeai as genai
-from sentence_transformers import SentenceTransformer
 
 # --- 1. CONFIGURATION AND GLOBAL DATA LOADING ---
 
@@ -28,11 +26,35 @@ if not GEOAPIFY_API_KEY:
     print("Error: GEOAPIFY_API_KEY not found. Please check your .env file.")
     exit()
 
-# Load the embedding model once when the bot starts
-print("Loading embedding model...")
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
-print("Model loaded.")
-
+DIET_RULES = {
+    "vegan": {
+        "allowed": ["vegetables", "fruits", "grains", "legumes", "nuts", "seeds", "tofu", "plant oils"],
+        "prohibited": ["meat", "poultry", "fish", "seafood", "dairy", "eggs", "honey", "animal gelatin",
+                       "fish sauce (nước mắm)"],
+        "description": "Strict plant-based diet. No animal products whatsoever."
+    },
+    "vegetarian": {
+        "allowed": ["vegetables", "fruits", "grains", "legumes", "dairy", "eggs", "honey"],
+        "prohibited": ["meat", "poultry", "fish", "seafood", "animal gelatin", "traditional fish sauce"],
+        "description": "No meat or seafood. Dairy and eggs are usually okay (Lacto-Ovo)."
+    },
+    "halal": {
+        "allowed": ["halal meat (beef, lamb, chicken)", "fish", "seafood", "vegetables", "fruit", "grains"],
+        "prohibited": ["pork (heo)", "lard", "blood", "alcohol (rượu/bia)",
+                       "meat not slaughtered according to islamic rites"],
+        "description": "Islamic dietary laws. STRICTLY NO PORK or ALCOHOL."
+    },
+    "hindu": {
+        "allowed": ["vegetables", "dairy", "grains", "chicken (some)", "lamb (some)", "fish (some)"],
+        "prohibited": ["beef (bò)", "pork (often avoided)", "alcohol (often avoided)"],
+        "description": "Hindu dietary customs. STRICTLY NO BEEF. Many Hindus are also vegetarian."
+    },
+    "kosher": {
+        "allowed": ["kosher meat (beef, lamb, poultry)", "fish with scales"],
+        "prohibited": ["pork", "shellfish (shrimp, crab, lobster)", "mixing meat and dairy"],
+        "description": "Jewish dietary laws. No pork or shellfish. Never mix meat and milk."
+    }
+}
 
 # --- 2. HELPER FUNCTIONS (These were missing!) ---
 
@@ -107,8 +129,8 @@ def get_bounding_box(lat, lon, distance_km):
 def handle_culture_query(prompt):
     print("-> Executing: Culture Query")
     system_context = (
-        "You are a friendly and knowledgeable Vietnamese cultural expert. "
-        "Answer the user's question clearly, concisely, and with a respectful tone."
+        "You are a Vietnamese cultural expert. Answer clearly. "
+        "If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
     )
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content([system_context, prompt])
@@ -117,20 +139,12 @@ def handle_culture_query(prompt):
 
 def route_user_request(prompt):
     system_context = (
-        "You are a helpful travel assistant AI for Vietnam. "
-        "Your job is to analyze the user's prompt and classify their intent into one of three tasks. "
-        "You must also extract any relevant entities."
-        "Always respond in the same language that the user used in their query."
-        "\n"
-        "The 3 tasks are:\n"
-        "1. 'culture_query': User is asking for general information.\n"
-        "2. 'food_recommendation': User is asking for a *type* of food (recipe or dish suggestion).\n"
-        "3. 'restaurant_recommendation': User is asking for a specific *place* to eat.\n"
-        "\n"
-        "**Extraction Rules:**\n"
-        "- If the task is 'restaurant_recommendation', the 'cuisine' is the specific food (e.g., 'Cơm tấm').\n"
-        "- The 'location' is the geographical area (e.g., 'district 5').\n"
-        "- If a field is not present, set its value to 'none'."
+        "You are a travel assistant. Classify intent into: 'culture_query', 'food_recommendation', 'restaurant_recommendation', 'daily_menu'.\n"
+        "Extract entities:\n"
+        "- 'location': specific area (e.g., 'District 1')\n"
+        "- 'cuisine': specific dish (e.g., 'Pho')\n"
+        "- 'diet_ingredient': restrictions (e.g., 'vegan', 'halal')\n"
+        "- 'budget': price preference (e.g., 'cheap', 'street food', 'luxury', 'under 50k'). Default 'none'."
     )
 
     schema = {
@@ -139,7 +153,8 @@ def route_user_request(prompt):
             "task": {"type": "STRING"},
             "location": {"type": "STRING"},
             "cuisine": {"type": "STRING"},
-            "diet_ingredient": {"type": "STRING"}
+            "diet_ingredient": {"type": "STRING"},
+            "budget": {"type": "STRING"}
         },
         "required": ["task"]
     }
@@ -163,6 +178,7 @@ def route_user_request(prompt):
 def handle_restaurant_recommendation(prompt, entities):
     location = entities.get('location')
     cuisine = entities.get('cuisine')
+    budget = entities.get('budget','any')
 
     print(f"-> Executing: Restaurant Recommendation (Location: {location}, Cuisine: {cuisine})")
 
@@ -193,7 +209,7 @@ def handle_restaurant_recommendation(prompt, entities):
 
     # 3. Process & Filter
     results = []
-    search_term = cuisine.lower() if cuisine else ""
+    search_term = cuisine.lower() if cuisine and cuisine != 'none' else ""
 
     for row in rows:
         rest = dict(row)
@@ -226,11 +242,10 @@ def handle_restaurant_recommendation(prompt, entities):
     if not results:
         print("-> No matches in DB. Switching to Cultural Fallback.")
         fallback_system_context = (
-            "You are a knowledgeable local guide for Vietnam. "
-            "The user asked for a specific restaurant or dish in a specific location, but your local database returned ZERO matches. "
-            "1. First, politely inform the user that you don't have specific restaurant data for that request in your current database. "
-            "2. Then, pivot to providing helpful **General/Cultural Knowledge** about the food they asked for. "
-            "Describe what the dish is, its history, or general tips on where to find it in Vietnam (e.g., 'You can usually find this dish in street stalls...')."
+             f"User asked for '{cuisine}' near '{location}' (Budget: {budget}). No DB matches.\n"
+            "1. Politely apologize for missing data.\n"
+            "2. Provide general cultural info about the dish.\n"
+            "3. **Estimate the typical price** for this dish in Vietnam (e.g. 'Usually 30k-50k')."
         )
         response = model.generate_content([fallback_system_context, f"User Query: {prompt}"])
         return response.text
@@ -249,9 +264,15 @@ def handle_restaurant_recommendation(prompt, entities):
         "The JSON includes an 'img' field containing an image path. For example 'foody_images/img_name.jpg' "
         "The JSON includes a 'distance_km' field showing how far the restaurant is from the user. "
         "Mention this distance in your answer. "
-        "Always respond in the same language that the user used in their query."
+        "For EACH restaurant, based on its name/type (e.g. 'Cơm Tấm' vs 'Nhà Hàng'), provide an **Estimated Cost** range in VND.\n"
+        "- Street Food/Bình Dân: ~30k - 60k VND\n"
+        "- Mid-range: ~80k - 150k VND\n"
+        "- High-end: >200k VND\n"
+        "Check if the estimated cost matches the User's Budget. If not, mention it (e.g. 'This is a bit pricier than your request').\n\n"
+        "Always respond in the same language that the user used in their query.\n"
         f"USER LOCATION: {location}\n"
         f"USER CUISINE: {cuisine}\n"
+        f"USER BUDGET: {budget}\n"
         f"DATABASE:\n{restaurant_context}"
     )
 
@@ -267,6 +288,7 @@ def handle_restaurant_recommendation(prompt, entities):
                         "Name": {"type": "STRING"},
                         "Address": {"type": "STRING"},
                         "Rating": {"type": "NUMBER"},
+                        "Budget": {"type":"NUMBER"},
                         "distance_km": {"type": "NUMBER"},
                         "Description": {"type": "STRING"},  # <--- THÊM Ở ĐÂY
                         "img": {"type": "STRING"}
@@ -300,49 +322,42 @@ def handle_food_recommendation(prompt, entities):
     Mission 2: Recommends a dish using RAG.
     Smartly falls back to General Knowledge within the same prompt if RAG fails.
     """
-    diet = entities.get('diet_ingredient')
+    diet = entities.get('diet_ingredient','General')
+    budget = entities.get('budget','any')
     print(f"-> Executing: Food Recommendation (Diet: {diet})")
 
-    # Connect to ChromaDB
-    found_recipes_text = []
-    try:
-        db_client = chromadb.PersistentClient(path="chroma_db")
-        collection = db_client.get_collection(name="recipes")
-
-        # Embed Search
-        search_text = f"{prompt} {diet}"
-        query_embedding = embedder.encode(search_text).tolist()
-
-        # Query (Always returns results even if irrelevant)
-        results = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=5
-        )
-
-        if results['documents']:
-            found_recipes_text = results['documents'][0]
-
-    except Exception as e:
-        print(f"Warning: RAG Error ({e}). Proceeding to fallback.")
 
     # --- THE FIX: A "Smart" Prompt that handles both cases ---
     system_context = (
-            "Always respond in the same language that the user used in their query."
-            "You are a Vietnamese food expert. The user is asking for: " + prompt + "\n"
-                                                                                    "Below are recipes from your local database that matched the keywords (RAG Context).\n\n"
-                                                                                    "**CRITICAL INSTRUCTION:**\n"
-                                                                                    "1. check if the 'SEARCH RESULTS' actually contain the specific dish the user asked for.\n"
-                                                                                    "2. **IF MATCH FOUND:** Use the search results to recommend the dish.\n"
-                                                                                    "3. **IF NO MATCH FOUND:** IGNORE the search results completely. Do NOT say 'I don't have information'. "
-                                                                                    "Instead, use your own **General Cultural Knowledge** to describe the dish, its ingredients, and how it is eaten.\n\n"
-                                                                                    "SEARCH RESULTS (RAG Context):\n" +
-            "\n---\n".join(found_recipes_text)
+        f"User wants a food suggestion. Request: {prompt}\n"
+        f"Diet: {diet}. Budget: {budget}.\n"
+        "--------------------------------------------------\n"
+        "1. Recommend 3 authentic Vietnamese dishes.\n"
+        "2. **Safety Check:** Explain WHY it fits the diet (e.g. 'Safe for Halal because...').\n"
+        "3. **Cost Estimation:** Provide a typical price range for this dish (Street vs Restaurant price).\n"
+        "4. **Nutrient Detail:** Est. Calories/Protein/Carbs/Fat."
     )
 
     model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content([system_context, "User Request: " + prompt])
     return response.text
 
+def handle_daily_menu(prompt, entities):
+    budget = entities.get('budget', 'any')
+    print(f"-> Daily Menu: Budget {budget}")
+
+    # Simplified logic: Let Gemini act as the Chef using general knowledge
+    model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+    sys_msg = (
+        f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner).\n"
+        f"Budget Level: {budget}.\n"
+        "1. Suggest specific dishes.\n"
+        "2. **Total Cost:** Estimate the total daily cost in VND based on the budget level.\n"
+        "3. **Nutrients:** Calculate approx total calories/protein for the day."
+    )
+    return model.generate_content([sys_msg, prompt]).text
 
 # --- 4. MAIN LOOP ---
 
@@ -391,7 +406,9 @@ def replyToUser(data):
             result = handle_restaurant_recommendation(message_text, task_data)
             reply_text = result["text"]
             food_data = result["restaurants"]     # ✔ Trả ra danh sách quán ăn
-
+        elif task_type == 'daily_menu':
+            result = handle_daily_menu(message_text,task_data)
+            food_data = []
         else:
             reply_text = "Xin lỗi, tôi chưa hiểu yêu cầu của bạn."
             food_data = []
