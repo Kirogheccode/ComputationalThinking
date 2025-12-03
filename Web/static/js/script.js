@@ -319,12 +319,17 @@ async function sendImage(text) {
     previewImg.src = '';
     previewWrapper.classList.add('d-none');
     imageInput.value = '';
+    
+    displayUserMessage(text,chatWindow);
+    if (userInput) {
+        userInput.value = '';
+    }
 
     // 2. Tạo loading bubble cho bot
     createLoadingBubble(chatWindow);
-
-    // 3. Gửi ảnh lên backend (nếu có API)
-    let botText = "";
+   
+    // 3.1. Gửi ảnh lên backend (nếu có API) để nhận diện
+    let botText1 = "";
     let food_predict = "";
     try {
         const formData = new FormData();
@@ -336,24 +341,59 @@ async function sendImage(text) {
         });
 
         const data = await response.json();
-        botText = data.message;
+        botText1 = data.message;
         food_predict = data.food_name;
     } catch (err) {
         console.error("Lỗi khi gửi ảnh:", err);
-        botText = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
+        botText1 = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
     }
+    
+    // 3.2. Gửi câu prompt lên API để xử lý và trả lời
+    let botText2 = "";
+    let messageText = (food_predict || '') + " " + (text || '');
+    try {
+        // Gửi yêu cầu POST đến endpoint /api/chat của Flask
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // Gửi tin nhắn dưới dạng JSON
+            body: JSON.stringify({ message: messageText })
+        });
 
+        if (!response.ok) {
+            // Xử lý lỗi nếu server trả về 4xx, 5xx
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Nhận dữ liệu JSON trả về
+        const data = await response.json();
+        console.log("DEBUG: toàn bộ data nhận về từ API:", data);
+            
+        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
+        botText2 = data.reply;
+
+        // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
+        // để chúng hiển thị đúng trong HTML
+        botText2 = botText2.replace(/\n/g, '<br>');
+        const container = document.getElementById("carousel");
+        renderFoodCards(container, data.food_data);
+
+    }
+    catch (err) {
+        console.error("Lỗi khi gọi API:", err);
+        botText2 = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
+    }
     // 4. Xoá loading bubble
     removeLoadingBubble();
-
+    let botText = botText1 + "<br>" + botText2;
     // 5. Hiển thị tin nhắn trả lời từ bot
     displayBotMessage(botText, chatWindow);
 
     // 6. Reset preview và input
     uploadedImage = null;
-
-    const combinedText = (food_predict || '') + " " + (text || '') ;
-    sendText(combinedText);
+    isProcess = false;
 }
 
 function showNotification(text) {
