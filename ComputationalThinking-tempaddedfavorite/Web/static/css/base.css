@@ -1,0 +1,139 @@
+:root {
+  /* Light theme variables */
+  --color-bg: #faf7f3;
+  --color-text: #222;
+  --color-muted: #6c6c6c;
+  --color-card: #fff;
+  --color-card-shadow: rgba(12, 12, 12, 0.08);
+  --brand-primary: #ff7b00;
+  --brand-secondary: #ffb84c;
+  --gradient-hero: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.45));
+}
+
+body {
+    padding-top: 72px; /* Height of the fixed navbar */
+    background: linear-gradient(135deg, #c0fdfb, #ffb347);
+    min-height: 100vh;
+    font-family: 'Verdana', 'Segoe UI', sans-serif;
+    transition: background 0.35s ease, color 0.35s ease;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* NAVBAR */
+.navbar {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  transition: background 0.3s ease;
+}
+.navbar .nav-link {
+  color: black;
+  transition: color 0.2s;
+}
+
+.navbar .nav-link:hover {
+  color: var(--brand-secondary);
+}
+
+.brand-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: black;
+    transition: color 0.2s;
+}
+
+.brand-title:hover{
+  color: var(--brand-secondary);
+}
+
+.brand-logo {
+    height: 48px;                 /* chiều cao logo */
+    width: auto;                   /* giữ tỉ lệ */
+    margin-bottom: 4px;            /* khoảng cách với text */
+    display: block;
+}
+
+.footer {
+    background: linear-gradient(180deg, #0e0e10, #070707); /* giữ dark gradient hiện tại */
+    color: #ccc;
+    margin-top: 48px;
+    border-radius: 12px;
+    padding-top: 24px;
+    border-top: 3px solid #ffb347; /* border ngang màu cam ấm nổi bật */
+}
+
+/* Kiểu dáng chung cho card trên trang đăng nhập/đăng ký/tài khoản */
+.card.shadow-lg {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    background-color: var(--color-card); /* Sử dụng biến đã định nghĩa */
+    color: var(--color-text); /* Sử dụng biến đã định nghĩa */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Kiểu dáng cho form controls */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+}
+
+/* Nút primary */
+.btn-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn-primary:hover {
+    background-color: #e66a00; /* Màu tối hơn của brand-primary */
+    border-color: #e66a00;
+    transform: translateY(-2px);
+}
+
+/* Nút success */
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #218838;
+    transform: translateY(-2px);
+}
+
+/* Trang account - post card */
+.post-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.post-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.post-card img.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+.post-card .card-body {
+    padding: 1rem;
+}
+.post-card .card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.post-card .card-text.small {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+}
