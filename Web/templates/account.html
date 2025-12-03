@@ -1,0 +1,128 @@
+<!-- account.html -->
+{% extends "base.html" %}
+
+{% block title %}Tài khoản của bạn{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1>Chào mừng, {{ username }}!</h1>
+        <p class="lead">Đây là nhật ký hành trình ẩm thực của bạn.</p>
+    </div>
+
+    <div class="row">
+        <!-- Phần thêm bài đăng mới -->
+        <div class="col-lg-12 mb-5">
+            <div class="card shadow-sm p-4">
+                <h3 class="mb-4">Chia sẻ trải nghiệm ẩm thực của bạn</h3>
+                <form method="POST" action="{{ url_for('post_account') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="food_name" class="form-label">Tên món ăn / Quán ăn</label>
+                        <input type="text" class="form-control" id="food_name" name="food_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Đánh giá của bạn</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Hình ảnh món ăn (tùy chọn)</label>
+                        <input class="form-control" type="file" id="image" name="image" accept="image/*">
+                        <small class="text-muted">Chỉ chấp nhận .png, .jpg, .jpeg, .gif</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">Đăng bài</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Phần hiển thị các bài đăng của người dùng -->
+        <div class="col-lg-12">
+            <h3 class="mb-4">Bài đăng của bạn</h3>
+            {% if posts %}
+                <div class="row">
+                    {% for post in posts %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 shadow-sm post-card" data-place-id="{{ post.food_name }}">
+                            {% if post.image_filename %}
+                            <img src="{{ url_for('static', filename=post.image_filename) }}" class="card-img-top" alt="{{ post.food_name }}">
+                            {% else %}
+                            <img src="{{ url_for('static', filename='images/default_food.jpg') }}" class="card-img-top" alt="No image">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ post.food_name }}</h5>
+                                <p class="card-text small text-muted">Đăng bởi {{ post.username }} vào {{ post.posted_at }}</p>
+                                <p class="card-text">{{ post.description }}</p>
+
+                                <!-- Favorite / Unfavorite Button -->
+                                {% set is_fav = false %}
+                                {% for fav in favorites %}
+                                    {% if fav['place_id'] == post.food_name %}
+                                        {% set is_fav = true %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if is_fav %}
+                                <button class="btn btn-outline-danger unfavorite-btn">💔 Bỏ yêu thích</button>
+                                {% else %}
+                                <button class="btn btn-outline-primary favorite-btn">❤️ Yêu thích</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center text-muted">Bạn chưa có bài đăng nào. Hãy chia sẻ trải nghiệm đầu tiên của bạn!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const container = document.querySelector(".row");
+
+    container.addEventListener("click", function(e) {
+        const btn = e.target.closest(".favorite-btn, .unfavorite-btn");
+        if (!btn) return;
+
+        const card = btn.closest(".post-card");
+        const placeId = card.dataset.placeId;
+        const placeName = card.querySelector(".card-title").innerText;
+
+        if (btn.classList.contains("favorite-btn")) {
+            fetch("/favorite/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ place_id: placeId, place_name: placeName })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success"){
+                    btn.innerText = "💔 Bỏ yêu thích";
+                    btn.classList.remove("favorite-btn", "btn-outline-primary");
+                    btn.classList.add("unfavorite-btn", "btn-outline-danger");
+                } else {
+                    alert(data.message || "Lỗi thêm yêu thích!");
+                }
+            });
+        } else if (btn.classList.contains("unfavorite-btn")) {
+            fetch("/favorite/remove", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ place_id: placeId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success"){
+                    btn.innerText = "❤️ Yêu thích";
+                    btn.classList.remove("unfavorite-btn", "btn-outline-danger");
+                    btn.classList.add("favorite-btn", "btn-outline-primary");
+                } else {
+                    alert(data.message || "Lỗi bỏ yêu thích!");
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
