@@ -1,10 +1,14 @@
 /* static/css/verify_otp.css */
 
 .otp-container {
-    min-height: 80vh;
+    /* Tương tự */
+    min-height: 35vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    /* Kéo lên */
+    margin-top: -3rem;
 }
 
 .otp-card {
@@ -16,9 +20,14 @@
     text-align: center;
     position: relative;
     overflow: hidden;
+    /* Đã XÓA transition */
 }
 
-/* Thanh trang trí trên đầu card */
+/* Tắt hiệu ứng hover */
+.otp-card:hover {
+    transform: none !important;
+}
+
 .otp-card::before {
     content: '';
     position: absolute;
@@ -40,10 +49,9 @@
     font-size: 2rem;
 }
 
-/* Ô nhập OTP đặc biệt */
 .otp-input {
     font-size: 2rem;
-    letter-spacing: 15px; /* Giãn cách số */
+    letter-spacing: 15px;
     text-align: center;
     font-weight: bold;
     border: 2px solid #e9ecef;
@@ -75,7 +83,7 @@ body.dark .otp-card {
 body.dark .otp-input {
     background-color: #1e2526;
     border-color: #636e72;
-    color: #0dcaf0; /* Màu số sáng hơn cho nổi */
+    color: #0dcaf0;
 }
 
 body.dark .otp-input:focus {

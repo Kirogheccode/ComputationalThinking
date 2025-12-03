@@ -1,24 +1,32 @@
 /* static/css/register.css */
 
 .register-container {
-    min-height: 85vh;
+    /* Thay đổi min-height và thêm margin-top âm */
+    min-height: 35vh; 
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    /* Dòng này giúp kéo khung lên trên để bù trừ cho khoảng cách của base.html */
+    margin-top: -3rem; 
 }
 
+/* ... (Các phần code dưới giữ nguyên, chỉ sửa block .register-container ở trên thôi) ... */
 .register-card {
     border: none;
     border-radius: 20px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     background-color: #fff;
-    transition: all 0.3s ease;
+    /* transition: all 0.3s ease; -> ĐÃ XÓA */
 }
 
-/* Ảnh bên phải (đổi vị trí so với login cho lạ mắt) hoặc giữ bên trái */
+.register-card:hover {
+    transform: none !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
 .register-image-side {
-    /* Ảnh nguyên liệu/nấu ăn */
     background-image: url('https://images.unsplash.com/photo-1556910103-1c02745a30bf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
     background-size: cover;
     background-position: center;
@@ -37,7 +45,6 @@
     padding: 40px 50px;
 }
 
-/* Input Styles - Giống Login để đồng bộ */
 .input-group-text {
     background: transparent;
     border-right: none;
