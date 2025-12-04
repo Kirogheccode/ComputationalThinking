@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 
 # 🔹 Đồng bộ DB với database.py / app.py
-DB_PATH = "Web/Integrate UI and Chatbot/smart_tourism.db"
+DB_PATH = "smart_tourism.db"
 
 def add_favorite(user_id, place_id, place_name):
     conn = sqlite3.connect(DB_PATH)

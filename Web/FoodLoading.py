@@ -1,6 +1,6 @@
 import sqlite3
 
-def load_foods_from_sqlite(db_path="Web/foody_data.sqlite"):
+def load_foods_from_sqlite(db_path="foody_data.sqlite"):
     foods = []
 
     conn = sqlite3.connect(db_path)

@@ -543,11 +543,11 @@ function renderFoodCards(container, data) {
         <img src="${imageSrc}" alt="${food.Name}">
         <div class="food-info">
             <h5 class="food-name">${food.Name}</h5>
-            <p class="food-location">Địa chỉ: ${food.Address}</p>
-            <p class="food-rating">Đánh giá: ${food.Rating} ⭐</p>
-            <p class = "food-budget">Mức giá: ${food.Budget} </p>
-            <p class="food-description">Mô tả: ${food.Description}</p>
-            <p class="food-distance">Khoảng cách: ${food.distance_km} km</p>
+            <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
+            <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
+            <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
+            <p class="food-description"><b>Mô tả<b>: ${food.Description}</p>
+            <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
         </div>
         <button class="location-btn location-dot"
                 title="Xem trên bản đồ"

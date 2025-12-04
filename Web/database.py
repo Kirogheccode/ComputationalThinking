@@ -5,7 +5,7 @@ import uuid
 import random
 from werkzeug.security import generate_password_hash
 
-DATABASE = 'Web/Integrate UI and Chatbot/smart_tourism.db'
+DATABASE = 'smart_tourism.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)

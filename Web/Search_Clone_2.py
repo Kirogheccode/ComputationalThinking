@@ -6,7 +6,6 @@ import json
 import sqlite3
 import math
 import requests  
-import pandas as pd
 from dotenv import load_dotenv
 import google.generativeai as genai
 

@@ -7,8 +7,6 @@ from FoodLoading import load_foods_from_sqlite
 import math
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from werkzeug.utils import secure_filename
-import sys
-import requests
 from Search_Clone_2 import replyToUser
 from extensions import oauth
 from database import (
@@ -51,7 +49,7 @@ with app.app_context():
 
 # Dữ liệu mẫu về các món ăn
 # Trong một dự án thực tế, dữ liệu này nên được lấy từ database
-foods_data = load_foods_from_sqlite("Web/foody_data.sqlite")
+foods_data = load_foods_from_sqlite("foody_data.sqlite")
 
 @app.route("/")
 def index():
