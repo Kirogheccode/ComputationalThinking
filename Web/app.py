@@ -53,35 +53,37 @@ with app.app_context():
 # Trong một dự án thực tế, dữ liệu này nên được lấy từ database
 foods_data = load_foods_from_sqlite("Web/foody_data.sqlite")
 
-# Route cho trang chủ
 @app.route("/")
 def index():
     import re
     page = int(request.args.get("page", 1))
-    area = request.args.get("area", "all").strip()  # "Quận 1", "Bình Thạnh", v.v
+    area = request.args.get("area", "all").strip()
     q = request.args.get("q", "").strip().lower()
 
-    filtered_foods = []
+    # --- ĐOẠN MỚI THÊM: Lấy danh sách ID quán đã yêu thích ---
+    favorite_ids = []
+    if 'user_id' in session:
+        # Lấy list dict favorites, sau đó trích xuất place_id ra list riêng
+        # Lưu ý: Chuyển về string để dễ so sánh trong template
+        user_favs = get_favorites_by_user(session['user_id'])
+        favorite_ids = [str(item['place_id']) for item in user_favs]
+    # ---------------------------------------------------------
 
+    filtered_foods = []
     for food in foods_data:
-        location = food["location"].strip()  # ví dụ: "130 Thành Thái, P.12, Quận 10, TP. HCM"
+        location = food["location"].strip()
         name = food["name"].strip().lower()
 
-        # 1. Filter theo area
         if area.lower() != "all":
-            # Dùng regex để match tên quận chính xác (không match nhầm "Quận 1" trong "Quận 10")
-            # Regex \b giúp match ranh giới từ
             pattern = r'\b{}\b'.format(re.escape(area.lower()))
             if not re.search(pattern, location.lower()):
                 continue
 
-        # 2. Filter theo search text
         if q and q not in name:
             continue
 
         filtered_foods.append(food)
 
-    # Pagination
     per_page = 9
     total_pages = math.ceil(len(filtered_foods) / per_page)
     foods_to_render = filtered_foods[(page-1)*per_page : page*per_page]
@@ -92,7 +94,8 @@ def index():
         page=page,
         total_pages=total_pages,
         area_selected=area,
-        search_query=q
+        search_query=q,
+        favorite_ids=favorite_ids  # <--- Truyền biến này sang HTML
     )
 
 # Route cho trang bản đồ
@@ -126,8 +129,45 @@ def account_page():
     user_id = session['user_id']
     username = session['username']
 
+    # 1. Lấy các bài viết
     user_posts = get_food_posts_by_user(user_id)
-    return render_template('account.html', username=username, posts=user_posts)
+    
+    # 2. Lấy danh sách yêu thích thô (chỉ có ID, tên, ngày)
+    raw_favorites = get_favorites_by_user(user_id) 
+
+    # 3. Ghép thông tin chi tiết (Ảnh, Rating, Địa chỉ) từ foods_data
+    enriched_favorites = []
+    
+    for fav in raw_favorites:
+        fav_id = str(fav['place_id']) # Chuyển về string để so sánh
+        
+        # Tìm món ăn trong foods_data khớp ID
+        # (foods_data là biến toàn cục đã load từ FoodLoading.py ở đầu file)
+        found_food = next((f for f in foods_data if str(f['id']) == fav_id), None)
+        
+        if found_food:
+            # Nếu tìm thấy, lấy thông tin chi tiết bỏ vào
+            enriched_favorites.append({
+                "place_id": fav['place_id'],
+                "place_name": fav['place_name'],
+                "created_at": fav['created_at'],
+                "image": found_food['image'],       # Lấy ảnh
+                "location": found_food['location'], # Lấy địa chỉ
+                "rating": found_food['rating']      # Lấy rating
+            })
+        else:
+            # Dự phòng nếu không tìm thấy (ví dụ quán đã bị xóa khỏi data gốc)
+            enriched_favorites.append({
+                "place_id": fav['place_id'],
+                "place_name": fav['place_name'],
+                "created_at": fav['created_at'],
+                "image": "images/restaurant_placeholder.jpg",
+                "location": "Thông tin chưa cập nhật",
+                "rating": "N/A"
+            })
+
+    # Truyền danh sách đã ghép (enriched_favorites) sang template
+    return render_template('account.html', username=username, posts=user_posts, favorites=enriched_favorites)
 
 
 # User đăng bài đánh giá các món ăn, kết quả trả về là quay lại trang your_account

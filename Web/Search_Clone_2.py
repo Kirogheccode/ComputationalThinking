@@ -1,4 +1,5 @@
 import os
+# Tắt oneDNN optimizations của TensorFlow để tránh xung đột (nếu có dùng thư viện liên quan)
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
 import json
@@ -9,23 +10,26 @@ import pandas as pd
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-# --- 1. CONFIGURATION AND GLOBAL DATA LOADING ---
+# --- 1. CẤU HÌNH VÀ TẢI DỮ LIỆU TOÀN CỤC ---
 
-# Load .env file (for GOOGLE_API_KEY)
+# Tải biến môi trường từ file .env
 load_dotenv()
 GOOGLE_API = os.getenv("GOOGLE_API")
-GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API")  # <--- Added back
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API")
 
+# Cấu hình Gemini AI
 if GOOGLE_API:
     genai.configure(api_key=GOOGLE_API)
 else:
     print("Error: GOOGLE_API_KEY not found. Please check your .env file.")
-    exit()
+    # Trong môi trường production, có thể không muốn exit ngay, nhưng giữ nguyên logic cũ
+    # exit() 
 
 if not GEOAPIFY_API_KEY:
     print("Error: GEOAPIFY_API_KEY not found. Please check your .env file.")
-    exit()
+    # exit()
 
+# Định nghĩa các luật ăn kiêng (Dùng cho context của Gemini)
 DIET_RULES = {
     "vegan": {
         "allowed": ["vegetables", "fruits", "grains", "legumes", "nuts", "seeds", "tofu", "plant oils"],
@@ -56,30 +60,30 @@ DIET_RULES = {
     }
 }
 
-# --- 2. HELPER FUNCTIONS (These were missing!) ---
+# --- 2. CÁC HÀM HỖ TRỢ (HELPER FUNCTIONS) ---
 
 def haversine(lat1, lon1, lat2, lon2):
     """
-    Calculate the great circle distance in kilometers between two points
-    on the earth (specified in decimal degrees)
+    Tính khoảng cách đường tròn lớn (great circle distance) giữa hai điểm 
+    trên trái đất (tính bằng độ thập phân).
     """
-    # convert decimal degrees to radians
+    # Chuyển đổi độ thập phân sang radian
     lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
 
-    # haversine formula
+    # Công thức haversine
     dlon = lon2 - lon1
     dlat = lat2 - lat1
     a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
     c = 2 * math.asin(math.sqrt(a))
-    r = 6371  # Radius of earth in kilometers.
+    r = 6371  # Bán kính trái đất tính bằng km
     return c * r
 
 
 def get_coords_for_location(location_name):
     """
-    Uses Geoapify to geocode a user's location query (e.g., "District 1")
+    Sử dụng Geoapify để lấy tọa độ từ tên địa điểm (ví dụ: "District 1")
     """
-    # Bias search results to Ho Chi Minh City
+    # Ưu tiên kết quả tìm kiếm tại TP. Hồ Chí Minh
     HCMC_LON = 106.660172
     HCMC_LAT = 10.762622
 
@@ -109,11 +113,11 @@ def get_coords_for_location(location_name):
 
 def get_bounding_box(lat, lon, distance_km):
     """
-    Creates a square bounding box around a point.
-    1 degree of latitude is ~111km.
+    Tạo một khung bao (bounding box) hình vuông quanh một điểm.
+    1 độ vĩ độ ~ 111km.
     """
     lat_change = distance_km / 111.0
-    # Longitude change depends on the latitude (cosine factor)
+    # Thay đổi kinh độ phụ thuộc vào vĩ độ (nhân tố cos)
     lon_change = distance_km / (111.0 * math.cos(math.radians(lat)))
 
     return {
@@ -124,7 +128,7 @@ def get_bounding_box(lat, lon, distance_km):
     }
 
 
-# --- 3. MISSION HANDLERS ---
+# --- 3. CÁC HÀM XỬ LÝ NHIỆM VỤ (MISSION HANDLERS) ---
 
 def handle_culture_query(prompt):
     print("-> Executing: Culture Query")
@@ -138,6 +142,9 @@ def handle_culture_query(prompt):
 
 
 def route_user_request(prompt):
+    """
+    Phân loại ý định người dùng và trích xuất thực thể.
+    """
     system_context = (
         "You are a travel assistant. Classify intent into: 'culture_query', 'food_recommendation', 'restaurant_recommendation', 'daily_menu'.\n"
         "Extract entities:\n"
@@ -186,6 +193,7 @@ def handle_restaurant_recommendation(prompt, entities):
     if location and location.lower() != 'none':
         user_lat, user_lon = get_coords_for_location(location)
 
+    # Kết nối Database
     conn = sqlite3.connect('foody_data.sqlite')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -194,6 +202,7 @@ def handle_restaurant_recommendation(prompt, entities):
     params = []
     conditions = []
 
+    # Lọc theo vị trí (Bounding Box) nếu có tọa độ
     if user_lat and user_lon:
         bbox = get_bounding_box(user_lat, user_lon, distance_km=10)
         conditions.append("Latitude BETWEEN ? AND ?")
@@ -207,7 +216,7 @@ def handle_restaurant_recommendation(prompt, entities):
     rows = cursor.fetchall()
     conn.close()
 
-    # 3. Process & Filter
+    # Xử lý & Lọc kết quả
     results = []
     search_term = cuisine.lower() if cuisine and cuisine != 'none' else ""
 
@@ -215,6 +224,7 @@ def handle_restaurant_recommendation(prompt, entities):
         rest = dict(row)
         rest_name = str(rest['Name']).lower()
 
+        # Lọc cơ bản theo tên món ăn/cuisine
         if search_term and search_term not in rest_name:
             continue
 
@@ -236,9 +246,9 @@ def handle_restaurant_recommendation(prompt, entities):
 
         results.append(rest)
 
-    # --- FALLBACK LOGIC STARTS HERE ---
     model = genai.GenerativeModel('gemini-2.5-flash')
 
+    # --- FALLBACK LOGIC ---
     if not results:
         print("-> No matches in DB. Switching to Cultural Fallback.")
         fallback_system_context = (
@@ -248,14 +258,18 @@ def handle_restaurant_recommendation(prompt, entities):
             "3. **Estimate the typical price** for this dish in Vietnam (e.g. 'Usually 30k-50k')."
         )
         response = model.generate_content([fallback_system_context, f"User Query: {prompt}"])
-        return response.text
-    # --- FALLBACK LOGIC ENDS HERE ---
+        # Trả về text giải thích, danh sách nhà hàng rỗng
+        return {
+            "text": response.text,
+            "restaurants": []
+        }
+    # --- END FALLBACK ---
 
-    # 4. Rank
+    # Xếp hạng: Ưu tiên Rating cao, sau đó đến khoảng cách gần
     results.sort(key=lambda x: (-x['Rating'], x['distance_km']))
     top_results = results[:50]
 
-    # 5. Send Database Results to Gemini
+    # Gửi kết quả từ Database cho Gemini để format
     restaurant_context = json.dumps(top_results, ensure_ascii=False)
 
     system_context = (
@@ -290,7 +304,7 @@ def handle_restaurant_recommendation(prompt, entities):
                         "Rating": {"type": "NUMBER"},
                         "Budget": {"type":"NUMBER"},
                         "distance_km": {"type": "NUMBER"},
-                        "Description": {"type": "STRING"},  # <--- THÊM Ở ĐÂY
+                        "Description": {"type": "STRING"}, 
                         "img": {"type": "STRING"}
                     },
                     "required": ["Name"]
@@ -300,7 +314,6 @@ def handle_restaurant_recommendation(prompt, entities):
         "required": ["recommendations"]
     }
 
-
     response = model.generate_content(
         [system_context, prompt],
         generation_config={
@@ -309,25 +322,27 @@ def handle_restaurant_recommendation(prompt, entities):
         }
     )
 
-    result = json.loads(response.text)
-
-    return {
-        "text": result.get("explanation", ""),
-        "restaurants": result.get("recommendations", [])
-    }
+    try:
+        result = json.loads(response.text)
+        return {
+            "text": result.get("explanation", ""),
+            "restaurants": result.get("recommendations", [])
+        }
+    except json.JSONDecodeError:
+        return {
+            "text": "Error parsing AI response.",
+            "restaurants": []
+        }
 
 
 def handle_food_recommendation(prompt, entities):
     """
-    Mission 2: Recommends a dish using RAG.
-    Smartly falls back to General Knowledge within the same prompt if RAG fails.
+    Nhiệm vụ 2: Gợi ý món ăn (RAG hoặc kiến thức chung)
     """
     diet = entities.get('diet_ingredient','General')
     budget = entities.get('budget','any')
     print(f"-> Executing: Food Recommendation (Diet: {diet})")
 
-
-    # --- THE FIX: A "Smart" Prompt that handles both cases ---
     system_context = (
         f"User wants a food suggestion. Request: {prompt}\n"
         f"Diet: {diet}. Budget: {budget}.\n"
@@ -342,13 +357,12 @@ def handle_food_recommendation(prompt, entities):
     response = model.generate_content([system_context, "User Request: " + prompt])
     return response.text
 
+
 def handle_daily_menu(prompt, entities):
     budget = entities.get('budget', 'any')
     print(f"-> Daily Menu: Budget {budget}")
 
-    # Simplified logic: Let Gemini act as the Chef using general knowledge
     model = genai.GenerativeModel('gemini-2.5-flash')
-
 
     sys_msg = (
         f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner).\n"
@@ -359,32 +373,14 @@ def handle_daily_menu(prompt, entities):
     )
     return model.generate_content([sys_msg, prompt]).text
 
-# --- 4. MAIN LOOP ---
 
-def main_chatbot():
-    print("\n--- 🤖 Welcome to the Vietnam Cultural & Food Consultant ---")
-    while True:
-        prompt = input("You: ")
-        if prompt.lower() in ['exit', 'quit']:
-            break
-
-        task_data = route_user_request(prompt)
-        task_type = task_data.get('task')
-
-        try:
-            if task_type == 'culture_query':
-                response = handle_culture_query(prompt)
-            elif task_type == 'food_recommendation':
-                response = handle_food_recommendation(prompt, task_data)
-            elif task_type == 'restaurant_recommendation':
-                response = handle_restaurant_recommendation(prompt, task_data)
-            else:
-                response = "I'm sorry, I'm not sure how to help with that."
-            print(f"\nGemini: {response}\n")
-        except Exception as e:
-            print(f"\nGemini: Error: {e}\n")
+# --- 4. VÒNG LẶP CHÍNH VÀ API ---
 
 def replyToUser(data):
+    """
+    Hàm API chính để giao tiếp với frontend/backend khác.
+    Output format: {"reply": string, "food_data": list}
+    """
     message_text = data.get('message', '').strip()
 
     if not message_text:
@@ -404,11 +400,19 @@ def replyToUser(data):
 
         elif task_type == 'restaurant_recommendation':
             result = handle_restaurant_recommendation(message_text, task_data)
-            reply_text = result["text"]
-            food_data = result["restaurants"]     # ✔ Trả ra danh sách quán ăn
+            # result có thể là dict từ handle_restaurant_recommendation hoặc text từ fallback
+            if isinstance(result, dict):
+                reply_text = result.get("text", "")
+                food_data = result.get("restaurants", [])
+            else:
+                # Trường hợp fallback trả về string thuần (nếu có lỗi logic cũ, giữ an toàn)
+                reply_text = str(result)
+                food_data = []
+
         elif task_type == 'daily_menu':
-            result = handle_daily_menu(message_text,task_data)
+            reply_text = handle_daily_menu(message_text, task_data)
             food_data = []
+            
         else:
             reply_text = "Xin lỗi, tôi chưa hiểu yêu cầu của bạn."
             food_data = []
@@ -424,3 +428,21 @@ def replyToUser(data):
             "reply": "Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau.",
             "food_data": []
         }
+
+# --- MAIN BLOCK CHO TESTING ---
+if __name__ == "__main__":
+    print("\n--- 🤖 Welcome to the Vietnam Cultural & Food Consultant ---")
+    while True:
+        prompt = input("You: ")
+        if prompt.lower() in ['exit', 'quit']:
+            break
+        
+        # Giả lập data input từ frontend
+        response_data = replyToUser({"message": prompt})
+        
+        print(f"\nGemini: {response_data['reply']}")
+        if response_data['food_data']:
+            print(f"[Debug] Restaurants found: {len(response_data['food_data'])}")
+            for r in response_data['food_data'][:2]: # Print mẫu 2 cái
+                print(f" - {r.get('Name')} ({r.get('distance_km')} km)")
+        print("-" * 50)

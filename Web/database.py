@@ -232,6 +232,7 @@ def get_favorites_by_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Truy vấn đơn giản, không JOIN
     rows = cursor.execute("""
         SELECT place_id, place_name, created_at
         FROM favorites
@@ -241,15 +242,8 @@ def get_favorites_by_user(user_id):
 
     conn.close()
 
-    # Chuyển sqlite Row -> dict để jsonify được
-    return [
-        {
-            "place_id": row["place_id"],
-            "place_name": row["place_name"],
-            "created_at": row["created_at"]
-        }
-        for row in rows
-    ]
+    # Trả về danh sách dict cơ bản
+    return [dict(row) for row in rows]
 
 
 def remove_favorite(user_id, place_id):

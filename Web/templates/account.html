@@ -1,140 +1,203 @@
 {% extends "base.html" %}
 
-{% block title %}Trang cá nhân{% endblock %}
+{% block title %}Trang cá nhân - {{ username }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
 
-<div class="container mt-0 mb-5">
-    <div class="profile-header text-center mb-5">
-        <div class="avatar-placeholder mb-3">
-            {{ username[0] | upper }}
-        </div>
-        <h2 class="fw-bold mb-1">{{ username }}</h2>
-        <p class="text-secondary small">Nhật ký ẩm thực cá nhân</p>
-    </div>
-
-    <div class="row g-4 justify-content-center">
+<div class="container my-5">
+    <div class="row g-4">
         <div class="col-lg-4">
-            <div class="flat-card p-4 sticky-top" style="top: 20px; z-index: 1;">
-                <h5 class="fw-bold mb-3">Tạo bài viết mới</h5>
-                <form method="POST" action="{{ url_for('your_account') }}" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input type="text" class="form-control flat-input" id="food_name" name="food_name" placeholder="Tên món ăn / Địa điểm..." required>
+            <div class="profile-card text-center mb-4 sticky-top" style="top: 90px; z-index: 1;">
+                <div class="profile-cover"></div>
+                <div class="d-flex justify-content-center">
+                    <div class="profile-avatar">
+                        {{ username[0] | upper }}
                     </div>
-                    <div class="mb-3">
-                        <textarea class="form-control flat-input" id="description" name="description" rows="4" placeholder="Hương vị thế nào?..." required></textarea>
+                </div>
+                <div class="card-body p-4">
+                    <h3 class="fw-bold mb-1">{{ username }}</h3>
+                    <p class="text-muted small mb-4"><i class="fas fa-map-marker-alt me-1"></i>Thành viên Smart Tourism</p>
+                    
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <div class="stats-box">
+                                <div class="stats-num">{{ posts|length }}</div>
+                                <div class="stats-label">Bài viết</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stats-box">
+                                <div class="stats-num">{{ favorites|length }}</div>
+                                <div class="stats-label">Yêu thích</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="image" class="form-label small text-uppercase fw-bold text-muted">Hình ảnh</label>
-                        <input class="form-control flat-input" type="file" id="image" name="image" accept="image/*">
-                    </div>
-                    <button type="submit" class="btn btn-dark w-100 fw-bold py-2">ĐĂNG BÀI</button>
-                </form>
+
+                    <button class="btn btn-dark w-100 py-2 fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-pen-nib me-2"></i> Viết đánh giá mới
+                    </button>
+                </div>
             </div>
         </div>
 
         <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold mb-0">Bài viết của bạn</h4>
-                <span class="badge bg-light text-dark border">{{ posts|length }} bài viết</span>
-            </div>
+            <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pills-posts-tab" data-bs-toggle="pill" data-bs-target="#pills-posts" type="button">
+                        <i class="fas fa-utensils me-2"></i>Bài viết của tôi
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pills-fav-tab" data-bs-toggle="pill" data-bs-target="#pills-fav" type="button">
+                        <i class="fas fa-heart me-2"></i>Nhà hàng yêu thích
+                    </button>
+                </li>
+            </ul>
 
-            {% if posts %}
-                <div class="row g-4">
-                    {% for post in posts %}
-                    <div class="col-md-6">
-                        <div class="flat-card h-100 post-card" data-place-id="{{ post.food_name }}">
-                            <div class="card-img-wrapper">
-                                {% if post.image_filename %}
-                                <img src="{{ url_for('static', filename=post.image_filename) }}" class="card-img-top post-img" alt="{{ post.food_name }}">
-                                {% else %}
-                                <img src="{{ url_for('static', filename='images/default_food.jpg') }}" class="card-img-top post-img" alt="No image">
-                                {% endif %}
-                                <div class="card-date-overlay">
-                                    {{ post.posted_at.split(' ')[0] }}
-                                </div>
-                            </div>
-                            
-                            <div class="card-body p-3">
-                                <h5 class="card-title fw-bold">{{ post.food_name }}</h5>
-                                <p class="card-text text-secondary description-text">{{ post.description }}</p>
-
-                                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                                    {% set is_fav = false %}
-                                    {% for fav in favorites %}
-                                        {% if fav['place_id'] == post.food_name %}
-                                            {% set is_fav = true %}
+            <div class="tab-content" id="pills-tabContent">
+                
+                <div class="tab-pane fade show active" id="pills-posts" role="tabpanel">
+                    {% if posts %}
+                        <div class="row g-4">
+                            {% for post in posts %}
+                            <div class="col-md-6">
+                                <div class="item-card">
+                                    <div class="item-img-wrap">
+                                        {% if post.image_filename %}
+                                        <img src="{{ url_for('static', filename=post.image_filename) }}" class="item-img" alt="{{ post.food_name }}">
+                                        {% else %}
+                                        <img src="{{ url_for('static', filename='images/default_food.jpg') }}" class="item-img" alt="No image">
                                         {% endif %}
-                                    {% endfor %}
-
-                                    {% if is_fav %}
-                                    <button class="btn btn-sm btn-danger unfavorite-btn fw-bold px-3">
-                                        <i class="fas fa-heart"></i> Đã thích
-                                    </button>
-                                    {% else %}
-                                    <button class="btn btn-sm btn-outline-dark favorite-btn fw-bold px-3">
-                                        <i class="far fa-heart"></i> Yêu thích
-                                    </button>
-                                    {% endif %}
-                                    
-                                    <small class="text-muted" style="font-size: 0.75rem;">
-                                        {{ post.posted_at.split(' ')[1][:5] }} </small>
+                                        <div class="date-badge"><i class="far fa-calendar-alt me-1"></i> {{ post.posted_at.split(' ')[0] }}</div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <h5 class="card-title fw-bold text-truncate">{{ post.food_name }}</h5>
+                                        <p class="card-text text-muted small text-truncate-3-lines">
+                                            {{ post.description }}
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 mt-auto">
+                                            <span class="badge bg-light text-dark border">Đánh giá</span>
+                                            <small class="text-muted">{{ post.posted_at.split(' ')[1][:5] }}</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 bg-white rounded shadow-sm">
+                            <i class="fas fa-camera fa-3x text-muted mb-3 opacity-50"></i>
+                            <h5 class="text-muted">Bạn chưa có bài viết nào</h5>
+                            <button class="btn btn-warning btn-sm mt-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createPostModal">Viết bài ngay</button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="pills-fav" role="tabpanel">
+                    {% if favorites %}
+                        <div class="row g-4">
+                            {% for fav in favorites %}
+                            <div class="col-md-6" id="fav-card-{{ fav.place_id }}">
+                                <div class="item-card">
+                                    <div class="item-img-wrap">
+                                        <img src="{{ url_for('static', filename='images/restaurant_placeholder.jpg') }}" 
+                                             onerror="this.src='https://via.placeholder.com/400x250?text=Restaurant'" 
+                                             class="item-img" alt="{{ fav.place_name }}">
+                                        <div class="position-absolute top-0 end-0 p-2">
+                                            <button class="btn btn-light btn-sm rounded-circle shadow-sm text-danger remove-fav-direct" 
+                                                    data-place-id="{{ fav.place_id }}" title="Bỏ lưu">
+                                                <i class="fas fa-heart"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <h5 class="card-title fw-bold text-truncate">{{ fav.place_name }}</h5>
+                                        <p class="small text-muted mb-2">
+                                            <i class="fas fa-clock me-1"></i> Đã lưu: {{ fav.created_at }}
+                                        </p>
+                                        <button class="btn btn-outline-warning btn-sm w-100 fw-bold mt-auto btn-detail" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#foodModal"
+                                                data-id="{{ fav.place_id }}" 
+                                                data-name="{{ fav.place_name }}"
+                                                data-location="{{ fav.location }}"
+                                                data-image="{{ url_for('static', filename=fav.image) }}"
+                                                data-rating="{{ fav.rating }}⭐"
+                                                data-is-fav="true"> Xem chi tiết
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 bg-white rounded shadow-sm">
+                            <i class="far fa-heart fa-3x text-muted mb-3 opacity-50"></i>
+                            <h5 class="text-muted">Danh sách yêu thích trống</h5>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm mt-2">Khám phá nhà hàng</a>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="foodModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="modalFoodName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <img id="modalFoodImage" src="" class="img-fluid rounded" alt="Food Image">
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Địa điểm:</strong> <span id="modalFoodLocation"></span></p>
+                        <p><strong>Đánh giá:</strong> <span id="modalFoodRating"></span></p>
+                        <div class="mt-3">
+                            <button id="btnSaveFavorite" class="btn btn-danger btn-sm" disabled>
+                                <i class="fas fa-heart me-1"></i> Đã thích
+                            </button>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
-            {% else %}
-                <p class="text-center text-muted">Bạn chưa có bài đăng nào. Hãy chia sẻ trải nghiệm đầu tiên của bạn!</p>
-            {% endif %}
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const container = document.querySelector(".row");
-    container.addEventListener("click", function(e) {
-        const btn = e.target.closest(".favorite-btn, .unfavorite-btn");
-        if (!btn) return;
-
-        const card = btn.closest(".post-card");
-        const placeId = card.dataset.placeId;
-        const placeName = card.querySelector(".card-title").innerText;
-
-        if (btn.classList.contains("favorite-btn")) {
-            fetch("/favorite/add", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ place_id: placeId, place_name: placeName })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === "success"){
-                    btn.innerHTML = '<i class="fas fa-heart"></i> Đã thích';
-                    btn.classList.remove("favorite-btn", "btn-outline-dark");
-                    btn.classList.add("unfavorite-btn", "btn-danger");
-                }
-            });
-        } else if (btn.classList.contains("unfavorite-btn")) {
-            fetch("/favorite/remove", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ place_id: placeId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === "success"){
-                    btn.innerHTML = '<i class="far fa-heart"></i> Yêu thích';
-                    btn.classList.remove("unfavorite-btn", "btn-danger");
-                    btn.classList.add("favorite-btn", "btn-outline-dark");
-                }
-            });
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Bắt sự kiện khi bấm nút "Xem chi tiết"
+    const detailButtons = document.querySelectorAll('.btn-detail');
+    detailButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Cập nhật nội dung Modal
+            document.getElementById('modalFoodName').innerText = this.getAttribute('data-name');
+            document.getElementById('modalFoodImage').src = this.getAttribute('data-image');
+            document.getElementById('modalFoodLocation').innerText = this.getAttribute('data-location');
+            document.getElementById('modalFoodRating').innerText = this.getAttribute('data-rating');
+            
+            // Vì đang ở trang Yêu thích, nút trong modal luôn là "Đã thích"
+            const btnSave = document.getElementById('btnSaveFavorite');
+            if(btnSave) {
+                btnSave.innerHTML = '<i class="fas fa-heart me-1"></i> Đã thích';
+                btnSave.className = "btn btn-danger btn-sm";
+                btnSave.disabled = true;
+            }
+        });
     });
 });
 </script>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}

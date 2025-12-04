@@ -1,6 +1,6 @@
 import sqlite3
 
-def load_foods_from_sqlite(db_path="SideData\\foody_data.sqlite"):
+def load_foods_from_sqlite(db_path="Web/foody_data.sqlite"):
     foods = []
 
     conn = sqlite3.connect(db_path)
@@ -8,6 +8,7 @@ def load_foods_from_sqlite(db_path="SideData\\foody_data.sqlite"):
 
     cursor.execute("""
         SELECT 
+            id, 
             "Name",
             "Location",
             "Rating",
@@ -19,10 +20,11 @@ def load_foods_from_sqlite(db_path="SideData\\foody_data.sqlite"):
 
     for row in rows:
         foods.append({
-            "name": row[0],
-            "location": row[1],
-            "rating": row[2],
-            "image": row[3].replace("\\", "/") if row[3] else None
+            "id": row[0],     
+            "name": row[1],    
+            "location": row[2],
+            "rating": row[3],
+            "image": row[4].replace("\\", "/") if row[4] else None
         })
 
     conn.close()

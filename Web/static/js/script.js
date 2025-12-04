@@ -627,8 +627,64 @@ function uploadImageFeature() {
         imageInput.value = ''; // reset input file
     });
     const text = userInput.value.trim();
-
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    let currentFoodId = null;
+    let currentFoodName = null;
+
+    // 1. Khi bấm nút "Chi tiết" ở danh sách
+    const detailButtons = document.querySelectorAll('.btn-detail'); // Nhớ thêm class btn-detail vào nút ở Bước 1
+    detailButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Lấy dữ liệu từ data attribute
+            currentFoodId = this.getAttribute('data-id');
+            currentFoodName = this.getAttribute('data-name');
+            
+            // Cập nhật giao diện Modal (Ảnh, tên, v.v...) - Phần này bạn có thể đã có
+            document.getElementById('modalFoodName').innerText = currentFoodName;
+            // ... cập nhật các trường khác ...
+        });
+    });
+
+    // 2. Khi bấm nút "Lưu" trong Modal
+    const btnSave = document.getElementById('btnSaveFavorite');
+    if(btnSave) {
+        btnSave.addEventListener('click', function() {
+            if(!currentFoodId) return;
+
+            fetch('/favorite/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    place_id: currentFoodId,
+                    place_name: currentFoodName
+                })
+            })
+            .then(response => {
+                if(response.status === 401) {
+                    alert("Vui lòng đăng nhập để lưu quán ăn!");
+                    window.location.href = "/login"; // Chuyển hướng nếu chưa đăng nhập
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data && data.status === 'success') {
+                    alert("Đã lưu vào danh sách yêu thích!");
+                    // Có thể đổi text nút thành "Đã lưu"
+                    btnSave.innerText = "Đã lưu";
+                    btnSave.disabled = true;
+                } else if (data) {
+                    alert("Lỗi: " + (data.error || data.message));
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    }
+});
 
 function main()
 {
