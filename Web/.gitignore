@@ -1,2 +1,4 @@
 .env
 fine_tune_model_best.keras
+venv/
+static/foody_images/
