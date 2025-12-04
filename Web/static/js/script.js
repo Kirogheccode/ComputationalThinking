@@ -24,7 +24,6 @@ function scrollAnimation() {
 }
 
 function foodModal() {
-    // --- Logic for Food Modal on Homepage (improved) ---
     var foodModal = document.getElementById('foodModal');
     if (foodModal) {
         foodModal.addEventListener('show.bs.modal', function (event) {
@@ -32,66 +31,36 @@ function foodModal() {
             if (!card) return;
 
             var name = card.getAttribute('data-name') || 'Không tên';
-            var description = card.getAttribute('data-description') || 'Không có mô tả';
             var location = card.getAttribute('data-location') || '-';
-            var price = card.getAttribute('data-price') || '-';
+            var rating = card.getAttribute('data-rating') || '-';
             var image = card.getAttribute('data-image') || '/static/images/placeholder-food.jpg';
 
-            var modalTitle = foodModal.querySelector('.modal-title');
-            var modalImage = foodModal.querySelector('#modalFoodImage');
-            var modalDescription = foodModal.querySelector('#modalFoodDescription');
-            var modalLocation = foodModal.querySelector('#modalFoodLocation');
-            var modalPrice = foodModal.querySelector('#modalFoodPrice');
-            var openMapBtn = foodModal.querySelector('#openMapBtn');
+            foodModal.querySelector('#modalFoodName').textContent = name;
+            foodModal.querySelector('#modalFoodImage').src = image;
+            foodModal.querySelector('#modalFoodLocation').textContent = location;
+            foodModal.querySelector('#modalFoodRating').textContent = rating;
 
-            modalTitle.textContent = name;
-            modalImage.src = image;
-            modalDescription.textContent = description;
-            modalLocation.textContent = location;
-            modalPrice.textContent = price;
-
-            // openMapBtn can link to map page with query params (simple)
-            openMapBtn.href = `/map?name=${encodeURIComponent(name)}&location=${encodeURIComponent(location)}`;
+            foodModal.querySelector('#openMapBtn').href =
+                `/map?name=${encodeURIComponent(name)}&location=${encodeURIComponent(location)}`;
         });
     }
 }
 
-function filterAndSearch() {
-    // --- Filter & Search (client-side simple) ---
-    const areaSelect = document.getElementById('areaSelect');
-    const searchInput = document.getElementById('searchInput');
-    const clearFilters = document.getElementById('clearFilters');
-    const foodsGrid = document.getElementById('foodsGrid');
-    const foodItems = Array.from(document.querySelectorAll('.food-item'));
+// --- Hàm lọc, chỉ redirect khi Enter ---
+window.applyFilters = function() {
+    const area = document.getElementById('areaSelect').value;
+    const q = document.getElementById('searchInput').value.trim();
+    const params = new URLSearchParams({ area: area, q: q, page: 1 });
+    window.location.href = "?" + params.toString();
+};
 
-    function applyFilters() {
-        const area = (areaSelect?.value || 'all').toLowerCase();
-        const q = (searchInput?.value || '').trim().toLowerCase();
+// --- Hàm xóa filter nhưng không redirect ngay ---
+window.clearFilters = function() {
+    document.getElementById('areaSelect').value = 'all';
+    document.getElementById('searchInput').value = '';
+    applyFilters();
+};
 
-        foodItems.forEach(item => {
-            const itemArea = (item.getAttribute('data-area') || '').toLowerCase();
-            const name = (item.getAttribute('data-name') || '').toLowerCase();
-            const matchArea = (area === 'all') || itemArea.includes(area);
-            const matchQuery = q === '' || name.includes(q);
-            item.style.display = (matchArea && matchQuery) ? '' : 'none';
-        });
-
-        // refresh AOS (if used)
-        if (window.AOS) AOS.refresh();
-    }
-
-    if (areaSelect) areaSelect.addEventListener('change', applyFilters);
-    if (searchInput) searchInput.addEventListener('input', () => {
-        // debounce quick
-        clearTimeout(window.__searchDeb);
-        window.__searchDeb = setTimeout(applyFilters, 200);
-    });
-    if (clearFilters) clearFilters.addEventListener('click', () => {
-        if (areaSelect) areaSelect.value = 'all';
-        if (searchInput) searchInput.value = '';
-        applyFilters();
-    });
-}
 function mapModal() {
     let map; // Biến toàn cục giữ bản đồ
     let routeLayer; // Biến giữ đường vẽ
@@ -350,12 +319,17 @@ async function sendImage(text) {
     previewImg.src = '';
     previewWrapper.classList.add('d-none');
     imageInput.value = '';
+    
+    displayUserMessage(text,chatWindow);
+    if (userInput) {
+        userInput.value = '';
+    }
 
     // 2. Tạo loading bubble cho bot
     createLoadingBubble(chatWindow);
-
-    // 3. Gửi ảnh lên backend (nếu có API)
-    let botText = "";
+   
+    // 3.1. Gửi ảnh lên backend (nếu có API) để nhận diện
+    let botText1 = "";
     let food_predict = "";
     try {
         const formData = new FormData();
@@ -367,24 +341,59 @@ async function sendImage(text) {
         });
 
         const data = await response.json();
-        botText = data.message;
+        botText1 = data.message;
         food_predict = data.food_name;
     } catch (err) {
         console.error("Lỗi khi gửi ảnh:", err);
-        botText = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
+        botText1 = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
     }
+    
+    // 3.2. Gửi câu prompt lên API để xử lý và trả lời
+    let botText2 = "";
+    let messageText = (food_predict || '') + " " + (text || '');
+    try {
+        // Gửi yêu cầu POST đến endpoint /api/chat của Flask
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            // Gửi tin nhắn dưới dạng JSON
+            body: JSON.stringify({ message: messageText })
+        });
 
+        if (!response.ok) {
+            // Xử lý lỗi nếu server trả về 4xx, 5xx
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Nhận dữ liệu JSON trả về
+        const data = await response.json();
+        console.log("DEBUG: toàn bộ data nhận về từ API:", data);
+            
+        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
+        botText2 = data.reply;
+
+        // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
+        // để chúng hiển thị đúng trong HTML
+        botText2 = botText2.replace(/\n/g, '<br>');
+        const container = document.getElementById("carousel");
+        renderFoodCards(container, data.food_data);
+
+    }
+    catch (err) {
+        console.error("Lỗi khi gọi API:", err);
+        botText2 = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
+    }
     // 4. Xoá loading bubble
     removeLoadingBubble();
-
+    let botText = botText1 + "<br>" + botText2;
     // 5. Hiển thị tin nhắn trả lời từ bot
     displayBotMessage(botText, chatWindow);
 
     // 6. Reset preview và input
     uploadedImage = null;
-
-    const combinedText = (food_predict || '') + " " + (text || '') ;
-    sendText(combinedText);
+    isProcess = false;
 }
 
 function showNotification(text) {
@@ -453,6 +462,11 @@ function chatBot() {
     const sendMessageBtn = document.getElementById('sendMessageBtn');
     const userInput = document.getElementById('userInput');
     const chatWindow = document.getElementById('chat-window');
+
+    if (!sendMessageBtn || !userInput || !chatWindow) {
+        console.log("chatBot() skipped → elements not found");
+        return;
+    }
 
     sendMessageBtn.addEventListener('click', () => {
         const text = userInput.value.trim();
@@ -531,6 +545,7 @@ function renderFoodCards(container, data) {
             <h5 class="food-name">${food.Name}</h5>
             <p class="food-location">Địa chỉ: ${food.Address}</p>
             <p class="food-rating">Đánh giá: ${food.Rating} ⭐</p>
+            <p class = "food-budget">Mức giá: ${food.Budget} </p>
             <p class="food-description">Mô tả: ${food.Description}</p>
             <p class="food-distance">Khoảng cách: ${food.distance_km} km</p>
         </div>
@@ -579,6 +594,11 @@ function uploadImageFeature() {
     const userInput = document.getElementById('userInput');
     const chatWindow = document.getElementById('chat-window');
 
+    if (!imageBtn || !imageInput || !previewWrapper) {
+        console.log("uploadImageFeature() skipped → elements not found");
+        return;
+    }
+
     // --- Mở file picker ---
     imageBtn.addEventListener('click', () => {
         imageInput.click();
@@ -612,31 +632,64 @@ function uploadImageFeature() {
 
 function main()
 {
+    console.log("Main() is running!");
     document.addEventListener('DOMContentLoaded', function () {
-    
-    
         //==============================NAVIGATION BAR=============================
         themeMode()
         //=========================================================================
 
-
         //================================TRANG CHỦ================================
         scrollAnimation()
         foodModal()
-        filterAndSearch()
         //=========================================================================
-    
 
         //===========================TRANG CHỦ & CHATBOT===========================
         mapModal()
         //=========================================================================
-    
 
         //=================================CHATBOT=================================
         chatBot()
         uploadImageFeature()
         //=========================================================================
+        
+        console.log("Filter JS loaded!");
 
+        const areaSelect = document.getElementById("areaSelect");
+        const searchInput = document.getElementById("searchInput");
+        const clearBtn = document.getElementById("clearFilters");
+
+        // === Apply Filters ===
+        function applyFilters() {
+            const area = areaSelect.value;
+            const q = searchInput.value.trim();
+
+            const params = new URLSearchParams({
+                area: area,
+                q: q,
+                page: 1
+            });
+
+            console.log("Redirect to:", "?" + params.toString());
+            window.location.href = "?" + params.toString();
+        }
+
+        // ===== Gắn event nếu các phần tử tồn tại =====
+        if (areaSelect) {
+            areaSelect.addEventListener("change", applyFilters);
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    applyFilters();
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener("click", clearFilters);
+        }
     });
 }
 

@@ -3,6 +3,8 @@ import Routing
 from FoodRecognition import replyToImage
 from auth import auth_bp, login_required # Import auth blueprint và decorator
 import os
+from FoodLoading import load_foods_from_sqlite
+import math
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from werkzeug.utils import secure_filename
 import sys
@@ -40,7 +42,8 @@ app.register_blueprint(auth_bp)
 
 # Hàm kiểm tra đuôi file
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Khởi tạo database khi ứng dụng chạy
 with app.app_context():
@@ -48,37 +51,49 @@ with app.app_context():
 
 # Dữ liệu mẫu về các món ăn
 # Trong một dự án thực tế, dữ liệu này nên được lấy từ database
-foods = {
-    'pho': {
-        'name': 'Phở Bò',
-        'description': 'Phở là một món ăn truyền thống của Việt Nam, được xem là một trong những món ăn tiêu biểu cho ẩm thực Việt Nam. Thành phần chính của phở là bánh phở và nước dùng cùng với thịt bò hoặc gà cắt lát mỏng.',
-        'location': 'Phở Thìn - 13 Lò Đúc, Hà Nội',
-        'price': '50,000 - 70,000 VNĐ',
-        'image': 'images/mainpage-display/pho.jpg'
-    },
-    'banh_mi': {
-        'name': 'Bánh Mì',
-        'description': 'Bánh mì Việt Nam là một loại bánh mì baguette được xẻ dọc, nhồi với thịt, πατέ, rau, và các loại nước sốt. Đây là một món ăn đường phố phổ biến và được yêu thích trên toàn thế giới.',
-        'location': 'Bánh mì Phượng - 2B Phan Chu Trinh, Hội An',
-        'price': '25,000 - 40,000 VNĐ',
-        'image': 'images/mainpage-display/banh_mi.jpg'
-    },
-    'bun_cha': {
-        'name': 'Bún Chả',
-        'description': 'Bún chả là một món ăn của Hà Nội, bao gồm bún, chả thịt lợn nướng trên than hoa và bát nước mắm chua cay mặn ngọt. Món ăn này thường được ăn kèm với các loại rau sống.',
-        'location': 'Bún chả Hương Liên - 24 Lê Văn Hưu, Hà Nội',
-        'price': '40,000 - 60,000 VNĐ',
-        'image': 'images/mainpage-display/bun_cha.jpg'
-    }
-}
+foods_data = load_foods_from_sqlite("Web/foody_data.sqlite")
 
 # Route cho trang chủ
-@app.route('/')
+@app.route("/")
 def index():
-    """
-    Hiển thị trang chủ với danh sách các món ăn nổi bật.
-    """
-    return render_template('index.html', foods=foods)
+    import re
+    page = int(request.args.get("page", 1))
+    area = request.args.get("area", "all").strip()  # "Quận 1", "Bình Thạnh", v.v
+    q = request.args.get("q", "").strip().lower()
+
+    filtered_foods = []
+
+    for food in foods_data:
+        location = food["location"].strip()  # ví dụ: "130 Thành Thái, P.12, Quận 10, TP. HCM"
+        name = food["name"].strip().lower()
+
+        # 1. Filter theo area
+        if area.lower() != "all":
+            # Dùng regex để match tên quận chính xác (không match nhầm "Quận 1" trong "Quận 10")
+            # Regex \b giúp match ranh giới từ
+            pattern = r'\b{}\b'.format(re.escape(area.lower()))
+            if not re.search(pattern, location.lower()):
+                continue
+
+        # 2. Filter theo search text
+        if q and q not in name:
+            continue
+
+        filtered_foods.append(food)
+
+    # Pagination
+    per_page = 9
+    total_pages = math.ceil(len(filtered_foods) / per_page)
+    foods_to_render = filtered_foods[(page-1)*per_page : page*per_page]
+
+    return render_template(
+        "index.html",
+        foods=foods_to_render,
+        page=page,
+        total_pages=total_pages,
+        area_selected=area,
+        search_query=q
+    )
 
 # Route cho trang bản đồ
 @app.route('/map')
@@ -112,7 +127,7 @@ def account_page():
     username = session['username']
 
     user_posts = get_food_posts_by_user(user_id)
-    return render_template('account.html', username=username,posts=user_posts)
+    return render_template('account.html', username=username, posts=user_posts)
 
 
 # User đăng bài đánh giá các món ăn, kết quả trả về là quay lại trang your_account
