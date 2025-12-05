@@ -163,69 +163,90 @@ def handle_culture_query(prompt):
 
 def route_user_request(prompt):
     """
-    Extracts 'category' for tags like 'student', 'family', 'street food'.
+    STRICT ROUTER:
+    1. '/place_' or '/eat' -> Restaurant Recommendation
+    2. '/recipe_' or '/cook' -> Food Recommendation
+    3. '/plan_' or '/menu' -> Daily Menu
+    4. EVERYTHING ELSE -> Culture Query (Default)
     """
-    prompt_lower = prompt.lower()
+    prompt_lower = prompt.strip().lower()
 
-    # Explicit Syntax Checks
-    if prompt_lower.startswith("/eat") or prompt_lower.startswith("/tim quan"):
-        return {"task": "restaurant_recommendation", "cuisine": prompt.replace("/eat", "").strip(), "location": "none"}
+    # --- 1. Restaurant Command ---
+    # Syntax: "/eat Cơm tấm quận 1" or "/place_ Cơm tấm quận 1"
+    if prompt_lower.startswith("/place_") or prompt_lower.startswith("/eat"):
+        # Remove the command to get the query
+        clean_prompt = prompt.replace("/place_", "").replace("/eat", "").strip()
 
-    if prompt_lower.startswith("/cook") or prompt_lower.startswith("/recipe"):
-        return {"task": "food_recommendation", "cuisine": prompt.replace("/cook", "").strip()}
+        # Simple split logic: Try to separate Dish vs Location by common separators
+        # This is a basic heuristic since we aren't using the LLM for extraction anymore
+        cuisine = clean_prompt
+        location = "none"
 
-    if prompt_lower.startswith("/plan"):
-        return {"task": "daily_menu"}
+        # Check for location keywords to split string manually
+        loc_markers = [" tại ", " ở ", " quận ", " district ", " đường ", " street ", " near ", " gần "]
+        for marker in loc_markers:
+            if marker in clean_prompt.lower():
+                parts = clean_prompt.lower().split(marker, 1)
+                # Re-slice the original string to keep case
+                idx = clean_prompt.lower().find(marker)
+                cuisine = clean_prompt[:idx].strip()
+                location = clean_prompt[idx:].strip()  # Keep the marker (e.g. "quan 1") as part of location
+                break
 
-    # Keyword Bias
-    location_signals = ["district", "quận", "quan", "đường", "street", "near", "gần"]
-    bias = "User mentioned location. Heavily prioritize 'restaurant_recommendation'." if any(
-        s in prompt_lower for s in location_signals) else ""
+        return {
+            "task": "restaurant_recommendation",
+            "cuisine": cuisine,
+            "location": location,
+            "category": "",
+            "budget": ""
+        }
 
-    sys_msg = (
-        f"Classify intent: 'culture_query', 'food_recommendation', 'restaurant_recommendation', 'daily_menu'.\n{bias}\n"
-        "Extract entities:\n"
-        "- 'location': Area/Street\n"
-        "- 'cuisine': Specific Dish\n"
-        "- 'diet_ingredient': Restrictions (vegan, halal)\n"
-        "- 'category': Vibe/Tag (e.g., 'student', 'family', 'couple', 'street food', 'office')."
-    )
+    # --- 2. Recipe/Food Command ---
+    # Syntax: "/cook Phở bò"
+    if prompt_lower.startswith("/recipe_") or prompt_lower.startswith("/cook"):
+        clean_prompt = prompt.replace("/recipe_", "").replace("/cook", "").strip()
+        return {
+            "task": "food_recommendation",
+            "cuisine": clean_prompt,  # The whole text is the dish name
+            "diet_ingredient": "General"  # Default
+        }
 
-    schema = {
-        "type": "OBJECT",
-        "properties": {
-            "task": {"type": "STRING"},
-            "location": {"type": "STRING"},
-            "cuisine": {"type": "STRING"},
-            "diet_ingredient": {"type": "STRING"},
-            "category": {"type": "STRING"}
-        },
-        "required": ["task"]
-    }
+    # --- 3. Menu Command ---
+    # Syntax: "/plan" or "/menu"
+    if prompt_lower.startswith("/plan_") or prompt_lower.startswith("/menu"):
+        return {
+            "task": "daily_menu",
+            "location": "none",  # Default
+            "budget": "moderate"
+        }
 
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    try:
-        res = model.generate_content([sys_msg, prompt], generation_config={"response_mime_type": "application/json",
-                                                                           "response_schema": schema})
-        return json.loads(res.text)
-    except:
-        return {"task": "unknown"}
+    # --- 4. DEFAULT CATCH-ALL (Culture Query) ---
+    # If no command is found, we assume it's a general conversation/culture question.
+    print("-> Router: No command found. Defaulting to Culture Query.")
+    return {"task": "culture_query"}
 
-
-def handle_restaurant_recommendation(prompt, entities):
+def handle_restaurant_recommendation(prompt, entities, user_profile=None):
     """
-    Filters by Location -> Cuisine -> Opening Hours -> Tags.
+    Mission 3: Recommends restaurants.
+    PRIORITY: Location > Cuisine.
+    SOFT FILTERS: Time, Tags, Price (Warns instead of removing).
     """
-    loc = entities.get('location')
+    location = entities.get('location')
     cuisine = entities.get('cuisine')
-    category = entities.get('category', '').lower()
+    category = entities.get('category', '').lower()  # Tags like "student", "family"
+    budget = entities.get('budget', '').lower()
 
-    print(f"-> Restaurant Rec: Loc='{loc}', Dish='{cuisine}', Tag='{category}'")
+    # Fallback for cuisine if command-based
+    if not cuisine and (prompt.startswith("/eat") or prompt.startswith("/tim quan")):
+        parts = prompt.split(" ", 1)
+        cuisine = parts[1] if len(parts) > 1 else ""
 
-    # 1. Geocode
+    print(f"-> Restaurant Rec: Loc='{location}', Dish='{cuisine}', Tag='{category}', Budget='{budget}'")
+
+    # 1. Geocode (Strict Location Filter)
     user_lat, user_lon = None, None
-    if loc and loc.lower() != 'none':
-        user_lat, user_lon = get_coords_for_location(loc)
+    if location and location.lower() != 'none':
+        user_lat, user_lon = get_coords_for_location(location)
 
     # 2. SQL Query (Location + Broad Cuisine)
     conn = sqlite3.connect('foody_data.sqlite')
@@ -235,7 +256,7 @@ def handle_restaurant_recommendation(prompt, entities):
     query = "SELECT * FROM restaurants"
     params = []
 
-    # Pre-filter by location in SQL for speed
+    # Strict Location Filter (SQL)
     if user_lat:
         bbox = get_bounding_box(user_lat, user_lon, 10)
         query += " WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?"
@@ -245,31 +266,32 @@ def handle_restaurant_recommendation(prompt, entities):
     rows = cursor.fetchall()
     conn.close()
 
-    # 3. Python Filter (Cuisine, Time, Tags)
+    # 3. Python Filter (Soft Filters)
     results = []
     search_term = cuisine.lower() if cuisine and cuisine != 'none' else ""
 
-    current_time = datetime.now().strftime("%H:%M")
-    print(f"   Filtering {len(rows)} candidates at {current_time}...")
-
     for r in rows:
         val = dict(r)
+        val['warnings'] = []  # Store warnings here
 
-        # A. Cuisine Filter
+        # A. Cuisine Filter (Keep Strict - User needs the right food)
         if search_term and search_term not in val['name'].lower():
             continue
 
-        # B. Opening Hours Filter (Avoid Closed Places)
+        # B. Opening Hours (Soft Filter)
         if not is_open_now(val['opening_hours']):
-            continue
+            val['warnings'].append("CLOSED NOW")
 
-            # C. Tag/Category Filter
-        # DB 'tags' column looks like: "Student, Couple, Family"
-        db_tags = str(val['tags']).lower()
+        # C. Tag/Category (Soft Filter)
+        db_tags = str(val.get('tags', '')).lower()
         if category and category != 'none':
-            # Loose match: if user wants "student", accept "student" or "sinh viên" if your DB has it
             if category not in db_tags:
-                continue
+                val['warnings'].append(f"Tag '{category}' not found")
+
+        # D. Price Check (Soft Filter)
+        price_info = str(val.get('price_range', '')).lower()
+        if price_info == 'updating':
+            val['warnings'].append("Price is Updating")
 
         # Data cleanup
         try:
@@ -288,18 +310,26 @@ def handle_restaurant_recommendation(prompt, entities):
     if not results:
         model = genai.GenerativeModel('gemini-2.5-flash')
         return model.generate_content(
-            f"User asked for '{cuisine}' near '{loc}' (Tag: {category}) but NO OPEN matches found. Explain why (maybe too late/early?) and suggest general alternatives.").text
+            f"User asked for '{cuisine}' near '{location}'. No location matches found in DB. Suggest general cultural info.").text
 
-    # Rank
-    results.sort(key=lambda x: (-x['rating'], x['dist']))
+    # 4. Rank
+    # Primary Sort: Number of Warnings (Ascending) -> Perfect matches first
+    # Secondary Sort: Rating (Descending)
+    # Tertiary Sort: Distance (Ascending)
+    results.sort(key=lambda x: (len(x['warnings']), -x['rating'], x['dist']))
+
     top_5 = results[:5]
 
-    # 4. Final Response
+    # 5. Final Response
     model = genai.GenerativeModel('gemini-2.5-flash')
     sys_msg = (
-        "Recommend 3-5 restaurants from the list below (english reply).\n"
-        f"Context: User is looking for '{category}' vibes.\n"
-        "**CRITICAL:** Mention that these places are **OPEN NOW**.\n"
+        "Recommend 3-5 restaurants from the list below.\n"
+        f"Context: User is looking for '{cuisine}' in '{location}'.\n"
+        "**CRITICAL INSTRUCTION:**\n"
+        "The data contains a 'warnings' list for each restaurant.\n"
+        "- If 'warnings' is empty, recommend it normally.\n"
+        "- If 'warnings' has items (e.g. ['CLOSED NOW']), you MUST mention this clearly to the user "
+        "(e.g. 'Highly rated, but currently closed' or 'Note: Price is updating').\n"
         "Provide estimated nutritional breakdown for the main dish.\n"
         f"List:\n{json.dumps(top_5, ensure_ascii=False, default=str)}"
     )
@@ -312,7 +342,7 @@ def handle_food_recommendation(prompt, entities):
     model = genai.GenerativeModel('gemini-2.5-flash')
     sys_msg = (
         f"You are an expert Vietnamese culinary. User wants a dish suggestion. Diet: {diet}.\n"
-        "1. Recommend specific authentic Vietnamese dishes (english reply).\n"
+        "1. Recommend specific authentic Vietnamese dishes (english reply) or if users mention certain dishes, focus the answer on them.\n"
         "2. Warn if dish conflicts with restrictions (e.g. Pork/Halal).\n"
         "3. Provide estimated Calories/Protein/Carbs/Fat and cost."
     )
