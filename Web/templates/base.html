@@ -39,7 +39,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
                 <img class="brand-logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="logo">
-                <span class="brand-title">Smart Tourism – Food</span>
+                <span class="brand-title">Hungry Right Eat</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -100,26 +100,9 @@
     </div>
 
     <!-- Main Content -->
-    <main class="container mt-0 pt-4">
+    <main class="container mt-0 pt-0">
         {% block content %}{% endblock %}
     </main>
-    
-    <!-- Modal Map -->
-    <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Bản đồ</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <div id="mapContainer" style="height: 400px; width: 100%;"></div>
-        </div>
-        </div>
-    </div>
-    </div>
-
-
 
     <!-- Footer -->
     <footer class="footer mt-5">
@@ -139,7 +122,7 @@
                         <li><a href="{{ url_for('about_page') }}">Giới thiệu</a></li>
                         <!-- NEW: Footer Auth Links -->
                         {% if session.get('user_id') %}
-                        <li><a href="{{ url_for('your_account') }}">Tài khoản của bạn</a></li>
+                        <li><a href="{{ url_for('your_account') }}">Tài khoản cá nhân</a></li>
                         <li><a href="{{ url_for('auth.logout') }}">Đăng xuất</a></li>
                         {% else %}
                         <li><a href="{{ url_for('auth.register') }}">Đăng ký</a></li>

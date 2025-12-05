@@ -59,52 +59,50 @@
     </div>
 
     <div class="row" id="foodsGrid">
-      {% for food in foods %}
-      <div class="col-lg-4 col-md-6 mb-4 food-item" data-area="{{ food.location }}" data-name="{{ food.name | lower }}">
-        <div class="card h-100 food-card"
-             data-name="{{ food.name }}"
-             data-image="{{ url_for('static', filename=food.image) }}"
-             data-aos="fade-up"
-             data-aos-delay="{{ loop.index0 * 60 }}">
-          <div class="card-img-wrap">
-            <img loading="lazy" src="{{ url_for('static', filename=food.image) }}" class="card-img-top" alt="{{ food.name }}">
-            <div class="card-overlay">
-              <div class="overlay-text">
-                <h5 class="mb-0">{{ food.name }}</h5>
+          {% for food in foods %}
+          {% set is_fav = (food.id | string) in favorite_ids %}
+          
+          <div class="col-lg-4 col-md-6 mb-4 food-item" 
+              data-area="{{ food.location }}" 
+              data-name="{{ food.name | lower }}">
+            
+            <div class="card h-100 food-card shadow-sm"
+                data-bs-toggle="modal" 
+                data-bs-target="#foodModal"
+                data-id="{{ food.id }}" 
+                data-name="{{ food.name }}"
+                data-location="{{ food.location }}"
+                data-price="{{ food.price }}"
+                data-hours="{{ food.hours }}"
+                data-image="{{ url_for('static', filename=food.image) }}"
+                data-rating="{{ food.rating }}⭐"
+                data-is-fav="{{ 'true' if is_fav else 'false' }}"
+                data-aos="fade-up"
+                data-aos-duration="800"
+                data-aos-delay="{{ (loop.index0 % 3) * 150 }}">
+                <div class="card-img-wrap">
+                <img loading="lazy" src="{{ url_for('static', filename=food.image) }}" class="card-img-top img-hover-zoom" alt="{{ food.name }}">
+                <div class="card-overlay">
+                  <div class="overlay-text">
+                    <h5 class="mb-0">{{ food.name }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate fw-bold">{{ food.name }}</h5>
+                <p class="card-text mb-1 text-truncate text-muted small"><i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ food.location }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
+                    <span class="badge bg-warning text-dark rounded-pill px-3"><i class="fas fa-star me-1"></i> {{ food.rating }}</span>
+                    {% if is_fav %}
+                        <span class="text-danger" title="Đã yêu thích"><i class="fas fa-heart fa-lg animate__animated animate__heartBeat"></i></span>
+                    {% endif %}
+                </div>
               </div>
             </div>
           </div>
-          <div class="card-body">
-            <p class="card-text mb-1 text-truncate">Địa chỉ: {{ food.location }}</p>
-            <p class="card-text mb-0 text-truncate">Đánh giá: {{ food.rating }} ⭐</p>
-          </div>
-          <div class="card-footer d-flex justify-content-end align-items-center">
-            <div>
-              <button class="btn btn-sm btn-outline-secondary me-1 location-dot" 
-                      title="Xem trên bản đồ" 
-                      data-bs-toggle="modal" 
-                      data-bs-target="#mapModal"
-                      data-location="{{ food.location }}">
-                  <i class="fa-solid fa-location-dot"></i>
-              </button>
-              
-              {% set is_fav = (food.id | string) in favorite_ids %}
-              
-              <button class="btn btn-sm btn-warning btn-detail" 
-                      data-bs-toggle="modal" 
-                      data-bs-target="#foodModal"
-                      data-id="{{ food.id }}" 
-                      data-name="{{ food.name }}"
-                      data-location="{{ food.location }}"
-                      data-image="{{ url_for('static', filename=food.image) }}"
-                      data-rating="{{ food.rating }}⭐"
-                      data-is-fav="{{ 'true' if is_fav else 'false' }}"> Chi tiết
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
       {% endfor %}
+    </div>
     </div>
   </div>
 </section>
@@ -139,56 +137,31 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title" id="modalFoodName"></h5>
+                <h5 class="modal-title fw-bold" id="modalFoodName"></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-3">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <img id="modalFoodImage" src="" class="img-fluid rounded" alt="Food Image">
+                        <img id="modalFoodImage" src="" class="img-fluid rounded shadow-sm w-100" style="object-fit: cover; height: 300px;" alt="Food Image">
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Địa điểm:</strong> <span id="modalFoodLocation"></span></p>
-                        <p><strong>Đánh giá:</strong> <span id="modalFoodRating"></span></p>
-                        <div class="mt-3">
-                            <a id="openMapBtn" class="btn btn-outline-primary btn-sm me-2">
-                                <i class="fa-solid fa-map-location-dot"></i> Xem bản đồ
-                            </a>
+                    <div class="col-md-6 d-flex flex-column justify-content-center">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>Địa chỉ:</strong> <span id="modalFoodLocation"></span></p>
+                        <p class="mb-2"><i class="fas fa-star text-warning me-2"></i><strong>Đánh giá:</strong> <span id="modalFoodRating"></span></p>
+                        <p class="mb-2"><i class="fas fa-tag text-success me-2"></i><strong>Giá:</strong> <span id="modalFoodPrice"></span></p>
+                        <p class="mb-4"><i class="fas fa-clock text-primary me-2"></i><strong>Giờ mở cửa:</strong> <span id="modalFoodHours"></span></p>
+                        
+                        <div class="d-flex gap-2">
+                            <button id="btnViewMap" class="btn btn-outline-primary flex-grow-1">
+                                <i class="fa-solid fa-map-location-dot me-1"></i> Xem bản đồ
+                            </button>
                             
-                            <button id="btnSaveFavorite" class="btn btn-warning btn-sm">
+                            <button id="btnSaveFavorite" class="btn btn-warning flex-grow-1">
                                 <i class="far fa-heart me-1"></i> Yêu thích
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tìm đường đến quán ăn</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="userOriginInput" class="form-label fw-bold">Vị trí của bạn:</label>
-                    <div class="input-group">
-                        <input type="text" id="userOriginInput" class="form-control" placeholder="VD: Chợ Bến Thành, Quận 1...">
-                        <button class="btn btn-primary" id="btnFindRoute">
-                            <i class="fa-solid fa-route"></i> Tìm đường
-                        </button>
-                    </div>
-                    <small class="text-muted">Nhập địa chỉ hiện tại của bạn để xem đường đi.</small>
-                </div>
-                <input type="hidden" id="destinationHidden">
-                <div id="map" style="height: 450px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
             </div>
         </div>
     </div>
@@ -198,94 +171,117 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentFoodId = null;
     let currentFoodName = null;
-    let currentBtnDetail = null; 
+    let currentCard = null; // Thẻ card đang được click
+    let currentLocation = null; // Lưu địa chỉ để chuyển qua map
 
-    // 1. Bắt sự kiện nút "Chi tiết"
-    const detailButtons = document.querySelectorAll('.btn-detail');
-    detailButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentBtnDetail = this;
+    // 1. Bắt sự kiện click vào Card (thay vì nút chi tiết)
+    const foodCards = document.querySelectorAll('.food-card');
+    
+    foodCards.forEach(card => {
+        card.addEventListener('click', function() {
+            currentCard = this; 
             currentFoodId = this.getAttribute('data-id');
             currentFoodName = this.getAttribute('data-name');
+            currentLocation = this.getAttribute('data-location');
+            
             const isFav = this.getAttribute('data-is-fav') === 'true';
             
-            // Cập nhật Modal
+            // Cập nhật thông tin vào Modal
             document.getElementById('modalFoodName').innerText = currentFoodName;
             document.getElementById('modalFoodImage').src = this.getAttribute('data-image');
-            document.getElementById('modalFoodLocation').innerText = this.getAttribute('data-location');
+            document.getElementById('modalFoodLocation').innerText = currentLocation;
             document.getElementById('modalFoodRating').innerText = this.getAttribute('data-rating');
             
-            // Cập nhật trạng thái nút trong Modal
-            const btnSave = document.getElementById('btnSaveFavorite');
-            if(btnSave) {
-                // Xóa các event cũ (clone nút để xóa event listener cũ nếu bị lặp)
-                const newBtn = btnSave.cloneNode(true);
-                btnSave.parentNode.replaceChild(newBtn, btnSave);
-                
-                // Gán lại biến btnSave tham chiếu đến nút mới
-                const finalBtn = document.getElementById('btnSaveFavorite');
-                
-                if (isFav) {
-                    setButtonSavedState(finalBtn);
-                } else {
-                    setButtonNormalState(finalBtn);
-                    // Gán sự kiện click mới
-                    finalBtn.addEventListener('click', handleSaveFavorite);
-                }
-            }
+            // Cập nhật thông tin mới (Giá & Giờ)
+            document.getElementById('modalFoodPrice').innerText = this.getAttribute('data-price');
+            document.getElementById('modalFoodHours').innerText = this.getAttribute('data-hours');
+            
+            // Xử lý nút Yêu thích
+            setupFavoriteButton(isFav);
         });
     });
 
-    // Hàm xử lý khi bấm Lưu
-    function handleSaveFavorite() {
-        const btnSave = this;
+    // 2. Xử lý nút "Xem bản đồ" - Chuyển trang kèm tham số
+    document.getElementById('btnViewMap').addEventListener('click', function() {
+        if (currentLocation) {
+            // Encode địa chỉ để an toàn trên URL
+            const encodedLocation = encodeURIComponent(currentLocation);
+            window.location.href = `/map?destination=${encodedLocation}`;
+        }
+    });
+
+    // 3. Hàm xử lý nút Yêu thích (Tách riêng cho gọn)
+    function setupFavoriteButton(isFav) {
+        const btnSave = document.getElementById('btnSaveFavorite');
+        if(!btnSave) return;
+
+        // Reset button clone để xóa event listener cũ
+        const newBtn = btnSave.cloneNode(true);
+        btnSave.parentNode.replaceChild(newBtn, btnSave);
+        const finalBtn = document.getElementById('btnSaveFavorite');
+
+        // Set trạng thái ban đầu
+        updateFavoriteButtonUI(finalBtn, isFav);
+
+        // Gán sự kiện click
+        finalBtn.addEventListener('click', function() {
+            handleToggleFavorite(finalBtn);
+        });
+    }
+
+    function updateFavoriteButtonUI(btn, isFav) {
+        if (isFav) {
+            btn.innerHTML = '<i class="fas fa-heart me-1"></i> Đã thích';
+            btn.className = "btn btn-danger flex-grow-1"; 
+        } else {
+            btn.innerHTML = '<i class="far fa-heart me-1"></i> Yêu thích';
+            btn.className = "btn btn-warning flex-grow-1";
+        }
+    }
+
+    function handleToggleFavorite(btn) {
         if(!currentFoodId) return;
+        const isCurrentlyFav = currentCard.getAttribute('data-is-fav') === 'true';
 
-        fetch('/favorite/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                place_id: currentFoodId,
-                place_name: currentFoodName
+        if (isCurrentlyFav) {
+            // Remove logic
+            fetch('/favorite/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ place_id: currentFoodId })
             })
-        })
-        .then(response => {
-            if(response.status === 401) {
-                if(confirm("Bạn cần đăng nhập để lưu quán ăn. Đi đến trang đăng nhập?")) {
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    updateFavoriteButtonUI(btn, false);
+                    currentCard.setAttribute('data-is-fav', 'false');
+                }
+            });
+        } else {
+            // Add logic
+            fetch('/favorite/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    place_id: currentFoodId,
+                    place_name: currentFoodName
+                })
+            })
+            .then(response => {
+                if(response.status === 401) {
                     window.location.href = "/login";
+                    return;
                 }
-                return null;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if(data && data.status === 'success') {
-                // --- CHỈ CẬP NHẬT GIAO DIỆN, KHÔNG ALERT ---
-                setButtonSavedState(btnSave);
-
-                if(currentBtnDetail) {
-                    currentBtnDetail.setAttribute('data-is-fav', 'true');
+                return response.json();
+            })
+            .then(data => {
+                if(data && data.status === 'success') {
+                    updateFavoriteButtonUI(btn, true);
+                    currentCard.setAttribute('data-is-fav', 'true');
                 }
-            } else if (data) {
-                // Chỉ hiện thông báo khi có LỖI
-                alert("Lỗi: " + (data.error || "Không thể lưu"));
-            }
-        })
-        .catch(err => console.error("Lỗi:", err));
-    }
-
-    function setButtonSavedState(btn) {
-        btn.innerHTML = '<i class="fas fa-heart me-1"></i> Đã thích';
-        btn.className = "btn btn-danger btn-sm"; // Dùng className để reset class cũ
-        btn.disabled = true;
-    }
-
-    function setButtonNormalState(btn) {
-        btn.innerHTML = '<i class="far fa-heart me-1"></i> Yêu thích';
-        btn.className = "btn btn-warning btn-sm";
-        btn.disabled = false;
+            });
+        }
     }
 });
 </script>
-
 {% endblock %}

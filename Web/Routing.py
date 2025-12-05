@@ -40,18 +40,26 @@ def geocode_address(address: str):
 def get_coordinates_from_db(location: str):
     """
     Lấy trực tiếp Latitude/Longitude của nhà hàng từ SQLite
+    Cập nhật: Sửa tên bảng và cột thành chữ thường để khớp với foody_data.sqlite mới
     """
-    conn = sqlite3.connect('foody_data.sqlite')
+    # Đảm bảo đường dẫn file database chính xác
+    db_path = 'data/foody_data.sqlite' 
+    if not os.path.exists(db_path):
+        # Fallback nếu file nằm cùng cấp thư mục
+        db_path = 'data/foody_data.sqlite'
+        
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # Bảng dùng cột Location, không phải Address
-    cursor.execute("SELECT Latitude, Longitude FROM Restaurants WHERE Location = ?", (location,))
+    # SỬA Ở ĐÂY: Tên bảng 'restaurants' và cột viết thường
+    cursor.execute("SELECT latitude, longitude FROM restaurants WHERE location = ?", (location,))
     row = cursor.fetchone()
     conn.close()
 
     if row:
-        return row["Latitude"], row["Longitude"]
+        # SỬA Ở ĐÂY: Truy xuất key viết thường
+        return row["latitude"], row["longitude"]
     else:
         return None, None
 
@@ -67,7 +75,8 @@ def get_route(user_lat: float, user_lon: float, dest_lat: float, dest_lon: float
             profile="driving-car",
             format="geojson"
         )
-        return route["features"][0]["geometry"]["coordinates"]
+        return route["features"][0]["geometry"] 
+        
     except Exception as e:
         raise Exception(f"Lỗi khi tính route bằng ORS: {e}")
 
@@ -80,8 +89,10 @@ def drawMarkerByCoordinate(data):
 
         # Lấy tọa độ nhà hàng từ DB
         lat, lon = get_coordinates_from_db(location)
+        
+        # Nếu DB không có (ví dụ quán mới chưa crawl), fallback sang Geoapify
         if lat is None:
-            # fallback chỉ cho origin user (vị trí nhập)
+            print(f"Không tìm thấy '{location}' trong DB, đang gọi Geoapify...")
             lat, lon = geocode_address(location)
 
         return jsonify({'lat': lat, 'lng': lon})
@@ -98,14 +109,19 @@ def drawPathToDestionation(data):
         return jsonify({'error': 'Thiếu địa chỉ đi hoặc đến'}), 400
 
     try:
-        # origin dùng geocode
+        # 1. Lấy tọa độ người dùng (luôn dùng Geoapify vì là vị trí bất kỳ)
         user_lat, user_lon = geocode_address(origin_text)
 
-        # destination lấy từ DB
+        # 2. Lấy tọa độ điểm đến (ưu tiên lấy từ DB cho chính xác)
         dest_lat, dest_lon = get_coordinates_from_db(destination_text)
+        
         if dest_lat is None:
-            return jsonify({'error': 'Không tìm thấy tọa độ nhà hàng'}), 404
+            try:
+                dest_lat, dest_lon = geocode_address(destination_text)
+            except Exception:
+                return jsonify({'error': 'Không tìm thấy tọa độ điểm đến'}), 404
 
+        # 3. Tính toán đường đi
         route_geometry = get_route(user_lat, user_lon, dest_lat, dest_lon)
 
         return jsonify({

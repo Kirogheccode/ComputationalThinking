@@ -1,4 +1,3 @@
-/* === HERO === */
 .hero {
   background-image: url('/static/images/vn-food-bg.jpg');
   height: 80vh;
@@ -48,7 +47,7 @@
   box-shadow: 0 12px 30px rgba(255,123,0,0.45);
 }
 
-/* === FILTER BAR === */
+/* === FILTER BAR (Giữ nguyên từ code cũ) === */
 .filter-bar {
   background: rgba(255,255,255,0.75);
   border-radius: 10px;
@@ -62,60 +61,93 @@ body.dark .filter-bar {
   background: rgba(20,20,20,0.6);
 }
 
-/* === CARDS === */
+#clearFilters{
+    color: black;
+    background: white;
+}
+
+#themeToggleBtn{
+  color: black;
+  border-color: black;
+}
+
+/* === CARDS (CẬP NHẬT MỚI: Hiệu ứng mượt hơn, bỏ footer) === */
 .card {
   border: none;
-  border-radius: 12px;
+  border-radius: 16px; /* Bo tròn mềm mại hơn */
   overflow: hidden;
-  box-shadow: 0 8px 30px var(--color-card-shadow);
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); /* Bóng đổ nhẹ nhàng */
   background: var(--color-card);
   color: var(--color-text);
-  transition: transform 0.35s cubic-bezier(.2,.9,.2,1), box-shadow 0.35s, background 0.3s;
+  /* Tách riêng transition để tránh xung đột với AOS animation */
+  transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s;
+  height: 100%;
 }
-.card:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+
+/* Homepage Food Cards - Hiệu ứng Hover */
+.food-card {
+    cursor: pointer;
 }
+
+.food-card:hover {
+    /* !important để ghi đè transform của AOS sau khi animation chạy xong */
+    transform: translateY(-8px) !important; 
+    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* Wrapper ảnh */
 .card-img-wrap {
   position: relative;
   overflow: hidden;
-  height: 220px;
+  height: 240px; /* Tăng chiều cao ảnh một chút cho đẹp */
+  background-color: #f0f0f0;
 }
+
+/* Ảnh món ăn - Zoom khi hover */
 .card-img-top {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform .6s ease;
+  transition: transform 0.5s ease;
+  will-change: transform; /* Tối ưu hiệu năng render */
 }
-.card:hover .card-img-top {
-  transform: scale(1.08);
+
+.food-card:hover .card-img-top {
+  transform: scale(1.1);
 }
+
+/* Lớp phủ đen mờ trên ảnh để hiển thị tên món */
 .card-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: flex-end;
-  padding: 12px;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%);
+  padding: 16px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
   color: #fff;
+  pointer-events: none;
 }
-.overlay-text h5 { font-weight: 600; margin: 0; }
-.overlay-text small { opacity: 0.9; }
+
+.overlay-text h5 { 
+    font-weight: 700; 
+    margin: 0; 
+    font-size: 1.15rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0.3px;
+    line-height: 1.4;
+}
+
+/* Card Body */
+.card-body {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
 .text-truncate { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.card-footer { background: transparent; border-top: none; }
 
-/* Homepage Food Cards */
-.food-card {
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.food-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* === RESPONSIVE === */
+/* === RESPONSIVE (Giữ nguyên) === */
 @media (max-width: 767px) {
   .hero {
     height: 56vh;
@@ -130,62 +162,43 @@ body.dark .filter-bar {
   .card-img-wrap { height: 180px; }
 }
 
-#clearFilters{
-    color: black;
-    background: white;
-}
+/* === DARK MODE ADJUSTMENTS (Cập nhật và sửa lỗi) === */
 
-#themeToggleBtn{
-  color: black;
-  border-color: black;
-}
-
-/* 1. Đổi màu chữ 'Giá' và các text phụ (đang dùng class .text-muted) */
+/* 1. Đổi màu chữ phụ */
 body.dark .text-muted {
-    color: #d1d1d1 !important; /* Chuyển thành màu xám sáng dễ đọc trên nền đen */
+    color: #a0a0a0 !important; 
 }
 
-/* 2. Đổi màu nút Icon bản đồ (đang dùng .btn-outline-secondary) */
-body.dark .btn-outline-secondary {
-    color: #ffffff;          /* Icon và chữ màu trắng */
-    border-color: #a0a0a0;   /* Viền màu xám sáng */
-}
-
-/* Hiệu ứng khi di chuột vào nút bản đồ trong Dark Mode */
-body.dark .btn-outline-secondary:hover {
-    background-color: #ffffff;
-    color: #000000;          /* Nền trắng, icon đen */
-    border-color: #ffffff;
-}
-
-/* 3. Cập nhật màu nền Card */
+/* 2. Cập nhật màu nền Card */
 body.dark .card {
-    background-color: #2b2b2b; /* Nền thẻ chuyển sang xám đậm */
-    border-color: #444;        /* Viền thẻ nhạt hơn chút */
-    color: #fff;               /* Chữ mặc định màu trắng */
+    background-color: #1f1f1f; /* Màu xám đen sang trọng */
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+    color: #e0e0e0;
 }
 
-/* 4. Xử lý tiêu đề trên ảnh (Card Overlay) */
+/* 3. Tiêu đề trên ảnh trong Dark mode */
 body.dark .card-overlay .overlay-text h5 {
     color: #fff;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Thêm bóng đổ chữ để nổi bật hơn */
+    text-shadow: 0 2px 4px rgba(0,0,0,1);
 }
 
-/* 5. Fix lại nút "Xóa" bộ lọc trong Dark Mode */
+/* 4. Fix lại nút "Xóa" bộ lọc trong Dark Mode */
 body.dark #clearFilters {
     color: #fff;
-    background: #444; /* Nền tối hơn */
+    background: #444; 
     border: 1px solid #666;
 }
 body.dark #clearFilters:hover {
     background: #555;
 }
 
-/* 6. Fix lại nút Theme Toggle trong Dark Mode */
+/* 5. Fix lại nút Theme Toggle trong Dark Mode */
 body.dark #themeToggleBtn {
     color: #fff;
     border-color: #fff;
 }
+
 body.dark .modal .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
 }

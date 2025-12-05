@@ -10,13 +10,8 @@ from werkzeug.utils import secure_filename
 from Search_Clone_2 import replyToUser
 from extensions import oauth
 from database import (
-    init_db, 
-    add_food_post, 
-    get_food_posts_by_user, 
-    get_user_by_id,
-    add_favorite,
-    get_favorites_by_user,
-    remove_favorite
+    init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
+    add_favorite, get_favorites_by_user, remove_favorite, delete_food_post 
 )
 
 # Khởi tạo ứng dụng Flask
@@ -49,7 +44,7 @@ with app.app_context():
 
 # Dữ liệu mẫu về các món ăn
 # Trong một dự án thực tế, dữ liệu này nên được lấy từ database
-foods_data = load_foods_from_sqlite("foody_data.sqlite")
+foods_data = load_foods_from_sqlite()
 
 @app.route("/")
 def index():
@@ -58,11 +53,8 @@ def index():
     area = request.args.get("area", "all").strip()
     q = request.args.get("q", "").strip().lower()
 
-    # --- ĐOẠN MỚI THÊM: Lấy danh sách ID quán đã yêu thích ---
     favorite_ids = []
     if 'user_id' in session:
-        # Lấy list dict favorites, sau đó trích xuất place_id ra list riêng
-        # Lưu ý: Chuyển về string để dễ so sánh trong template
         user_favs = get_favorites_by_user(session['user_id'])
         favorite_ids = [str(item['place_id']) for item in user_favs]
     # ---------------------------------------------------------
@@ -93,7 +85,7 @@ def index():
         total_pages=total_pages,
         area_selected=area,
         search_query=q,
-        favorite_ids=favorite_ids  # <--- Truyền biến này sang HTML
+        favorite_ids=favorite_ids  
     )
 
 # Route cho trang bản đồ
@@ -194,7 +186,16 @@ def your_account():
     flash('Bài đăng của bạn đã được thêm thành công!', 'success')
     return redirect(url_for('your_account'))
 
-
+@app.route('/post/delete/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    user_id = session['user_id']
+    if delete_food_post(post_id, user_id):
+        flash('Đã xóa bài viết thành công.', 'success')
+    else:
+        flash('Không thể xóa bài viết này.', 'danger')
+    
+    return redirect(url_for('account_page'))
 
 # Phản hồi câu hỏi của user (Gemini + OpenStreetMap + Geoapify) về quán ăn
 @app.route('/api/chat', methods=['POST'])
@@ -231,10 +232,14 @@ def predict_food():
 
 # ⭐ LƯU NHÀ HÀNG YÊU THÍCH
 @app.route("/favorite/add", methods=["POST"])
-@login_required
 def api_add_favorite():
-    data = request.get_json()
+    if 'user_id' not in session:
+        return jsonify({
+            "status": "unauthorized", 
+            "message": "Vui lòng đăng nhập hoặc tạo tài khoản để tiếp tục sử dụng tính năng này."
+        }), 401
 
+    data = request.get_json()
     place_id = data.get("place_id")
     place_name = data.get("place_name")
 
@@ -244,8 +249,7 @@ def api_add_favorite():
     user_id = session["user_id"]
     add_favorite(user_id, place_id, place_name)
 
-    return jsonify({"status": "success", "message": "Saved to favorites!"})
-
+    return jsonify({"status": "success"})
 
 @app.route("/favorite/list", methods=["GET"])
 @login_required
