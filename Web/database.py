@@ -5,7 +5,7 @@ import uuid
 import random
 from werkzeug.security import generate_password_hash
 
-DATABASE = 'smart_tourism.db'
+DATABASE = 'data/smart_tourism.db'
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
@@ -244,6 +244,21 @@ def get_favorites_by_user(user_id):
 
     # Trả về danh sách dict cơ bản
     return [dict(row) for row in rows]
+
+
+def delete_food_post(post_id, user_id):
+    """Xóa bài viết nếu bài viết đó thuộc về user hiện tại"""
+    conn = get_db_connection()
+    try:
+        # Chỉ xóa nếu id bài viết và user_id khớp (bảo mật)
+        conn.execute("DELETE FROM food_posts WHERE id = ? AND user_id = ?", (post_id, user_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Lỗi xóa bài: {e}")
+        return False
+    finally:
+        conn.close()
 
 
 def remove_favorite(user_id, place_id):

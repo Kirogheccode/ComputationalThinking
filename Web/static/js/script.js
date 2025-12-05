@@ -641,29 +641,18 @@ function uploadImageFeature() {
     const text = userInput.value.trim();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    let currentFoodId = null;
-    let currentFoodName = null;
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // Lấy tất cả nút tim
+    const favoriteButtons = document.querySelectorAll('.btn-favorite');
 
-    // 1. Khi bấm nút "Chi tiết" ở danh sách
-    const detailButtons = document.querySelectorAll('.btn-detail'); // Nhớ thêm class btn-detail vào nút ở Bước 1
-    detailButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            // Lấy dữ liệu từ data attribute
-            currentFoodId = this.getAttribute('data-id');
-            currentFoodName = this.getAttribute('data-name');
-            
-            // Cập nhật giao diện Modal (Ảnh, tên, v.v...) - Phần này bạn có thể đã có
-            document.getElementById('modalFoodName').innerText = currentFoodName;
-            // ... cập nhật các trường khác ...
-        });
-    });
+    favoriteButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault(); 
 
-    // 2. Khi bấm nút "Lưu" trong Modal
-    const btnSave = document.getElementById('btnSaveFavorite');
-    if(btnSave) {
-        btnSave.addEventListener('click', function() {
-            if(!currentFoodId) return;
+            const placeId = this.getAttribute('data-place-id');
+            const placeName = this.getAttribute('data-place-name');
+            const icon = this.querySelector('i'); // Icon trái tim
 
             fetch('/favorite/add', {
                 method: 'POST',
@@ -671,31 +660,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    place_id: currentFoodId,
-                    place_name: currentFoodName
+                    place_id: placeId,
+                    place_name: placeName
                 })
             })
             .then(response => {
-                if(response.status === 401) {
-                    alert("Vui lòng đăng nhập để lưu quán ăn!");
-                    window.location.href = "/login"; // Chuyển hướng nếu chưa đăng nhập
-                    return;
+                // TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP (Lỗi 401)
+                if (response.status === 401) {
+                    return response.json().then(data => {
+                        // Hiện thông báo yêu cầu
+                        alert(data.message); 
+                        // Chuyển hướng sang trang đăng nhập
+                        window.location.href = "/login"; 
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                if(data && data.status === 'success') {
-                    alert("Đã lưu vào danh sách yêu thích!");
-                    // Có thể đổi text nút thành "Đã lưu"
-                    btnSave.innerText = "Đã lưu";
-                    btnSave.disabled = true;
-                } else if (data) {
-                    alert("Lỗi: " + (data.error || data.message));
+                // TRƯỜNG HỢP 2: THÀNH CÔNG
+                if (data && data.status === 'success') {
+                    // Chỉ đổi màu icon, KHÔNG hiện alert nữa
+                    if(icon) {
+                        icon.classList.remove('far'); // Xóa tim rỗng
+                        icon.classList.add('fas', 'text-danger'); // Thêm tim đặc màu đỏ
+                    }
                 }
             })
-            .catch(err => console.error(err));
+            .catch(error => console.error('Error:', error));
         });
-    }
+    });
 });
 
 function main()

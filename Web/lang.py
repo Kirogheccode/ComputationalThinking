@@ -8,7 +8,7 @@ translations = {
         "hello": "Xin chào",
         "filter": "Bộ lọc",
         "us": "Giới thiệu",
-        "your_account": "Tài khoản của bạn",
+        "your_account": "Tài khoản cá nhân",
         "register": "Đăng ký",
         "dark": "Tối",
         "light": "Sáng",
