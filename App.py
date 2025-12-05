@@ -173,7 +173,7 @@ def route_user_request(prompt):
 
     # --- 1. Restaurant Command ---
     # Syntax: "/eat Cơm tấm quận 1" or "/place_ Cơm tấm quận 1"
-    if prompt_lower.startswith("/place_") or prompt_lower.startswith("/eat"):
+    if prompt_lower.startswith("/place_"):
         # Remove the command to get the query
         clean_prompt = prompt.replace("/place_", "").replace("/eat", "").strip()
 
@@ -203,7 +203,7 @@ def route_user_request(prompt):
 
     # --- 2. Recipe/Food Command ---
     # Syntax: "/cook Phở bò"
-    if prompt_lower.startswith("/recipe_") or prompt_lower.startswith("/cook"):
+    if prompt_lower.startswith("/recipe_"):
         clean_prompt = prompt.replace("/recipe_", "").replace("/cook", "").strip()
         return {
             "task": "food_recommendation",
@@ -213,7 +213,7 @@ def route_user_request(prompt):
 
     # --- 3. Menu Command ---
     # Syntax: "/plan" or "/menu"
-    if prompt_lower.startswith("/plan_") or prompt_lower.startswith("/menu"):
+    if prompt_lower.startswith("/plan_"):
         return {
             "task": "daily_menu",
             "location": "none",  # Default
