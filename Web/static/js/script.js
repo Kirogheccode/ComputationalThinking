@@ -435,23 +435,28 @@ function showNotification(text) {
 }
 
 async function sendMessage(uploadedImage, text) {
-    if(isProcess){
-        showNotification("Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!");
+    const i18nEl = document.getElementById("sendMessageBtn");
+    if (!i18nEl) return;
+
+    // ✅ Lấy text đa ngôn ngữ giống themeMode()
+    const textProcessing = i18nEl.dataset.processing;
+    const textInputRequired = i18nEl.dataset.inputRequired;
+
+    if (isProcess) {
+        showNotification(textProcessing);
         return;
     }
 
-    if(text == ""){
-        showNotification("Hãy nhập liệu vào ô input.");
+    if (text === "") {
+        showNotification(textInputRequired);
         return;
     }
 
-    // Nếu có ảnh -> gửi ảnh
-    if (uploadedImage && text!=="") {
+    if (uploadedImage && text !== "") {
         await sendImage(text);
         return;
     }
 
-    // Nếu không có ảnh -> gửi text
     if (text !== "") {
         await sendText(text);
         return;
@@ -481,32 +486,39 @@ function chatBot() {
 }
 
 function themeMode() {
-    // --- Theme toggle (dark mode) ---
     const themeToggleBtn = document.getElementById("themeToggleBtn");
     const body = document.body;
+
+    if (!themeToggleBtn) return;
+
+    // Lấy text đa ngôn ngữ từ HTML
+    const textDark = themeToggleBtn.dataset.dark;
+    const textLight = themeToggleBtn.dataset.light;
+
     // === Theme initialization ===
     const savedTheme = localStorage.getItem("theme");
+
     if (savedTheme === "dark") {
         body.classList.add("dark");
-        if (themeToggleBtn)
-            themeToggleBtn.textContent = "🌙 Tối";
-    }
-    else {
+        themeToggleBtn.textContent = "🌙 " + textDark;
+    } else {
         body.classList.remove("dark");
-        if (themeToggleBtn)
-            themeToggleBtn.textContent = "🌞 Sáng";
+        themeToggleBtn.textContent = "🌞 " + textLight;
     }
 
+    // === Click toggle ===
+    themeToggleBtn.addEventListener("click", () => {
+        const isDark = body.classList.toggle("dark");
+        themeToggleBtn.textContent = isDark
+            ? "🌙 " + textDark
+            : "🌞 " + textLight;
 
-    if (themeToggleBtn) {
-        themeToggleBtn.addEventListener("click", () => {
-            const isDark = body.classList.toggle("dark");
-            themeToggleBtn.textContent = isDark ? "🌙 Tối" : "🌞 Sáng";
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-            if (window.AOS) setTimeout(() => AOS.refresh(), 350);
-        });
-    }
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+
+        if (window.AOS) setTimeout(() => AOS.refresh(), 350);
+    });
 }
+
 
 function renderFoodCards(container, data) {
     const placeholder = document.getElementById("food-placeholder");

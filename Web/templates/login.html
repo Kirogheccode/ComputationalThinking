@@ -1,7 +1,7 @@
 <!-- login.html -->
 {% extends "base.html" %}
 
-{% block title %}Đăng nhập{% endblock %}
+{% block title %}{{ t.login_title }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
@@ -14,40 +14,40 @@
                     <div class="col-md-6 d-none d-md-block login-image-side">
                         <div class="d-flex align-items-end h-100 p-4">
                             <div class="text-white position-relative" style="z-index: 2;">
-                                <h3 class="fw-bold">Khám phá ẩm thực</h3>
-                                <p class="mb-0">Kết nối với những địa điểm ăn uống tuyệt vời nhất quanh bạn.</p>
+                                <h3 class="fw-bold">{{ t.food_explore }}</h3>
+                                <p class="mb-0">{{ t.food_desc }}</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-6 form-side">
                         <div class="mb-4 text-center">
-                            <h2 class="fw-bold">Chào mừng trở lại!</h2>
-                            <p class="text-muted">Vui lòng đăng nhập để tiếp tục.</p>
+                            <h2 class="fw-bold">{{ t.welcome_back }}</h2>
+                            <p class="text-muted">{{ t.login_continue }}</p>
                         </div>
 
                         <form method="POST" action="{{ url_for('auth.login') }}">
                             <div class="mb-4">
-                                <label for="username" class="form-label fw-bold small text-uppercase text-muted">Tên đăng nhập</label>
+                                <label for="username" class="form-label fw-bold small text-uppercase text-muted">{{ t.username }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-user"></i></span>
                                     <input type="text" class="form-control py-2" id="username" name="username" 
-                                           placeholder="Nhập tên người dùng" required 
+                                           placeholder="{{ t.username_placeholder }}" required 
                                            value="{{ request.form.username if request.form.username }}">
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="password" class="form-label fw-bold small text-uppercase text-muted">Mật khẩu</label>
+                                <label for="password" class="form-label fw-bold small text-uppercase text-muted">{{ t.password }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                     <input type="password" class="form-control py-2" id="password" name="password" 
-                                           placeholder="Nhập mật khẩu" required>
+                                           placeholder="{{ t.password_placeholder }}" required>
                                 </div>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
-                                ĐĂNG NHẬP
+                                {{ t.login_btn }}
                             </button>
                         </form>
 
@@ -55,24 +55,24 @@
                             <div class="position-relative mb-4">
                                 <hr class="text-muted opacity-25">
                                 <span class="position-absolute top-50 start-50 translate-middle px-3 bg-white text-muted small header-or">
-                                    Hoặc
+                                    {{ t.or }}
                                 </span>
                             </div>
 
                             <div class="d-grid gap-2 col-10 mx-auto">
                                 <a href="{{ url_for('auth.login_google') }}" class="btn btn-danger btn-social py-2">
-                                    <i class="fab fa-google me-2"></i> Đăng nhập bằng Google
+                                    <i class="fab fa-google me-2"></i> {{ t.login_google }}
                                 </a>
 
                                 <a href="{{ url_for('auth.login_facebook') }}" class="btn btn-primary btn-social py-2" style="background-color: #3b5998; border-color: #3b5998;">
-                                    <i class="fab fa-facebook-f me-2"></i> Đăng nhập bằng Facebook
+                                    <i class="fab fa-facebook-f me-2"></i> {{ t.login_facebook }}
                                 </a>
                             </div>
                         </div>
 
                         <div class="text-center mt-4">
-                            <span class="text-muted">Chưa có tài khoản?</span> 
-                            <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none ms-1">Đăng ký ngay</a>
+                            <span class="text-muted">{{ t.no_account }}?</span> 
+                            <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none ms-1">{{ t.register_now }}</a>
                         </div>
                     </div>
                 </div>

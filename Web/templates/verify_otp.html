@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Xác thực OTP{% endblock %}
+{% block title %}{{ t.otp_title }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/verify_otp.css') }}">
@@ -14,35 +14,37 @@
                     <i class="fas fa-envelope-open-text"></i>
                 </div>
 
-                <h3 class="fw-bold mb-2">Xác thực Email</h3>
+                <h3 class="fw-bold mb-2">{{ t.verify_email_title }}</h3>
                 <p class="text-muted mb-4">
-                    Chúng tôi đã gửi mã 6 số đến<br>
+                    {{ t.otp_sent_prefix }}<br>
                     <strong class="text-primary">{{ email }}</strong>
                 </p>
 
                 <form method="POST" action="{{ url_for('auth.verify_otp') }}">
                     <div class="mb-4">
                         <input type="text" class="form-control otp-input" id="otp" name="otp" 
-                               placeholder="------" maxlength="6" required autocomplete="off"
+                               placeholder="{{ t.otp_placeholder }}" maxlength="6" required autocomplete="off"
                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                        </div>
+                    </div>
                     
                     <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm mb-3">
-                        XÁC THỰC
+                        {{ t.verify_btn }}
                     </button>
                 </form>
                 
                 <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-light">
                     <a href="{{ url_for('auth.resend_otp') }}" class="btn btn-link text-decoration-none btn-sm px-0">
-                        <i class="fas fa-redo me-1"></i> Gửi lại mã
+                        <i class="fas fa-redo me-1"></i> {{ t.resend_otp }}
                     </a>
                     <a href="{{ url_for('auth.register') }}" class="btn btn-link text-decoration-none text-muted btn-sm px-0">
-                        Nhập sai Email?
+                        {{ t.wrong_email }}
                     </a>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}

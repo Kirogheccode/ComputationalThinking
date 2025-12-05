@@ -1,0 +1,297 @@
+translations = {
+    "vi": {
+        "home": "Trang chủ",
+        "map": "Bản đồ",
+        "search": "Tìm kiếm",
+        "login": "Đăng nhập",
+        "logout": "Đăng xuất",
+        "hello": "Xin chào",
+        "filter": "Bộ lọc",
+        "us": "Giới thiệu",
+        "your_account": "Tài khoản của bạn",
+        "register": "Đăng ký",
+        "dark": "Tối",
+        "light": "Sáng",
+        "contact": "Liên hệ",
+        "navig": "Điều hướng",
+        "des": "Gợi ý món ăn & địa điểm ẩm thực tại TP.HCM. Khám phá, lưu lại và thưởng thức.",
+
+        "hero_title": "Khám phá tinh hoa ẩm thực",
+        "hero_city": "TP.HCM",
+        "hero_sub": "Gợi ý quán ngon, địa điểm nổi bật và trải nghiệm ẩm thực không thể bỏ lỡ.",
+        "hero_start": "Bắt đầu hành trình 🍜",
+        "hero_map": "Xem trên bản đồ",
+
+        "all_area": "Tất cả khu vực",
+        "search_placeholder": "Tìm món hoặc tên quán...",
+        "clear": "Xóa",
+
+        "trend_food": "Món ăn nổi bật",
+        "rcm": "Gợi ý cho bạn",
+        "info": "Chi tiết",
+        "address": "Địa chỉ",
+        "rating": "Đánh giá",
+        "front": "Trước",
+        "back": "Sau",
+        "fav": "Yêu thích",
+        "close": "Đóng",
+
+        "map_title": "Tìm đường đến quán ăn",
+        "your_location": "Vị trí của bạn:",
+        "location_placeholder": "VD: Chợ Bến Thành, Quận 1...",
+        "find_route": "Tìm đường",
+        "location_hint": "Nhập địa chỉ hiện tại của bạn để xem đường đi.",
+
+        "about_title": "Giới thiệu",
+        "about_heading": "Giới thiệu Dự án",
+        "about_subtitle": "Smart Tourism System – Gợi ý món ăn khi đi du lịch",
+
+        "about_goal_title": "Mục tiêu dự án",
+        "about_goal_desc": "Dự án \"Smart Tourism System\" được xây dựng nhằm mục đích mang lại trải nghiệm du lịch ẩm thực tốt nhất cho du khách. Hệ thống sử dụng công nghệ để gợi ý những món ăn đặc sắc, phù hợp với khẩu vị và vị trí của người dùng, giúp họ dễ dàng khám phá văn hóa ẩm thực địa phương.",
+
+        "about_team_title": "Nhóm thực hiện",
+
+        "member_1": "Nguyễn Lê Hoàng Khải - Team Lead / Integration Engineer",
+        "member_2": "Nguyễn Nhựt Huy - Backend Developer / Pipeline Engineer",
+        "member_3": "Trần Lê Hoàng Gia - Integration Engineer",
+        "member_4": "Vũ Duy Nhất - Integration Engineer",
+        "member_5": "Trịnh Khánh Linh - Frontend Developer / UI Designer",
+        "member_6": "Trần Quang Minh Huy - Frontend Developer / UI Designer",
+        "member_7": "Nguyễn Ngọc Gia Bảo - Database / Storage Engineer",
+
+        "about_team_desc": "Chúng tôi là nhóm sinh viên đam mê công nghệ và du lịch, mong muốn tạo ra những sản phẩm hữu ích, góp phần nâng cao chất lượng du lịch tại Việt Nam.",
+
+        "profile_title": "Trang cá nhân",
+        "profile_member": "Thành viên Smart Tourism",
+        "profile_posts": "Bài viết",
+        "profile_fav": "Yêu thích",
+        "profile_write": "Viết đánh giá mới",
+        "profile_my_posts": "Bài viết của tôi",
+        "profile_my_fav": "Nhà hàng yêu thích",
+        "profile_rating": "Đánh giá",
+        "profile_no_post": "Bạn chưa có bài viết nào",
+        "profile_write_now": "Viết bài ngay",
+        "profile_unfav": "Bỏ lưu",
+        "profile_saved": "Đã lưu",
+        "profile_view_detail": "Xem chi tiết",
+        "profile_empty_fav": "Danh sách yêu thích trống",
+        "profile_explore": "Khám phá nhà hàng",
+        "profile_fav_done": "Đã thích",
+
+        "chatbot_title": "Chatbot Gợi ý",
+        "chatbot_food_suggest": "Gợi ý món ăn",
+        "chatbot_no_suggest": "Chưa có quán ăn gợi ý",
+        "chatbot_chat_title": "Chatbot",
+        "chatbot_hello": "Xin chào! Tôi có thể giúp gì cho bạn hôm nay?",
+        "chatbot_placeholder": "Hỏi về quán phở, bún chả...",
+
+        "complete_register_title": "Hoàn tất đăng ký",
+        "complete_register_heading": "Hoàn tất đăng ký",
+        "complete_register_using": "Bạn đang đăng nhập bằng",
+        "complete_register_note": "Vui lòng chọn tên đăng nhập để hoàn tất.",
+
+        "complete_register_email_label": "Email của bạn",
+        "complete_register_email_note": "Email được lấy từ tài khoản mạng xã hội của bạn.",
+
+        "complete_register_username_label": "Tên đăng nhập mong muốn",
+        "complete_register_username_placeholder": "Ví dụ: dulich123",
+
+        "complete_register_submit": "TẠO TÀI KHOẢN",
+
+        "register_title": "Đăng ký tài khoản",
+        "register_heading": "Tạo tài khoản mới",
+        "register_sub": "Tham gia cộng đồng ẩm thực ngay hôm nay.",
+
+        "register_display_name": "Tên hiển thị",
+        "register_username_placeholder": "VD: FoodLover123",
+
+        "register_email": "Địa chỉ Email",
+        "register_email_placeholder": "name@example.com",
+        "register_email_note": "*Chúng tôi sẽ gửi mã OTP xác nhận qua email này.",
+
+        "register_password": "Mật khẩu",
+        "register_password_hint": "Tối thiểu 6 ký tự",
+
+        "register_continue": "TIẾP TỤC",
+        "register_have_account": "Đã có tài khoản?",
+
+        "register_right_title": "Chia sẻ đam mê",
+        "register_right_desc": "Đánh giá món ăn, tìm kiếm địa điểm và kết nối bạn bè.",
+
+        "login_title": "Đăng nhập",
+        "welcome_back": "Chào mừng trở lại!",
+        "login_continue": "Vui lòng đăng nhập để tiếp tục.",
+        "username": "Tên đăng nhập",
+        "username_placeholder": "Nhập tên người dùng",
+        "password": "Mật khẩu",
+        "password_placeholder": "Nhập mật khẩu",
+        "login_btn": "Đăng nhập",
+        "or": "Hoặc",
+        "login_google": "Đăng nhập bằng Google",
+        "login_facebook": "Đăng nhập bằng Facebook",
+        "no_account": "Chưa có tài khoản?",
+        "register_now": "Đăng ký ngay",
+        "food_explore": "Khám phá ẩm thực",
+        "food_desc": "Kết nối với những địa điểm ăn uống tuyệt vời nhất quanh bạn.",
+
+        "otp_title": "Xác thực OTP",
+        "verify_email_title": "Xác thực Email",
+        "otp_sent_prefix": "Chúng tôi đã gửi mã 6 số đến",
+        "otp_placeholder": "------",
+        "verify_btn": "XÁC THỰC",
+        "resend_otp": "Gửi lại mã",
+        "wrong_email": "Nhập sai Email?",
+
+        "processing_task": "Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!",
+        "input_required": "Hãy nhập liệu vào ô input."
+
+    },
+
+    "en": {
+        "home": "Home",
+        "search": "Search",
+        "map": "Map",
+        "login": "Login",
+        "logout": "Logout",
+        "hello": "Hello",
+        "filter": "Filter",
+        "us": "About us",
+        "your_account": "Your account",
+        "register": "Register",
+        "dark": "Dark",
+        "light": "Light",
+        "contact": "Contact",
+        "navig": "Navigation",
+        "des": "Explore Ho Chi Minh City’s finest food and dining destinations.",
+
+        "hero_title": "Discover the essence of cuisine",
+        "hero_city": "Ho Chi Minh City",
+        "hero_sub": "Top food spots, featured destinations, and unforgettable culinary experiences.",
+        "hero_start": "Start the journey 🍜",
+        "hero_map": "View on map",
+
+        "all_area": "All areas",
+        "search_placeholder": "Search for food or restaurant...",
+        "clear": "Clear",
+
+        "trend_food": "Trending food",
+        "rcm": "Recommended for you",
+        "info": "View",
+        "address": "Address",
+        "rating": "Rating",
+        "front": "Front",
+        "back": "Back",
+        "fav": "Favourite",
+        "close": "Close",
+
+        "map_title": "Get directions to the restaurant",
+        "your_location": "Your location:",
+        "location_placeholder": "E.g: Ben Thanh Market, District 1...",
+        "find_route": "Find route",
+        "location_hint": "Enter your current address to view the route.",
+
+        "about_title": "About",
+        "about_heading": "About the Project",
+        "about_subtitle": "Smart Tourism System – Food recommendation while traveling",
+
+        "about_goal_title": "Project Objectives",
+        "about_goal_desc": "The \"Smart Tourism System\" project is built to provide the best culinary tourism experience for travelers. The system uses technology to recommend signature dishes based on user preferences and locations, helping them explore local food culture more easily.",
+
+        "about_team_title": "Development Team",
+
+        "member_1": "Nguyen Le Hoang Khai - Team Lead / Integration Engineer",
+        "member_2": "Nguyen Nhut Huy - Backend Developer / Pipeline Engineer",
+        "member_3": "Tran Le Hoang Gia - Integration Engineer",
+        "member_4": "Vu Duy Nhat - Integration Engineer",
+        "member_5": "Trinh Khanh Linh - Frontend Developer / UI Designer",
+        "member_6": "Tran Quang Minh Huy - Frontend Developer / UI Designer",
+        "member_7": "Nguyen Ngoc Gia Bao - Database / Storage Engineer",
+
+        "about_team_desc": "We are a group of students passionate about technology and tourism, aiming to create useful products that contribute to improving the quality of tourism in Vietnam.",
+    
+        "profile_title": "Profile",
+        "profile_member": "Smart Tourism Member",
+        "profile_posts": "Posts",
+        "profile_fav": "Favorites",
+        "profile_write": "Write a new review",
+        "profile_my_posts": "My Posts",
+        "profile_my_fav": "Favorite Restaurants",
+        "profile_rating": "Rating",
+        "profile_no_post": "You haven't posted anything yet",
+        "profile_write_now": "Write now",
+        "profile_unfav": "Remove from favorites",
+        "profile_saved": "Saved",
+        "profile_view_detail": "View details",
+        "profile_empty_fav": "Your favorite list is empty",
+        "profile_explore": "Explore restaurants",
+        "profile_fav_done": "Liked",
+
+        "chatbot_title": "Food Suggestion Chatbot",
+        "chatbot_food_suggest": "Food Suggestions",
+        "chatbot_no_suggest": "No restaurant suggestions yet",
+        "chatbot_chat_title": "Chatbot",
+        "chatbot_hello": "Hello! How can I help you today?",
+        "chatbot_placeholder": "Ask about pho, bun cha, restaurants...",
+
+        "complete_register_title": "Complete Registration",
+        "complete_register_heading": "Complete Your Registration",
+        "complete_register_using": "You are signing in using",
+        "complete_register_note": "Please choose a username to complete the process.",
+
+        "complete_register_email_label": "Your Email",
+        "complete_register_email_note": "This email is retrieved from your social network account.",
+
+        "complete_register_username_label": "Desired Username",
+        "complete_register_username_placeholder": "Example: travel123",
+
+        "complete_register_submit": "CREATE ACCOUNT",
+
+        "register_title": "Register Account",
+        "register_heading": "Create a New Account",
+        "register_sub": "Join the food community today.",
+
+        "register_display_name": "Display Name",
+        "register_username_placeholder": "E.g: FoodLover123",
+
+        "register_email": "Email Address",
+        "register_email_placeholder": "name@example.com",
+        "register_email_note": "*We will send an OTP verification code to this email.",
+
+        "register_password": "Password",
+        "register_password_hint": "At least 6 characters",
+
+        "register_continue": "CONTINUE",
+        "register_have_account": "Already have an account?",
+
+        "register_right_title": "Share Your Passion",
+        "register_right_desc": "Review food, discover places, and connect with friends.",
+
+        "login_title": "Login",
+        "welcome_back": "Welcome back!",
+        "login_continue": "Please login to continue.",
+        "username": "Username",
+        "username_placeholder": "Enter your username",
+        "password": "Password",
+        "password_placeholder": "Enter your password",
+        "login_btn": "Login",
+        "or": "Or",
+        "login_google": "Login with Google",
+        "login_facebook": "Login with Facebook",
+        "no_account": "Don't have an account?",
+        "register_now": "Register now",
+        "food_explore": "Explore Food",
+        "food_desc": "Connect with the best dining places around you.",
+
+        "otp_title": "OTP Verification",
+        "verify_email_title": "Verify Email",
+        "otp_sent_prefix": "We have sent a 6-digit code to",
+        "otp_placeholder": "------",
+        "verify_btn": "VERIFY",
+        "resend_otp": "Resend code",
+        "wrong_email": "Wrong email?",
+
+        "processing_task": "Task is being processed, please wait!",
+        "input_required": "Please enter text."
+
+    }
+}

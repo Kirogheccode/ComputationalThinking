@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Trang cá nhân - {{ username }}{% endblock %}
+{% block title %}{{ t.profile_title }} - {{ username }}{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
@@ -17,25 +17,26 @@
                 </div>
                 <div class="card-body p-4">
                     <h3 class="fw-bold mb-1">{{ username }}</h3>
-                    <p class="text-muted small mb-4"><i class="fas fa-map-marker-alt me-1"></i>Thành viên Smart Tourism</p>
-                    
+                    <p class="text-muted small mb-4">
+                        <i class="fas fa-map-marker-alt me-1"></i>{{ t.profile_member }}
+                    </p>                    
                     <div class="row g-2 mb-4">
                         <div class="col-6">
                             <div class="stats-box">
                                 <div class="stats-num">{{ posts|length }}</div>
-                                <div class="stats-label">Bài viết</div>
+                                <div class="stats-label">{{ t.profile_posts }}</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="stats-box">
                                 <div class="stats-num">{{ favorites|length }}</div>
-                                <div class="stats-label">Yêu thích</div>
+                                <div class="stats-label">{{ t.profile_fav }}</div>
                             </div>
                         </div>
                     </div>
 
                     <button class="btn btn-dark w-100 py-2 fw-bold rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-pen-nib me-2"></i> Viết đánh giá mới
+                        <i class="fas fa-pen-nib me-2"></i> {{ t.profile_write }}
                     </button>
                 </div>
             </div>
@@ -45,12 +46,12 @@
             <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="pills-posts-tab" data-bs-toggle="pill" data-bs-target="#pills-posts" type="button">
-                        <i class="fas fa-utensils me-2"></i>Bài viết của tôi
+                        <i class="fas fa-utensils me-2"></i>{{ t.profile_my_posts }}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="pills-fav-tab" data-bs-toggle="pill" data-bs-target="#pills-fav" type="button">
-                        <i class="fas fa-heart me-2"></i>Nhà hàng yêu thích
+                        <i class="fas fa-heart me-2"></i>{{ t.profile_my_fav }}
                     </button>
                 </li>
             </ul>
@@ -77,7 +78,7 @@
                                             {{ post.description }}
                                         </p>
                                         <div class="d-flex justify-content-between align-items-center mt-2 mt-auto">
-                                            <span class="badge bg-light text-dark border">Đánh giá</span>
+                                            <span class="badge bg-light text-dark border">{{ t.profile_rating }}</span>
                                             <small class="text-muted">{{ post.posted_at.split(' ')[1][:5] }}</small>
                                         </div>
                                     </div>
@@ -88,8 +89,8 @@
                     {% else %}
                         <div class="text-center py-5 bg-white rounded shadow-sm">
                             <i class="fas fa-camera fa-3x text-muted mb-3 opacity-50"></i>
-                            <h5 class="text-muted">Bạn chưa có bài viết nào</h5>
-                            <button class="btn btn-warning btn-sm mt-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createPostModal">Viết bài ngay</button>
+                            <h5 class="text-muted">{{ t.profile_no_post }}</h5>
+                            <button class="btn btn-warning btn-sm mt-2 fw-bold" data-bs-toggle="modal" data-bs-target="#createPostModal">{{ t.profile_write_now }}</button>
                         </div>
                     {% endif %}
                 </div>
@@ -114,7 +115,7 @@
                                     <div class="card-body p-3">
                                         <h5 class="card-title fw-bold text-truncate">{{ fav.place_name }}</h5>
                                         <p class="small text-muted mb-2">
-                                            <i class="fas fa-clock me-1"></i> Đã lưu: {{ fav.created_at }}
+                                            <i class="fas fa-clock me-1"></i> {{ t.profile_saved }}: {{ fav.created_at }}
                                         </p>
                                         <button class="btn btn-outline-warning btn-sm w-100 fw-bold mt-auto btn-detail" 
                                                 data-bs-toggle="modal" 
@@ -124,7 +125,7 @@
                                                 data-location="{{ fav.location }}"
                                                 data-image="{{ url_for('static', filename=fav.image) }}"
                                                 data-rating="{{ fav.rating }}⭐"
-                                                data-is-fav="true"> Xem chi tiết
+                                                data-is-fav="true"> {{ t.profile_view_detail }}
                                         </button>
                                     </div>
                                 </div>
@@ -134,8 +135,8 @@
                     {% else %}
                         <div class="text-center py-5 bg-white rounded shadow-sm">
                             <i class="far fa-heart fa-3x text-muted mb-3 opacity-50"></i>
-                            <h5 class="text-muted">Danh sách yêu thích trống</h5>
-                            <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm mt-2">Khám phá nhà hàng</a>
+                            <h5 class="text-muted">{{ t.profile_empty_fav }}</h5>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-dark btn-sm mt-2">{{ t.profile_explore }}</a>
                         </div>
                     {% endif %}
                 </div>
@@ -158,18 +159,18 @@
                         <img id="modalFoodImage" src="" class="img-fluid rounded" alt="Food Image">
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Địa điểm:</strong> <span id="modalFoodLocation"></span></p>
-                        <p><strong>Đánh giá:</strong> <span id="modalFoodRating"></span></p>
+                        <p><strong>{{ t.address }}:</strong> <span id="modalFoodLocation"></span></p>
+                        <p><strong>{{ t.rating }}:</strong> <span id="modalFoodRating"></span></p>
                         <div class="mt-3">
                             <button id="btnSaveFavorite" class="btn btn-danger btn-sm" disabled>
-                                <i class="fas fa-heart me-1"></i> Đã thích
+                                <i class="fas fa-heart me-1"></i>  {{ t.profile_fav_done }}
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-0">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">{{ t.close }}</button>
             </div>
         </div>
     </div>

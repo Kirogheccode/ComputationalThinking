@@ -1,25 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Chatbot Gợi ý{% endblock %}
+{% block title %}{{ t.chatbot_title }}{% endblock %}
 
 {% block content %}
 <div class="container my-4">
     <div class="row">
 
         <div class="col-md-6">
-            <h2>Gợi ý món ăn</h2>
+            <h2>{{ t.chatbot_food_suggest }}</h2>
             <div class="carousel" id="carousel">
                 <!-- PLACEHOLDER mặc định -->
                 <div id="food-placeholder" class="food-placeholder">
                     <i class="fa-solid fa-utensils"></i>
-                    <p>Chưa có quán ăn gợi ý</p>
+                    <p>{{ t.chatbot_no_suggest }}</p>
                 </div>
-
             </div>
         </div>
 
         <div class="col-md-6">
-            <h2>Chatbot</h2>
+            <h2>{{ t.chatbot_chat_title }}</h2>
             
             <div class="chatbot-container">
                 <div class="chat-window" id="chat-window" style="height: 450px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
@@ -27,7 +26,7 @@
                         <img src="{{ url_for('static', filename='images/jane.jpg') }}" 
                             class="bot-avatar rounded-circle me-2" style="width: 40px; height: 40px;" alt="Bot">
                         
-                        <p class="mb-0">Xin chào! Tôi có thể giúp gì cho bạn hôm nay?</p>
+                        <p class="mb-0">{{ t.chatbot_hello }}</p>
                     </div>
                 </div>
                 
@@ -41,8 +40,10 @@
                 </div>
 
                 <div class="chat-input-area d-flex align-items-center gap-2 mt-3">
-                    <input type="text" id="userInput" class="form-control" placeholder="Hỏi về quán phở, bún chả...">
-                    <button id="sendMessageBtn" class="btn btn-primary">
+                    <input type="text" id="userInput" class="form-control" placeholder="{{ t.chatbot_placeholder }}">
+                    <button id="sendMessageBtn" class="btn btn-primary"
+                        data-processing="{{ t.processing_task }}"
+                        data-input-required="{{ t.input_required }}">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                     <input type="file" id="imageInput" accept="image/*" hidden>
@@ -56,21 +57,22 @@
     </div>
 </div>
 
+<!-- === MAP MODAL === -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Tìm đường đến quán ăn</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">{{ t.map_title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t.close }}"></button>
             </div>
             <div class="modal-body">
                 
                 <div class="mb-3">
-                    <label for="userOriginInput" class="form-label fw-bold">Vị trí xuất phát:</label>
+                    <label for="userOriginInput" class="form-label fw-bold">{{ t.your_location }}</label>
                     <div class="input-group">
-                        <input type="text" id="userOriginInput" class="form-control" placeholder="Nhập vị trí của bạn (VD: Chợ Bến Thành)...">
+                        <input type="text" id="userOriginInput" class="form-control" placeholder="{{ t.location_placeholder }}">
                         <button class="btn btn-primary" id="btnFindRoute">
-                            <i class="fa-solid fa-route"></i> Tìm đường
+                            <i class="fa-solid fa-route"></i> {{ t.find_route }}
                         </button>
                     </div>
                 </div>

@@ -9,6 +9,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 from werkzeug.utils import secure_filename
 from Search_Clone_2 import replyToUser
 from extensions import oauth
+from lang import translations
 from database import (
     init_db, 
     add_food_post, 
@@ -25,6 +26,12 @@ oauth.init_app(app)
 
 # Secret key session
 app.config['SECRET_KEY'] = 'your_super_secret_key_here_for_session_management' 
+
+@app.context_processor
+def inject_lang():
+    lang = request.args.get("lang") or session.get("lang") or "vi"
+    session["lang"] = lang
+    return dict(t=translations[lang], current_lang=lang)
 
 # Cấu hình thư mục upload (fix path tuyệt đối)
 UPLOAD_FOLDER = os.path.join(app.root_path, "static/images/user_uploads")
@@ -268,7 +275,6 @@ def api_remove_favorite():
     remove_favorite(user_id, place_id)
 
     return jsonify({"status": "success"})
-
 
 # Chạy ứng dụng
 if __name__ == '__main__':
