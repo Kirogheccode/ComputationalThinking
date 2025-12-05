@@ -4,12 +4,12 @@ import sqlite3
 import math
 import requests
 import pandas as pd
+from datetime import datetime
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-# --- 1. CONFIGURATION AND GLOBAL DATA LOADING ---
+# --- 1. CONFIGURATION ---
 
-# Load .env file (for GOOGLE_API_KEY)
 load_dotenv()
 GOOGLE_API = os.getenv("GOOGLE_API_KEY")
 GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
@@ -17,19 +17,18 @@ GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
 if GOOGLE_API:
     genai.configure(api_key=GOOGLE_API)
 else:
-    print("Error: GOOGLE_API_KEY not found. Please check your .env file.")
+    print("Error: GOOGLE_API_KEY not found.")
     exit()
 
 if not GEOAPIFY_API_KEY:
-    print("Error: GEOAPIFY_API_KEY not found. Please check your .env file.")
+    print("Error: GEOAPIFY_API_KEY not found.")
     exit()
 
 # --- DIET KNOWLEDGE BASE ---
 DIET_RULES = {
     "vegan": {
         "allowed": ["vegetables", "fruits", "grains", "legumes", "nuts", "seeds", "tofu", "plant oils"],
-        "prohibited": ["meat", "poultry", "fish", "seafood", "dairy", "eggs", "honey", "animal gelatin",
-                       "fish sauce (nước mắm)"],
+        "prohibited": ["meat", "poultry", "fish", "seafood", "dairy", "eggs", "honey", "animal gelatin", "fish sauce (nước mắm)"],
         "description": "Strict plant-based diet. No animal products whatsoever."
     },
     "vegetarian": {
@@ -39,8 +38,7 @@ DIET_RULES = {
     },
     "halal": {
         "allowed": ["halal meat (beef, lamb, chicken)", "fish", "seafood", "vegetables", "fruit", "grains"],
-        "prohibited": ["pork (heo)", "lard", "blood", "alcohol (rượu/bia)",
-                       "meat not slaughtered according to islamic rites"],
+        "prohibited": ["pork (heo)", "lard", "blood", "alcohol (rượu/bia)", "meat not slaughtered according to islamic rites"],
         "description": "Islamic dietary laws. STRICTLY NO PORK or ALCOHOL."
     },
     "hindu": {
@@ -55,87 +53,103 @@ DIET_RULES = {
     }
 }
 
-# --- USER DATABASE MANAGER ---
-USER_DB = "user_data.sqlite"
-
-
-def init_user_db():
-    """Creates the Users table if it doesn't exist."""
-    conn = sqlite3.connect(USER_DB)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS Users (
-            username TEXT PRIMARY KEY,
-            diet_restrictions TEXT,
-            food_priorities TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-
-def get_user_profile(username):
-    conn = sqlite3.connect(USER_DB)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Users WHERE username = ?", (username,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
-def save_user_profile(username, diet, priorities):
-    conn = sqlite3.connect(USER_DB)
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT OR REPLACE INTO Users (username, diet_restrictions, food_priorities)
-        VALUES (?, ?, ?)
-    ''', (username, diet, priorities))
-    conn.commit()
-    conn.close()
-
-
 # --- 2. HELPER FUNCTIONS ---
 
+def get_nutrition_from_spoonacular(dish_name):
+    """
+    Searches Spoonacular for a specific dish and returns its nutrition string.
+    """
+    api_key = os.getenv("SPOONACULAR_API_KEY")
+    if not api_key: return None
+
+    # We use 'complexSearch' to find the closest matching recipe and get its stats
+    url = "https://api.spoonacular.com/recipes/complexSearch"
+    params = {
+        "apiKey": api_key,
+        "query": dish_name,
+        "number": 1,
+        "addRecipeNutrition": "true"
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if data['results']:
+            # Extract the first matching recipe
+            item = data['results'][0]
+            nutrients = item.get('nutrition', {}).get('nutrients', [])
+
+            # Helper to find a specific nutrient in the list
+            def find_n(name):
+                for n in nutrients:
+                    if n['name'] == name: return f"{n['amount']}{n['unit']}"
+                return "?"
+
+            return f"({item['title']}: {find_n('Calories')} kcal, Protein {find_n('Protein')}, Fat {find_n('Fat')})"
+    except Exception as e:
+        print(f"Spoonacular Error for {dish_name}: {e}")
+
+    return None
+
 def haversine(lat1, lon1, lat2, lon2):
-    lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    c = 2 * math.asin(math.sqrt(a))
-    r = 6371
-    return c * r
+    try:
+        lon1, lat1, lon2, lat2 = map(math.radians, [float(lon1), float(lat1), float(lon2), float(lat2)])
+        a = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
+        return 6371 * 2 * math.asin(math.sqrt(a))
+    except (ValueError, TypeError):
+        return 0
 
 
 def get_coords_for_location(location_name):
-    HCMC_LON = 106.660172
-    HCMC_LAT = 10.762622
     try:
         url = "https://api.geoapify.com/v1/geocode/search"
         params = {
             'text': f"{location_name}, Ho Chi Minh City",
             'apiKey': GEOAPIFY_API_KEY,
             'limit': 1,
-            'bias': f'proximity:{HCMC_LON},{HCMC_LAT}'
+            'bias': 'proximity:106.660172,10.762622'
         }
-        response = requests.get(url, params=params)
-        if response.ok:
-            data = response.json()
-            if data['features']:
-                coords = data['features'][0]['geometry']['coordinates']
-                return coords[1], coords[0]  # Lat, Lon
+        resp = requests.get(url, params=params)
+        if resp.ok and resp.json()['features']:
+            coords = resp.json()['features'][0]['geometry']['coordinates']
+            return coords[1], coords[0]  # Lat, Lon
     except Exception as e:
-        print(f"Error geocoding: {e}")
+        print(f"Geocoding error: {e}")
     return None, None
 
 
-def get_bounding_box(lat, lon, distance_km):
-    lat_change = distance_km / 111.0
-    lon_change = distance_km / (111.0 * math.cos(math.radians(lat)))
+def get_bounding_box(lat, lon, km):
+    lat_change = km / 111.0
+    lon_change = km / (111.0 * math.cos(math.radians(lat)))
     return {
         "min_lat": lat - lat_change, "max_lat": lat + lat_change,
         "min_lon": lon - lon_change, "max_lon": lon + lon_change
     }
+
+
+def is_open_now(hours_str):
+    """
+    Parses '09:00 - 22:00' and checks against current system time.
+    Returns True if Open, False if Closed.
+    """
+    if not hours_str or hours_str.lower() == 'updating' or not '-' in hours_str:
+        return True  # Default to Open if unknown
+
+    try:
+        now = datetime.now().time()
+        start_str, end_str = hours_str.split(' - ')
+        start_time = datetime.strptime(start_str.strip(), "%H:%M").time()
+        end_time = datetime.strptime(end_str.strip(), "%H:%M").time()
+
+        if start_time < end_time:
+            # Normal range (e.g., 09:00 - 22:00)
+            return start_time <= now <= end_time
+        else:
+            # Cross-midnight range (e.g., 16:00 - 02:00)
+            return now >= start_time or now <= end_time
+    except:
+        return True  # Default to True on parse error
 
 
 # --- 3. MISSION HANDLERS ---
@@ -143,20 +157,40 @@ def get_bounding_box(lat, lon, distance_km):
 def handle_culture_query(prompt):
     print("-> Executing: Culture Query")
     model = genai.GenerativeModel('gemini-2.5-flash')
-    sys_msg = "You are a Vietnamese cultural expert. Answer clearly. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
+    sys_msg = "You are a Vietnamese cultural expert. Answer clearly in English. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
     return model.generate_content([sys_msg, prompt]).text
 
 
 def route_user_request(prompt):
-    # Updated to extract 'budget'
-    system_context = (
-        "You are a travel assistant. Classify intent into: 'culture_query', 'food_recommendation', 'restaurant_recommendation', 'daily_menu'.\n"
+    """
+    Extracts 'category' for tags like 'student', 'family', 'street food'.
+    """
+    prompt_lower = prompt.lower()
+
+    # Explicit Syntax Checks
+    if prompt_lower.startswith("/eat") or prompt_lower.startswith("/tim quan"):
+        return {"task": "restaurant_recommendation", "cuisine": prompt.replace("/eat", "").strip(), "location": "none"}
+
+    if prompt_lower.startswith("/cook") or prompt_lower.startswith("/recipe"):
+        return {"task": "food_recommendation", "cuisine": prompt.replace("/cook", "").strip()}
+
+    if prompt_lower.startswith("/plan"):
+        return {"task": "daily_menu"}
+
+    # Keyword Bias
+    location_signals = ["district", "quận", "quan", "đường", "street", "near", "gần"]
+    bias = "User mentioned location. Heavily prioritize 'restaurant_recommendation'." if any(
+        s in prompt_lower for s in location_signals) else ""
+
+    sys_msg = (
+        f"Classify intent: 'culture_query', 'food_recommendation', 'restaurant_recommendation', 'daily_menu'.\n{bias}\n"
         "Extract entities:\n"
-        "- 'location': specific area (e.g., 'District 1')\n"
-        "- 'cuisine': specific dish (e.g., 'Pho')\n"
-        "- 'diet_ingredient': restrictions (e.g., 'vegan', 'halal')\n"
-        "- 'budget': price preference (e.g., 'cheap', 'street food', 'luxury', 'under 50k'). Default 'none'."
+        "- 'location': Area/Street\n"
+        "- 'cuisine': Specific Dish\n"
+        "- 'diet_ingredient': Restrictions (vegan, halal)\n"
+        "- 'category': Vibe/Tag (e.g., 'student', 'family', 'couple', 'street food', 'office')."
     )
+
     schema = {
         "type": "OBJECT",
         "properties": {
@@ -164,178 +198,203 @@ def route_user_request(prompt):
             "location": {"type": "STRING"},
             "cuisine": {"type": "STRING"},
             "diet_ingredient": {"type": "STRING"},
-            "budget": {"type": "STRING"}  # <--- New Field
+            "category": {"type": "STRING"}
         },
         "required": ["task"]
     }
+
     model = genai.GenerativeModel('gemini-2.5-flash')
     try:
-        res = model.generate_content([system_context, prompt],
-                                     generation_config={"response_mime_type": "application/json",
-                                                        "response_schema": schema})
+        res = model.generate_content([sys_msg, prompt], generation_config={"response_mime_type": "application/json",
+                                                                           "response_schema": schema})
         return json.loads(res.text)
     except:
         return {"task": "unknown"}
 
 
-def handle_restaurant_recommendation(prompt, entities, user_profile=None):
-    location = entities.get('location')
+def handle_restaurant_recommendation(prompt, entities):
+    """
+    Filters by Location -> Cuisine -> Opening Hours -> Tags.
+    """
+    loc = entities.get('location')
     cuisine = entities.get('cuisine')
-    budget = entities.get('budget', 'any')  # <--- Get Budget
+    category = entities.get('category', '').lower()
 
-    print(f"-> Restaurant Rec: {location}, {cuisine}, Budget: {budget}")
+    print(f"-> Restaurant Rec: Loc='{loc}', Dish='{cuisine}', Tag='{category}'")
 
     # 1. Geocode
     user_lat, user_lon = None, None
-    if location and location.lower() != 'none':
-        user_lat, user_lon = get_coords_for_location(location)
+    if loc and loc.lower() != 'none':
+        user_lat, user_lon = get_coords_for_location(loc)
 
-    # 2. SQL Query
+    # 2. SQL Query (Location + Broad Cuisine)
     conn = sqlite3.connect('foody_data.sqlite')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    query = "SELECT * FROM Restaurants"
+
+    query = "SELECT * FROM restaurants"
     params = []
 
+    # Pre-filter by location in SQL for speed
     if user_lat:
         bbox = get_bounding_box(user_lat, user_lon, 10)
-        query += " WHERE Latitude BETWEEN ? AND ? AND Longitude BETWEEN ? AND ?"
+        query += " WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?"
         params.extend([bbox['min_lat'], bbox['max_lat'], bbox['min_lon'], bbox['max_lon']])
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
 
-    # 3. Process
+    # 3. Python Filter (Cuisine, Time, Tags)
     results = []
     search_term = cuisine.lower() if cuisine and cuisine != 'none' else ""
 
-    # Memory Context
-    memory_context = ""
-    if user_profile:
-        memory_context = f"\n**USER PROFILE:** Diet: {user_profile['diet_restrictions']}, Prefs: {user_profile['food_priorities']}"
+    current_time = datetime.now().strftime("%H:%M")
+    print(f"   Filtering {len(rows)} candidates at {current_time}...")
 
-    for row in rows:
-        rest = dict(row)
-        if search_term and search_term not in rest['Name'].lower(): continue
+    for r in rows:
+        val = dict(r)
 
+        # A. Cuisine Filter
+        if search_term and search_term not in val['name'].lower():
+            continue
+
+        # B. Opening Hours Filter (Avoid Closed Places)
+        if not is_open_now(val['opening_hours']):
+            continue
+
+            # C. Tag/Category Filter
+        # DB 'tags' column looks like: "Student, Couple, Family"
+        db_tags = str(val['tags']).lower()
+        if category and category != 'none':
+            # Loose match: if user wants "student", accept "student" or "sinh viên" if your DB has it
+            if category not in db_tags:
+                continue
+
+        # Data cleanup
         try:
-            rest['Rating'] = float(rest['Rating'])
+            val['rating'] = float(val['rating'])
         except:
-            rest['Rating'] = 0.0
+            val['rating'] = 0.0
 
         if user_lat:
-            rest['distance_km'] = round(haversine(user_lat, user_lon, rest['Latitude'], rest['Longitude']), 2)
+            val['dist'] = round(haversine(user_lat, user_lon, val['latitude'], val['longitude']), 2)
         else:
-            rest['distance_km'] = 0
-        results.append(rest)
+            val['dist'] = 0
+
+        results.append(val)
 
     # Fallback
-    model = genai.GenerativeModel('gemini-2.5-flash')
     if not results:
-        fallback_msg = (
-            f"User asked for '{cuisine}' near '{location}' (Budget: {budget}). No DB matches.\n"
-            "1. Politely apologize for missing data.\n"
-            "2. Provide general cultural info about the dish.\n"
-            "3. **Estimate the typical price** for this dish in Vietnam (e.g. 'Usually 30k-50k')."
-        )
-        return model.generate_content(fallback_msg).text
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        return model.generate_content(
+            f"User asked for '{cuisine}' near '{loc}' (Tag: {category}) but NO OPEN matches found. Explain why (maybe too late/early?) and suggest general alternatives.").text
 
     # Rank
-    results.sort(key=lambda x: (-x['Rating'], x['distance_km']))
+    results.sort(key=lambda x: (-x['rating'], x['dist']))
     top_5 = results[:5]
 
-    # 4. Final Response with Cost Estimation
+    # 4. Final Response
+    model = genai.GenerativeModel('gemini-2.5-flash')
     sys_msg = (
-        "Recommend restaurants from the list below.\n"
-        f"User Budget Preference: {budget}.\n"
-        f"{memory_context}\n"
-        "**CRITICAL INSTRUCTION:**\n"
-        "For EACH restaurant, based on its name/type (e.g. 'Cơm Tấm' vs 'Nhà Hàng'), provide an **Estimated Cost** range in VND.\n"
-        "- Street Food/Bình Dân: ~30k - 60k VND\n"
-        "- Mid-range: ~80k - 150k VND\n"
-        "- High-end: >200k VND\n"
-        "Check if the estimated cost matches the User's Budget. If not, mention it (e.g. 'This is a bit pricier than your request').\n\n"
-        f"DATA:\n{json.dumps(top_5, ensure_ascii=False)}"
+        "Recommend 3-5 restaurants from the list below (english reply).\n"
+        f"Context: User is looking for '{category}' vibes.\n"
+        "**CRITICAL:** Mention that these places are **OPEN NOW**.\n"
+        "Provide estimated nutritional breakdown for the main dish.\n"
+        f"List:\n{json.dumps(top_5, ensure_ascii=False, default=str)}"
     )
     return model.generate_content([sys_msg, prompt]).text
 
 
-def handle_food_recommendation(prompt, entities, user_profile=None):
-    diet = entities.get('diet_ingredient', 'General').lower()
-    budget = entities.get('budget', 'any')
-    print(f"-> Food Rec: {diet}, Budget: {budget}")
-
-    # 1. Rules & Memory
-    memory_context = ""
-    active_rule = None
-    for key in DIET_RULES:
-        if key in diet:
-            active_rule = DIET_RULES[key]
-            break
-
-    if active_rule:
-        memory_context += f"\n**DIET RULE ({key.upper()}):** ❌ NO {', '.join(active_rule['prohibited'])}."
-    if user_profile:
-        memory_context += f"\n**USER PROFILE:** Restrictions: {user_profile['diet_restrictions']}"
-
-    # 2. Direct LLM Response (No RAG needed for general food advice)
+def handle_food_recommendation(prompt, entities):
+    diet = entities.get('diet_ingredient', 'General')
+    print(f"-> Food Rec (Direct LLM): {diet}")
     model = genai.GenerativeModel('gemini-2.5-flash')
-
     sys_msg = (
-        f"User wants a food suggestion. Request: {prompt}\n"
-        f"Diet: {diet}. Budget: {budget}.\n"
-        f"{memory_context}\n"
-        "--------------------------------------------------\n"
-        "1. Recommend 3 authentic Vietnamese dishes.\n"
-        "2. **Safety Check:** Explain WHY it fits the diet (e.g. 'Safe for Halal because...').\n"
-        "3. **Cost Estimation:** Provide a typical price range for this dish (Street vs Restaurant price).\n"
-        "4. **Nutrient Detail:** Est. Calories/Protein/Carbs/Fat."
+        f"You are an expert Vietnamese culinary. User wants a dish suggestion. Diet: {diet}.\n"
+        "1. Recommend specific authentic Vietnamese dishes (english reply).\n"
+        "2. Warn if dish conflicts with restrictions (e.g. Pork/Halal).\n"
+        "3. Provide estimated Calories/Protein/Carbs/Fat and cost."
     )
     return model.generate_content([sys_msg, prompt]).text
 
 
 def handle_daily_menu(prompt, entities, user_profile=None):
+    """
+    Mission 4:
+    1. Gemini decides the authentic Vietnamese Menu.
+    2. Python asks Spoonacular for the Nutrition of those specific dishes.
+    3. Gemini presents the final result.
+    """
     budget = entities.get('budget', 'moderate')
-    print(f"-> Daily Menu: Budget {budget}")
+    diet = entities.get('diet_ingredient', '')
+    if user_profile and not diet:
+        diet = user_profile.get('diet_restrictions', '')
 
-    # Simplified logic: Let Gemini act as the Chef using general knowledge
+    print(f"-> Daily Menu (Hybrid): Diet={diet}, Budget={budget}")
+
+    # --- STAGE 1: ASK GEMINI FOR DISH NAMES (Structured JSON) ---
     model = genai.GenerativeModel('gemini-2.5-flash')
 
-    profile_txt = f"User Profile: {user_profile['diet_restrictions']}" if user_profile else ""
-
-    sys_msg = (
-        f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner).\n"
-        f"Budget Level: {budget}.\n"
-        f"{profile_txt}\n"
-        "1. Suggest specific dishes.\n"
-        "2. **Total Cost:** Estimate the total daily cost in VND based on the budget level.\n"
-        "3. **Nutrients:** Calculate approx total calories/protein for the day."
+    # We force Gemini to output JSON so we can read it easily in Python
+    json_prompt = (
+        f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner) (english reply). Diet: {diet}.\n"
+        "Return ONLY a valid JSON object with keys 'breakfast', 'lunch', 'dinner'.\n"
+        "Value should be the Vietnamese dish name, avoid the options that users have to cook themselves (e.g. 'Pho Bo').\n"
+        "Do not add markdown formatting."
     )
-    return model.generate_content([sys_msg, prompt]).text
 
+    try:
+        # Get dish names
+        json_response = model.generate_content(json_prompt).text
+        # Clean potential markdown codes if Gemini adds them
+        clean_json = json_response.replace("```json", "").replace("```", "").strip()
+        menu_plan = json.loads(clean_json)
+    except Exception as e:
+        # Fallback if JSON fails
+        return handle_daily_menu_fallback(prompt)
+
+    # --- STAGE 2: FETCH NUTRITION FOR THESE DISHES ---
+    nutrition_info = {}
+    total_cals = 0
+
+    print("   Fetching Spoonacular Data...")
+    for meal, dish in menu_plan.items():
+        stats = get_nutrition_from_spoonacular(dish)
+        if stats:
+            nutrition_info[meal] = stats
+        else:
+            nutrition_info[meal] = "(Nutrition data unavailable)"
+
+    # --- STAGE 3: GENERATE FINAL PRESENTATION ---
+    final_context = (
+        "You are a Vietnamese Culinary Expert.\n"
+        "Here is the Menu you planned, combined with Lab Data (english reply):\n"
+        f"- Breakfast: {menu_plan['breakfast']} {nutrition_info['breakfast']}\n"
+        f"- Lunch: {menu_plan['lunch']} {nutrition_info['lunch']}\n"
+        f"- Dinner: {menu_plan['dinner']} {nutrition_info['dinner']}\n\n"
+        "**TASK:**\n"
+        "1. Present this menu beautifully.\n"
+        "2. Describe the cultural significance of each dish briefly.\n"
+        "3. Comment on the nutritional balance based on the data provided."
+    )
+
+    return model.generate_content([final_context, f"User Request: {prompt}"]).text
+
+
+def handle_daily_menu_fallback(prompt):
+    # Simple backup if JSON parsing fails
+    model = genai.GenerativeModel('gemini-2.5-flash')
+    return model.generate_content(f"Create a Vietnamese meal plan for: {prompt}").text
+
+    return model.generate_content([sys_msg, prompt]).text
 
 # --- 4. MAIN ---
 
 def main_chatbot():
-    print("\n--- 🤖 Vietnam Food AI (Personalized & Cost-Aware) ---")
-    init_user_db()
+    print("\n--- 🤖 Vietnam Food AI ---")
+    #print("Filters enabled: Open Now, Distance, Tags (Student/Family/etc)")
 
-    # Login (Simplified for brevity)
-    current_user = None
-    choice = input("Do you have an account? (yes/no): ").lower()
-    if choice in ['y', 'yes']:
-        username = input("Enter username: ")
-        current_user = get_user_profile(username)
-        if current_user: print(f"Welcome {username}!")
-    elif choice in ['n', 'no']:
-        u = input("Username: ")
-        d = input("Diet (Halal, Vegan...): ")
-        p = input("Food Priorities: ")
-        save_user_profile(u, d, p)
-        current_user = get_user_profile(u)
-
-    print("\nHow can I help? (Type 'exit' to quit)")
     while True:
         prompt = input("You: ")
         if prompt.lower() in ['exit', 'quit']: break
@@ -347,13 +406,13 @@ def main_chatbot():
             if task == 'culture_query':
                 resp = handle_culture_query(prompt)
             elif task == 'food_recommendation':
-                resp = handle_food_recommendation(prompt, data, current_user)
+                resp = handle_food_recommendation(prompt, data)
             elif task == 'restaurant_recommendation':
-                resp = handle_restaurant_recommendation(prompt, data, current_user)
+                resp = handle_restaurant_recommendation(prompt, data)
             elif task == 'daily_menu':
-                resp = handle_daily_menu(prompt, data, current_user)
+                resp = handle_daily_menu(prompt, data)
             else:
-                resp = "I'm not sure how to help."
+                resp = "I'm not sure how to help with that."
 
             print(f"\nGemini: {resp}\n")
         except Exception as e:
