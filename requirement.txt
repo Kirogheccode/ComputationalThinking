@@ -1,0 +1,19 @@
+Tải cho venv của folder Web
+flask
+google-generativeai
+dotenv
+numpy
+tensorflow
+matplotlib
+requests
+openrouteservice  
+
+Tải cho venv của folder Search
+chromadb
+pandas
+sentence_transformers
+requests
+dotenv
+google-generativeai
+
+Khi tải xong, mở 2 cửa sổ VSCode riêng lẻ, kích hoạt môi trường của từng folder và chạy file app.py và api.py
