@@ -43,7 +43,7 @@ def get_coordinates_from_db(location: str):
     Cập nhật: Sửa tên bảng và cột thành chữ thường để khớp với foody_data.sqlite mới
     """
     # Đảm bảo đường dẫn file database chính xác
-    db_path = 'data/foody_data.sqlite' 
+    db_path = 'data/foody_data.sqlite'
     if not os.path.exists(db_path):
         # Fallback nếu file nằm cùng cấp thư mục
         db_path = 'data/foody_data.sqlite'

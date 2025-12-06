@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 load_dotenv()
-GOOGLE_API = os.getenv("GOOGLE_API")
+GOOGLE_API = os.getenv("GOOGLE_API_KEY")
 
 if GOOGLE_API:
     genai.configure(api_key=GOOGLE_API)
