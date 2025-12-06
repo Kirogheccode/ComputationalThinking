@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 # Import các module tự viết
 import Routing
+import Currency  # Import the new file
 from FoodRecognition import replyToImage
 from auth import auth_bp, login_required
 from FoodLoading import load_foods_from_sqlite
@@ -127,6 +128,11 @@ def chatbot_page():
 def about_page():
     return render_template('about.html')
 
+@app.route('/exchange')
+def exchange_page():
+    # Pass the supported currencies to the template so we don't hardcode them in HTML
+    return render_template('exchange.html', currencies=Currency.SUPPORTED_CURRENCIES)
+
 @app.route('/account')
 @login_required
 def account_page():
@@ -229,6 +235,29 @@ def predict_food():
         return jsonify({"error": "No image uploaded"}), 400
     img_file = request.files["image"]
     return replyToImage(img_file)
+
+@app.route('/api/convert_currency', methods=['POST'])
+def api_convert_currency():
+    data = request.get_json()
+
+    # Get data from frontend
+    currency_code = data.get('currency')
+    amount = data.get('amount')
+    direction = data.get('direction') # '1' or '2'
+
+    # Validation
+    if not currency_code or not amount or not direction:
+        return jsonify({"success": False, "error": "Missing data"})
+
+    try:
+        amount = float(amount)
+    except ValueError:
+        return jsonify({"success": False, "error": "Invalid amount"})
+
+    # Call the logic from Currency.py
+    result = Currency.calculate_conversion(amount, currency_code, direction)
+
+    return jsonify(result)
 
 # --- FAVORITE API ---
 

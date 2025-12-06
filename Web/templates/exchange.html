@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 mx-auto" style="max_width: 500px;">
+        <h2 class="text-center mb-4">💱 Currency Converter</h2>
+
+        <form id="convertForm">
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input type="number" class="form-control" id="amount" placeholder="Enter amount" required min="0" step="0.01">
+            </div>
+
+            <div class="mb-3">
+                <label for="currency" class="form-label">Currency</label>
+                <select class="form-select" id="currency">
+                    {% for key, code in currencies.items() %}
+                        <option value="{{ code }}">{{ code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Direction</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="direction" id="dir1" value="1" checked>
+                    <label class="form-check-label" for="dir1">
+                        Foreign ➝ VND (Buy VND)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="direction" id="dir2" value="2">
+                    <label class="form-check-label" for="dir2">
+                        VND ➝ Foreign (Sell VND)
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Convert</button>
+        </form>
+
+        <div id="resultBox" class="alert alert-success mt-4 d-none">
+            <h4 id="resultValue" class="text-center fw-bold"></h4>
+            <p id="rateValue" class="text-center mb-0 small text-muted"></p>
+        </div>
+
+        <div id="errorBox" class="alert alert-danger mt-4 d-none"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('convertForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // UI Elements
+    const resultBox = document.getElementById('resultBox');
+    const errorBox = document.getElementById('errorBox');
+    const btn = this.querySelector('button');
+
+    // Reset UI
+    resultBox.classList.add('d-none');
+    errorBox.classList.add('d-none');
+    btn.disabled = true;
+    btn.innerText = "Converting...";
+
+    // Gather Data
+    const data = {
+        amount: document.getElementById('amount').value,
+        currency: document.getElementById('currency').value,
+        direction: document.querySelector('input[name="direction"]:checked').value
+    };
+
+    try {
+        const response = await fetch('/api/convert_currency', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            document.getElementById('resultValue').innerText = result.converted_string;
+            document.getElementById('rateValue').innerText = result.rate_display;
+            resultBox.classList.remove('d-none');
+        } else {
+            errorBox.innerText = result.error || "An error occurred";
+            errorBox.classList.remove('d-none');
+        }
+    } catch (err) {
+        errorBox.innerText = "Network error. Please try again.";
+        errorBox.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Convert";
+    }
+});
+</script>
+{% endblock %}
