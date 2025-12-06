@@ -74,9 +74,12 @@
                             <li><a class="dropdown-item" href="{{ url_for('set_language', lang_code='en') }}">English</a></li>
                         </ul>
                     </li>
-
                     <li class="nav-item ms-2">
-                        <button class="btn btn-outline-light btn-sm" id="themeToggleBtn" aria-pressed="false">{{ lang.dark }}</button>
+                        <button class="btn btn-outline-light btn-sm"
+                                id="themeToggleBtn"
+                                data-dark="{{ t.dark }}"
+                                data-light="{{ t.light }}">
+                        </button>
                     </li>
                 </ul>
             </div>

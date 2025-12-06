@@ -495,6 +495,7 @@ function themeMode() {
     const textDark = themeToggleBtn.dataset.dark;
     const textLight = themeToggleBtn.dataset.light;
 
+    
     // === Theme initialization ===
     const savedTheme = localStorage.getItem("theme");
 
