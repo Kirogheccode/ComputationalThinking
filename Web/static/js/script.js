@@ -1,6 +1,7 @@
 let loadingDiv = null;
 let uploadedImage = null;
 let isProcess = false;
+let currentPrefix = "";
 
 function scrollAnimation() {
     // Initialize AOS for scroll animations
@@ -241,24 +242,19 @@ async function sendText(messageText){
     // Create loading bubble
     createLoadingBubble(chatWindow);
 
-    // Call Gemini API
-    // 3. GỌI API BACKEND (thay vì gọi gemini.js)
-    let botText = ""; // Biến để lưu tin nhắn trả lời
+   const safePrefix = currentPrefix || "";
+    const finalPayload = safePrefix + messageText;
+
+    // DEBUG: Check console (F12) to see if prefix is attached
+    console.log("Sending Payload:", finalPayload);
+
+    let botText = "";
     try {
-        // Gửi yêu cầu POST đến endpoint /api/chat của Flask
         const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            // Gửi tin nhắn dưới dạng JSON
-            body: JSON.stringify({ message: messageText })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: finalPayload }) // <--- Send the combined text
         });
-
-        if (!response.ok) {
-            // Xử lý lỗi nếu server trả về 4xx, 5xx
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
 
         // Nhận dữ liệu JSON trả về
         const data = await response.json();
@@ -692,6 +688,31 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+function suggestionChips() {
+    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+    const userInput = document.getElementById('userInput');
+
+    if (!userInput || suggestionBtns.length === 0) return;
+
+    suggestionBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Toggle Logic
+            if (this.classList.contains('active')) {
+                // De-select
+                this.classList.remove('active');
+                currentPrefix = ""; // Reset global variable
+            } else {
+                // Select new
+                suggestionBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentPrefix = this.getAttribute('data-prefix'); // Set global variable
+            }
+            userInput.focus();
+            console.log("Mode selected:", currentPrefix); // Debug log
+        });
+    });
+}
+
 function main()
 {
     console.log("Main() is running!");
@@ -712,6 +733,7 @@ function main()
         //=================================CHATBOT=================================
         chatBot()
         uploadImageFeature()
+        suggestionChips()
         //=========================================================================
         
         console.log("Filter JS loaded!");
@@ -754,5 +776,7 @@ function main()
         }
     });
 }
+
+
 
 main()

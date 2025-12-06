@@ -230,6 +230,19 @@ body.dark #themeToggleBtn {
 .bot-bubble {
     background-color: #fff; /* Màu trắng mặc định */
 }
+
+/* Active state for Suggestion Chips */
+.suggestion-btn.active {
+    background-color: #e7f1ff !important; /* Light blue background */
+    border-color: #0d6efd !important;     /* Blue border */
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); /* Glow effect */
+}
+
+/* Ensure icons keep their colors even when active */
+.suggestion-btn.active i {
+    /* Icons remain their original colors (text-danger, etc.) */
+}
+
 .chat-window {
     background-color: #f9f9f9; /* Màu nền chat mặc định */
 }
@@ -410,3 +423,4 @@ body.dark .food-budget {
 body.dark .food-placeholder{
     color: white;
 }
+

@@ -23,27 +23,41 @@
             <div class="chatbot-container">
                 <div class="chat-window" id="chat-window" style="height: 450px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
                     <div class="message bot-message d-flex align-items-start mb-3">
-                        <img src="{{ url_for('static', filename='images/jane.jpg') }}" 
+                        <img src="{{ url_for('static', filename='images/jane.jpg') }}"
                             class="bot-avatar rounded-circle me-2" style="width: 40px; height: 40px;" alt="Bot">
-                        
                         <p class="mb-0">{{ t.chatbot_hello }}</p>
                     </div>
                 </div>
-                
+
                 <div id="imagePreviewWrapper" class="mb-2 d-none">
                     <div class="position-relative" style="width: 180px;">
                         <img id="imagePreview" class="img-thumbnail rounded" alt="Preview">
-                        <button id="removeImageBtn"
-                                class="btn btn-danger btn-sm position-absolute top-0 end-0"
-                                style="border-radius: 50%; width: 28px; height: 28px;">×</button>
+                        <button id="removeImageBtn" class="btn btn-danger btn-sm position-absolute top-0 end-0">×</button>
                     </div>
                 </div>
 
+                <div class="d-flex gap-2 mb-3 pb-2 overflow-auto text-nowrap" id="suggestion-chips" style="scrollbar-width: thin;">
+
+    <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/place_ ">
+        <i class="fa-solid fa-location-dot text-danger"></i> Restaurants
+    </button>
+
+                    <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/recipe_ ">
+                        <i class="fa-solid fa-utensils text-success"></i> Recipes
+                    </button>
+
+                    <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/plan_ ">
+                        <i class="fa-solid fa-calendar-days text-primary"></i> Menu
+                    </button>
+
+                    <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="">
+                        <i class="fa-solid fa-book-open text-warning"></i> Culture
+                    </button>
+
+                </div>
                 <div class="chat-input-area d-flex align-items-center gap-2 mt-3">
                     <input type="text" id="userInput" class="form-control" placeholder="{{ t.chatbot_placeholder }}">
-                    <button id="sendMessageBtn" class="btn btn-primary"
-                        data-processing="{{ t.processing_task }}"
-                        data-input-required="{{ t.input_required }}">
+                    <button id="sendMessageBtn" class="btn btn-primary" ...>
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                     <input type="file" id="imageInput" accept="image/*" hidden>
@@ -53,7 +67,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -87,4 +100,6 @@
 </div>
 
 <div id="notificationContainer" class="notification-container"></div>
+
+
 {% endblock %}
