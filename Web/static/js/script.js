@@ -713,6 +713,83 @@ function suggestionChips() {
     });
 }
 
+
+function moneyScanner() {
+    const scanBtn = document.getElementById('scanBtn');
+    const fileInput = document.getElementById('moneyUpload');
+    const amountInput = document.getElementById('amount');
+    const currencySelect = document.getElementById('currency');
+    const errorBox = document.getElementById('errorBox');
+
+    // Safety check: If elements don't exist on this page, stop running.
+    if (!scanBtn || !fileInput) return;
+
+    // 1. Trigger File Picker
+    scanBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+
+    // 2. Handle File Selection
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        // UI Loading State
+        const originalText = scanBtn.innerHTML;
+        scanBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning...';
+        scanBtn.disabled = true;
+
+        if(errorBox) errorBox.classList.add('d-none');
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch('/api/scan_money', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                const info = result.data;
+            // 1. Auto-fill the Unified Amount Box
+            if(amountInput) amountInput.value = info.amount;
+
+            // 2. Auto-switch the Dropdown to match the scanned currency
+            if(currencySelect) {
+                // Loop through all options (USD, EUR, JPY...)
+                for (let i = 0; i < currencySelect.options.length; i++) {
+                    // Check if option text (e.g. "USD") matches the scanned currency code
+                    if (currencySelect.options[i].text.includes(info.currency)) {
+                        currencySelect.selectedIndex = i; // Select it!
+                        break;
+                    }
+                }
+            }
+
+                // Show Warnings (e.g. fake money)
+                if (info.warning) {
+                    alert("⚠️ WARNING: " + info.warning);
+                }
+
+            } else {
+                // Show specific error (e.g. "Detected 2 items...")
+                alert(result.error || "Could not read the money. Please try again.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error connecting to server.");
+        } finally {
+            // Reset Button
+            scanBtn.innerHTML = originalText || '<i class="fa-solid fa-camera"></i> Scan';
+            scanBtn.disabled = false;
+            fileInput.value = ''; // Allow re-uploading same file
+        }
+    });
+}
+
 function main()
 {
     console.log("Main() is running!");
@@ -735,7 +812,11 @@ function main()
         uploadImageFeature()
         suggestionChips()
         //=========================================================================
-        
+
+        //=================================EXCHANGE================================
+        moneyScanner()
+        //=========================================================================
+
         console.log("Filter JS loaded!");
 
         const areaSelect = document.getElementById("areaSelect");
