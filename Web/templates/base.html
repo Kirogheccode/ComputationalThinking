@@ -36,37 +36,49 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto d-flex align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">{{ lang.home }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('map_page') }}">{{ lang.map }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('chatbot_page') }}">{{ lang.chatbot_chat_title }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('about_page') }}">{{ lang.us }}</a>
-                    </li>
-                    
+                    <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" 
+                        href="{{ url_for('index') }}">
+                        {{ lang.home }}
+                    </a>
+
+                    <a class="nav-link {% if request.endpoint == 'map_page' %}active{% endif %}" 
+                        href="{{ url_for('map_page') }}">
+                        {{ lang.map }}
+                    </a>
+
+                    <a class="nav-link {% if request.endpoint == 'chatbot_page' %}active{% endif %}" 
+                        href="{{ url_for('chatbot_page') }}">
+                        {{ lang.chatbot_chat_title }}
+                    </a>
+
+                    <a class="nav-link {% if request.endpoint == 'about_page' %}active{% endif %}" 
+                        href="{{ url_for('about_page') }}">
+                        {{ lang.us }}
+                    </a>
+
                     {% if session.get('user_id') %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('your_account') }}">{{ lang.your_account }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ lang.logout }}</a>
-                    </li>
+                    <a class="nav-link {% if request.endpoint == 'account_page' %}active{% endif %}" 
+                        href="{{ url_for('your_account') }}">
+                        {{ lang.your_account }}
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'auth.logout' %}active{% endif %}"
+                        href="{{ url_for('auth.logout') }}">
+                        {{ lang.logout }}
+                    </a>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">{{ lang.register }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">{{ lang.login }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('exchange_page') }}">Currency</a>
-                    </li>
+                    <a class="nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}"
+                        href="{{ url_for('auth.register') }}">
+                        {{ lang.register }}
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}"
+                        href="{{ url_for('auth.login') }}">
+                        {{ lang.login }}
+                    </a>
                     {% endif %}
+                    <a class="nav-link {% if request.endpoint == 'exchange_page' %}active{% endif %}" 
+                        href="{{ url_for('exchange_page') }}">
+                        {{lang.currency}}
+                    </a>
 
                     <li class="nav-item dropdown ms-2">
                         <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

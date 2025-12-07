@@ -15,8 +15,9 @@ from Search_Clone_2 import replyToUser
 from extensions import oauth
 from lang import translations
 from database import (
-    init_db, add_food_post, get_food_posts_by_user, 
-    add_favorite, get_favorites_by_user, remove_favorite, delete_food_post 
+    init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
+    add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
+    get_feed_random, get_db_connection
 )
 
 # Load environment variables
@@ -37,6 +38,9 @@ oauth.init_app(app)
 UPLOAD_FOLDER = os.path.join(app.root_path, "static/images/user_uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Cấu hình thư mục user avatar
+app.config['AVATAR_UPLOAD_FOLDER'] = 'static/images/avatars'
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -170,7 +174,21 @@ def account_page():
                 "hours": ""
             })
 
-    return render_template('account.html', username=username, posts=user_posts, favorites=enriched_favorites)
+    user = get_user_by_id(user_id)
+
+    avatar_url = (
+        url_for('static', filename=user['avatar'])
+        if user and user['avatar']
+        else url_for('static', filename='images/default-avatar.jpg')
+    )
+
+    return render_template(
+        'account.html',
+        username=username,
+        avatar_url=avatar_url,   # ✅ THÊM DÒNG NÀY
+        posts=user_posts,
+        favorites=enriched_favorites
+    )
 
 @app.route('/account', methods=['POST'])
 @login_required
@@ -179,6 +197,7 @@ def your_account():
     food_name = request.form['food_name']
     description = request.form['description']
     image_file = request.files.get('image')
+    rating = int(request.form.get("rating", 5))
 
     if not food_name or not description:
         flash('Vui lòng điền tên món ăn và đánh giá.', 'danger')
@@ -193,7 +212,7 @@ def your_account():
         # Lưu đường dẫn vào DB (dạng relative path để static url_for dùng được)
         image_filename = f"images/user_uploads/{filename}"
     
-    add_food_post(user_id, food_name, description, image_filename)
+    add_food_post(user_id, food_name, description, image_filename, rating)
     flash('Bài đăng của bạn đã được thêm thành công!', 'success')
     return redirect(url_for('account_page'))
 
@@ -286,6 +305,52 @@ def api_remove_favorite():
         
     remove_favorite(session["user_id"], place_id)
     return jsonify({"status": "success"})
+
+@app.route("/api/feed")
+def api_feed():
+    page = int(request.args.get("page", 1))
+    limit = 10
+    offset = (page - 1) * limit  # page 1 = 0, page 2 = 10, page 3 = 20 ...
+
+    posts = get_feed_random(limit, offset)
+
+    return jsonify(posts)
+
+@app.route('/upload-avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    user_id = session['user_id']
+    file = request.files.get('avatar')
+
+    if not file or file.filename == '':
+        flash("Vui lòng chọn ảnh", "danger")
+        return redirect(url_for("account_page"))
+
+    if not allowed_file(file.filename):
+        flash("Chỉ được upload ảnh (png, jpg, jpeg)", "danger")
+        return redirect(url_for("account_page"))
+
+    # Đặt tên file theo user id để tránh trùng
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    filename = f"user_{user_id}.{ext}"
+
+    save_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], filename)
+    file.save(save_path)
+
+    avatar_db_path = f"images/avatars/{filename}"
+
+    # ✅ UPDATE VÀO DB
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE users SET avatar = ? WHERE id = ?",
+        (avatar_db_path, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+    flash("✅ Đổi avatar thành công!", "success")
+    return redirect(url_for("account_page"))
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)

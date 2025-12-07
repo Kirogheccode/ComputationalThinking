@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.home }} - Smart Tourism{% endblock %}
+
+{% block content %}
+<!-- <section class="hero d-flex align-items-center justify-content-center text-center">
+  <div class="container">
+    <div class="hero-inner" data-aos="fade-up">
+      <h1 class="display-5 hero-title">{{ lang.hero_title }}<br class="d-none d-md-block"> {{ lang.hero_city }}</h1>
+      <p class="lead hero-sub">{{ lang.hero_sub }}</p>
+      <div class="mt-4">
+        <a href="#featured" class="btn btn-warning btn-lg me-2 hero-cta">{{ lang.hero_start }}</a>
+        <a href="{{ url_for('map_page') }}" class="btn btn-outline-light btn-lg">{{ lang.hero_map }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-4 filter-bar" id="filterBar">
+  <div class="container d-flex flex-column flex-md-row align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+      <select id="areaSelect" class="form-select form-select-sm">
+        <option value="all" {% if area_selected == 'all' %}selected{% endif %}>{{ lang.all_area }}</option>
+        <option value="Quận 1" {% if area_selected == 'Quận 1' %}selected{% endif %}>Quận 1</option>
+        <option value="Quận 3" {% if area_selected == 'Quận 3' %}selected{% endif %}>Quận 3</option>
+        <option value="Quận 4" {% if area_selected == 'Quận 4' %}selected{% endif %}>Quận 4</option>
+        <option value="Quận 5" {% if area_selected == 'Quận 5' %}selected{% endif %}>Quận 5</option>
+        <option value="Quận 6" {% if area_selected == 'Quận 6' %}selected{% endif %}>Quận 6</option>
+        <option value="Quận 7" {% if area_selected == 'Quận 7' %}selected{% endif %}>Quận 7</option>
+        <option value="Quận 8" {% if area_selected == 'Quận 8' %}selected{% endif %}>Quận 8</option>
+        <option value="Quận 10" {% if area_selected == 'Quận 10' %}selected{% endif %}>Quận 10</option>
+        <option value="Quận 11" {% if area_selected == 'Quận 11' %}selected{% endif %}>Quận 11</option>
+        <option value="Quận 12" {% if area_selected == 'Quận 12' %}selected{% endif %}>Quận 12</option>
+        <option value="Bình Tân" {% if area_selected == 'Bình Tân' %}selected{% endif %}>Bình Tân</option>
+        <option value="Bình Thạnh" {% if area_selected == 'Bình Thạnh' %}selected{% endif %}>Bình Thạnh</option>
+        <option value="Gò Vấp" {% if area_selected == 'Gò Vấp' %}selected{% endif %}>Gò Vấp</option>
+        <option value="Phú Nhuận" {% if area_selected == 'Phú Nhuận' %}selected{% endif %}>Phú Nhuận</option>
+        <option value="Tân Bình" {% if area_selected == 'Tân Bình' %}selected{% endif %}>Tân Bình</option>
+        <option value="Tân Phú" {% if area_selected == 'Tân Phú' %}selected{% endif %}>Tân Phú</option>
+        <option value="Thủ Đức" {% if area_selected == 'Thủ Đức' %}selected{% endif %}>Thủ Đức</option>
+      </select>
+    </div>
+    <div class="flex-fill">
+      <input id="searchInput" class="form-control form-control-sm" type="text"
+             placeholder="{{ lang.search_placeholder }}"
+             value="{{ search_query }}">
+    </div>
+    <div>
+      <button id="clearFilters" class="btn btn-sm btn-outline-light">{{t["clear"]}}</button>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" id="featured">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">{{ lang.trend_food }}</h2>
+      <small class="text-muted">{{ lang.rcm }}</small>
+    </div>
+
+    <div class="row" id="foodsGrid">
+          {% for food in foods %}
+          {% set is_fav = (food.id | string) in favorite_ids %}
+          
+          <div class="col-lg-4 col-md-6 mb-4 food-item" 
+              data-area="{{ food.location }}" 
+              data-name="{{ food.name | lower }}">
+            
+            <div class="card h-100 food-card shadow-sm"
+                data-bs-toggle="modal" 
+                data-bs-target="#foodModal"
+                data-id="{{ food.id }}" 
+                data-name="{{ food.name }}"
+                data-location="{{ food.location }}"
+                data-price="{{ food.price }}"
+                data-hours="{{ food.hours }}"
+                data-image="{{ url_for('static', filename=food.image) }}"
+                data-rating="{{ food.rating }}⭐"
+                data-is-fav="{{ 'true' if is_fav else 'false' }}"
+                data-aos="fade-up"
+                data-aos-duration="800"
+                data-aos-delay="{{ (loop.index0 % 3) * 150 }}">
+                <div class="card-img-wrap">
+                <img loading="lazy" src="{{ url_for('static', filename=food.image) }}" class="card-img-top img-hover-zoom" alt="{{ food.name }}">
+                <div class="card-overlay">
+                  <div class="overlay-text">
+                    <h5 class="mb-0">{{ food.name }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate fw-bold">{{ food.name }}</h5>
+                <p class="card-text mb-1 text-truncate text-muted small"><i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ food.location }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
+                    <span class="badge bg-warning text-dark rounded-pill px-3"><i class="fas fa-star me-1"></i> {{ food.rating }}</span>
+                    {% if is_fav %}
+                        <span class="text-danger" title="{{ lang.profile_fav_done }}"><i class="fas fa-heart fa-lg animate__animated animate__heartBeat"></i></span>
+                    {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+      {% endfor %}
+    </div>
+    </div>
+  </div>
+</section>
+
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page - 1 }}&area={{ area_selected }}&q={{ search_query }}">« {{ lang.front }}</a>
+    </li>
+    {% if page > 3 %}
+      <li class="page-item"><a class="page-link" href="?page=1&area={{ area_selected }}&q={{ search_query }}">1</a></li>
+      {% if page > 4 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endif %}
+    {% for p in range(page-2, page+3) %}
+      {% if p >= 1 and p <= total_pages %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?page={{ p }}&area={{ area_selected }}&q={{ search_query }}">{{ p }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages - 2 %}
+      {% if page < total_pages - 3 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+      <li class="page-item"><a class="page-link" href="?page={{ total_pages }}&area={{ area_selected }}&q={{ search_query }}">{{ total_pages }}</a></li>
+    {% endif %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page + 1 }}&area={{ area_selected }}&q={{ search_query }}">{{ lang.back }} »</a>
+    </li>
+  </ul>
+</nav> -->
+
+<div class="container mt-4">
+    <h3 class="fw-bold mb-4">Bảng tin</h3>
+
+    <div id="feedContainer"></div>
+
+    <p id="endMessage" class="text-center text-muted mt-4" style="display:none">
+        Bạn đã hết bài viết để xem rồi.
+    </p>
+
+    <div id="loading" class="text-center mt-4 text-muted" style="display:none">
+        Đang tải bài viết...
+    </div>
+</div>
+
+<!-- <div class="modal fade" id="foodModal" tabindex="-1" aria-labelledby="foodModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="modalFoodName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <img id="modalFoodImage" src="" class="img-fluid rounded shadow-sm w-100" style="object-fit: cover; height: 300px;" alt="Food Image">
+                    </div>
+                    <div class="col-md-6 d-flex flex-column justify-content-center">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>{{ lang.address }}:</strong> <span id="modalFoodLocation"></span></p>
+                        <p class="mb-2"><i class="fas fa-star text-warning me-2"></i><strong>{{ lang.rating }}:</strong> <span id="modalFoodRating"></span></p>
+                        <p class="mb-2"><i class="fas fa-tag text-success me-2"></i><strong>Giá:</strong> <span id="modalFoodPrice"></span></p>
+                        <p class="mb-4"><i class="fas fa-clock text-primary me-2"></i><strong>Giờ mở cửa:</strong> <span id="modalFoodHours"></span></p>
+                        
+                        <div class="d-flex gap-2">
+                            <button id="btnViewMap" class="btn btn-outline-primary flex-grow-1">
+                                <i class="fa-solid fa-map-location-dot me-1"></i> {{ lang.hero_map }}
+                            </button>
+                            
+                            <button id="btnSaveFavorite" class="btn btn-warning flex-grow-1">
+                                <i class="far fa-heart me-1"></i> {{ lang.fav }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<script>
+let page = 1;         
+let loading = false; 
+let done = false;    
+
+const MAX_DOM_POSTS = 40; // ✅ Giữ tối đa 40 bài trên màn hình
+
+async function loadFeed() {
+    if (loading || done) return;
+
+    loading = true;
+    document.getElementById("loading").style.display = "block";
+
+    const res = await fetch(`/api/feed?page=${page}`);
+    const posts = await res.json();
+
+    document.getElementById("loading").style.display = "none";
+
+    // ✅ Nếu API trả về rỗng → HẾT BÀI
+    if (posts.length === 0) {
+        done = true;
+        document.getElementById("endMessage").style.display = "block";
+        return;
+    }
+
+    const feedContainer = document.getElementById("feedContainer");
+
+    posts.forEach(post => {
+        feedContainer.innerHTML += `
+            <div class="card mb-4 shadow-sm feed-item">
+                <div class="card-body">
+                    <h6 class="fw-bold">@${post.username}</h6>
+
+                    <p class="mb-2">
+                        <strong>${post.food_name}</strong>
+                    </p>
+
+                    <p>${post.description}</p>
+
+                    ${
+                        post.image_filename 
+                        ? `<img src="/static/${post.image_filename}" class="img-fluid rounded mb-3">` 
+                        : ""
+                    }
+
+                    <div class="text-muted small">
+                        ${post.posted_at}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    // ✅ TỰ ĐỘNG XÓA BÀI CŨ NẾU QUÁ 40 BÀI
+    const items = document.querySelectorAll(".feed-item");
+    if (items.length > MAX_DOM_POSTS) {
+        const excess = items.length - MAX_DOM_POSTS;
+        for (let i = 0; i < excess; i++) {
+            items[i].remove(); // ✅ Xóa bài cũ nhất
+        }
+    }
+
+    page++;       
+    loading = false;
+}
+
+
+// ✅ SỰ KIỆN LƯỚT TỚI CUỐI TRANG
+window.addEventListener("scroll", () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+        loadFeed();
+    }
+});
+
+
+// ✅ LOAD 10 BÀI ĐẦU TIÊN KHI MỚI VÀO TRANG
+loadFeed();
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentFoodId = null;
+    let currentFoodName = null;
+    let currentCard = null;
+    let currentLocation = null;
+
+    const foodCards = document.querySelectorAll('.food-card');
+    
+    foodCards.forEach(card => {
+        card.addEventListener('click', function() {
+            currentCard = this; 
+            currentFoodId = this.getAttribute('data-id');
+            currentFoodName = this.getAttribute('data-name');
+            currentLocation = this.getAttribute('data-location');
+            
+            const isFav = this.getAttribute('data-is-fav') === 'true';
+            
+            document.getElementById('modalFoodName').innerText = currentFoodName;
+            document.getElementById('modalFoodImage').src = this.getAttribute('data-image');
+            document.getElementById('modalFoodLocation').innerText = currentLocation;
+            document.getElementById('modalFoodRating').innerText = this.getAttribute('data-rating');
+            document.getElementById('modalFoodPrice').innerText = this.getAttribute('data-price');
+            document.getElementById('modalFoodHours').innerText = this.getAttribute('data-hours');
+            
+            setupFavoriteButton(isFav);
+        });
+    });
+
+    document.getElementById('btnViewMap').addEventListener('click', function() {
+        if (currentLocation) {
+            const encodedLocation = encodeURIComponent(currentLocation);
+            window.location.href = `/map?destination=${encodedLocation}`;
+        }
+    });
+
+    function setupFavoriteButton(isFav) {
+        const btnSave = document.getElementById('btnSaveFavorite');
+        if(!btnSave) return;
+
+        const newBtn = btnSave.cloneNode(true);
+        btnSave.parentNode.replaceChild(newBtn, btnSave);
+        const finalBtn = document.getElementById('btnSaveFavorite');
+
+        updateFavoriteButtonUI(finalBtn, isFav);
+
+        finalBtn.addEventListener('click', function() {
+            handleToggleFavorite(finalBtn);
+        });
+    }
+
+    function updateFavoriteButtonUI(btn, isFav) {
+        if (isFav) {
+            btn.innerHTML = '<i class="fas fa-heart me-1"></i> {{ lang.profile_fav_done }}';
+            btn.className = "btn btn-danger flex-grow-1"; 
+        } else {
+            btn.innerHTML = '<i class="far fa-heart me-1"></i> {{ lang.fav }}';
+            btn.className = "btn btn-warning flex-grow-1";
+        }
+    }
+
+    function handleToggleFavorite(btn) {
+        if(!currentFoodId) return;
+        const isCurrentlyFav = currentCard.getAttribute('data-is-fav') === 'true';
+
+        if (isCurrentlyFav) {
+            fetch('/favorite/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ place_id: currentFoodId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    updateFavoriteButtonUI(btn, false);
+                    currentCard.setAttribute('data-is-fav', 'false');
+                }
+            });
+        } else {
+            fetch('/favorite/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    place_id: currentFoodId,
+                    place_name: currentFoodName
+                })
+            })
+            .then(response => {
+                if(response.status === 401) {
+                    window.location.href = "/login";
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data && data.status === 'success') {
+                    updateFavoriteButtonUI(btn, true);
+                    currentCard.setAttribute('data-is-fav', 'true');
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

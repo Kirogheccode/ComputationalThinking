@@ -23,7 +23,8 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            verified INTEGER DEFAULT 0
+            verified INTEGER DEFAULT 0,
+            avatar TEXT DEFAULT 'default.png'
         )
     """)
 
@@ -46,6 +47,7 @@ def init_db():
             description TEXT NOT NULL,
             image_filename TEXT,
             posted_at TEXT NOT NULL,
+            rating INTEGER DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
@@ -59,6 +61,31 @@ def init_db():
             place_name TEXT NOT NULL,
             created_at TEXT NOT NULL,
             UNIQUE (user_id, place_id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Bảng comment
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (post_id) REFERENCES food_posts(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Bảng react (like)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            UNIQUE (post_id, user_id),
+            FOREIGN KEY (post_id) REFERENCES food_posts(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
@@ -140,18 +167,17 @@ def verify_otp_code(email, otp_input):
 # FOOD POST FUNCTIONS
 # ======================================
 
-def add_food_post(user_id, food_name, description, image_filename):
+def add_food_post(user_id, food_name, description, image_filename, rating=5):
     conn = get_db_connection()
     posted_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     conn.execute("""
-        INSERT INTO food_posts (user_id, food_name, description, image_filename, posted_at)
-        VALUES (?, ?, ?, ?, ?)
-    """, (user_id, food_name, description, image_filename, posted_at))
+        INSERT INTO food_posts (user_id, food_name, description, image_filename, rating, posted_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (user_id, food_name, description, image_filename, rating, posted_at))
 
     conn.commit()
     conn.close()
-
 
 def get_food_posts_by_user(user_id):
     conn = get_db_connection()
@@ -272,6 +298,50 @@ def remove_favorite(user_id, place_id):
 
     conn.commit()
     conn.close()
+
+# GET 10 random posts
+def get_feed_random(limit=10, offset=0):
+    conn = get_db_connection()
+
+    rows = conn.execute("""
+        SELECT 
+            fp.id,
+            fp.food_name,
+            fp.description,
+            fp.image_filename,
+            fp.posted_at,
+            fp.rating,
+
+            u.username,
+            u.avatar,
+
+            (SELECT COUNT(*) FROM reactions r WHERE r.post_id = fp.id) AS like_count,
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = fp.id) AS comment_count
+
+        FROM food_posts fp
+        JOIN users u ON fp.user_id = u.id
+        ORDER BY RANDOM()
+        LIMIT ? OFFSET ?
+    """, (limit, offset)).fetchall()
+
+    conn.close()
+
+    result = []
+    for row in rows:
+        result.append({
+            "id": row["id"],
+            "username": row["username"],
+            "avatar": row["avatar"],   # ✅ AVATAR FIX CHUẨN
+            "food_name": row["food_name"],
+            "description": row["description"],
+            "image_filename": row["image_filename"],
+            "posted_at": row["posted_at"],
+            "rating": row["rating"],   # ✅ RATING TRUYỀN ĐÚNG
+            "like_count": row["like_count"],
+            "comment_count": row["comment_count"]
+        })
+
+    return result
 
 
 if __name__ == '__main__':

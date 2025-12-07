@@ -2,16 +2,16 @@
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow p-4 mx-auto" style="max_width: 500px;">
-        <h2 class="text-center mb-4">💱 Currency Converter</h2>
+        <h2 class="text-center mb-4">💱 {{lang.currency_title}}</h2>
 
         <form id="convertForm">
             <div class="mb-3">
-                <label for="amount" class="form-label">Amount</label>
-                <input type="number" class="form-control" id="amount" placeholder="Enter amount" required min="0" step="0.01">
+                <label for="amount" class="form-label">{{lang.currency_amount}}</label>
+                <input type="number" class="form-control" id="amount" placeholder="{{lang.enter_amount}}" required min="0" step="0.01">
             </div>
 
             <div class="mb-3">
-                <label for="currency" class="form-label">Currency</label>
+                <label for="currency" class="form-label">{{lang.unit_cur}}</label>
                 <select class="form-select" id="currency">
                     {% for key, code in currencies.items() %}
                         <option value="{{ code }}">{{ code }}</option>
@@ -20,22 +20,22 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Direction</label>
+                <label class="form-label">{{lang.way}}</label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="direction" id="dir1" value="1" checked>
                     <label class="form-check-label" for="dir1">
-                        Foreign ➝ VND (Buy VND)
+                        {{lang.foreign}} ➝ VND (Buy VND)
                     </label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="direction" id="dir2" value="2">
                     <label class="form-check-label" for="dir2">
-                        VND ➝ Foreign (Sell VND)
+                        VND ➝ {{lang.foreign}} (Sell VND)
                     </label>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Convert</button>
+            <button type="submit" class="btn btn-primary w-100">{{lang.convert}}</button>
         </form>
 
         <div id="resultBox" class="alert alert-success mt-4 d-none">

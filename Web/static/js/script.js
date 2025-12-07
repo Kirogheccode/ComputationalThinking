@@ -542,6 +542,9 @@ function renderFoodCards(container, data) {
     data.forEach(food => {
     const card = document.createElement('div');
     card.classList.add('card-food');
+    card.setAttribute("data-is-fav", food.is_fav === true ? "true" : "false");
+    card.setAttribute("data-id", food.id);
+    card.setAttribute("data-name", food.Name);
 
     // Fallback ảnh mặc định
     const imageSrc = food.img && food.img.trim() !== ""
@@ -568,8 +571,28 @@ function renderFoodCards(container, data) {
                 data-image="${imageSrc}">
             <i class="fa-solid fa-location-dot"></i>
         </button>
+        <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
+            <i class="far fa-heart me-1"></i> Yêu thích
+        </button>
     `;
     container.appendChild(card);
+    card.addEventListener('click', function () {
+        currentCard = card;
+        currentFoodId = food.id;
+        currentFoodName = food.Name;
+        currentLocation = food.Address;
+
+        const isFav = card.getAttribute("data-is-fav") === "true";
+
+        document.getElementById('modalFoodName').innerText = food.Name;
+        document.getElementById('modalFoodImage').src = imageSrc;
+        document.getElementById('modalFoodLocation').innerText = food.Address;
+        document.getElementById('modalFoodRating').innerText = food.Rating;
+        document.getElementById('modalFoodPrice').innerText = food.Budget;
+
+        setupFavoriteButton(isFav);
+    });
+
 });
 
 }
