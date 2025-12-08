@@ -758,45 +758,6 @@ function main()
         uploadImageFeature()
         suggestionChips()
         //=========================================================================
-        
-        console.log("Filter JS loaded!");
-
-        const areaSelect = document.getElementById("areaSelect");
-        const searchInput = document.getElementById("searchInput");
-        const clearBtn = document.getElementById("clearFilters");
-
-        // === Apply Filters ===
-        function applyFilters() {
-            const area = areaSelect.value;
-            const q = searchInput.value.trim();
-
-            const params = new URLSearchParams({
-                area: area,
-                q: q,
-                page: 1
-            });
-
-            console.log("Redirect to:", "?" + params.toString());
-            window.location.href = "?" + params.toString();
-        }
-
-        // ===== Gắn event nếu các phần tử tồn tại =====
-        if (areaSelect) {
-            areaSelect.addEventListener("change", applyFilters);
-        }
-
-        if (searchInput) {
-            searchInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    applyFilters();
-                }
-            });
-        }
-
-        if (clearBtn) {
-            clearBtn.addEventListener("click", clearFilters);
-        }
     });
 }
 

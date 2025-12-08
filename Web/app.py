@@ -4,6 +4,8 @@ import math
 import re # Import re để dùng trong search
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from datetime import datetime
+import sqlite3
 
 # Import các module tự viết
 import Routing
@@ -17,7 +19,7 @@ from lang import translations
 from database import (
     init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
     add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
-    get_feed_random, get_db_connection
+    get_feed, get_db_connection, get_comments_by_post
 )
 
 # Load environment variables
@@ -308,11 +310,16 @@ def api_remove_favorite():
 
 @app.route("/api/feed")
 def api_feed():
-    page = int(request.args.get("page", 1))
+    
+    page = request.args.get("page", 1, type=int)
     limit = 10
-    offset = (page - 1) * limit  # page 1 = 0, page 2 = 10, page 3 = 20 ...
+    offset = (page - 1) * limit
+    
+    # ✅ LẤY TỪ KHÓA TÌM KIẾM TỪ REQUEST
+    search_term = request.args.get("search", "")
 
-    posts = get_feed_random(limit, offset)
+    # ✅ GỌI HÀM get_feed MỚI VÀ TRUYỀN CẢ LIMIT, OFFSET VÀ SEARCH_TERM
+    posts = get_feed(limit, offset, search_term)
 
     return jsonify(posts)
 
@@ -350,6 +357,139 @@ def upload_avatar():
 
     flash("✅ Đổi avatar thành công!", "success")
     return redirect(url_for("account_page"))
+
+# Tính năng like
+@app.route("/toggle-like/<int:post_id>", methods=["POST"])
+def toggle_like(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id FROM reactions 
+        WHERE post_id = ? AND user_id = ?
+    """, (post_id, user_id))
+
+    liked = cursor.fetchone()
+
+    if liked:
+        cursor.execute("""
+            DELETE FROM reactions 
+            WHERE post_id = ? AND user_id = ?
+        """, (post_id, user_id))
+        status = "unliked"
+    else:
+        cursor.execute("""
+            INSERT INTO reactions (post_id, user_id)
+            VALUES (?, ?)
+        """, (post_id, user_id))
+        status = "liked"
+
+    conn.commit()
+
+    cursor.execute("""
+        SELECT COUNT(*) FROM reactions WHERE post_id = ?
+    """, (post_id,))
+    total_likes = cursor.fetchone()[0]
+
+    conn.close()
+
+    return jsonify({
+        "status": status,
+        "total_likes": total_likes
+    })
+
+#Tính năng comment
+@app.route("/comment/add/<int:post_id>", methods=["POST"])
+def add_comment(post_id):
+
+    if "user_id" not in session:
+        return jsonify({"success": False})
+
+    content = request.form.get("content")
+
+    if not content or content.strip() == "":
+        return jsonify({"success": False})
+
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = sqlite3.connect("data/smart_tourism.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO comments (post_id, user_id, content, created_at)
+        VALUES (?, ?, ?, ?)
+    """, (post_id, session["user_id"], content, created_at))
+
+    conn.commit()
+    comment_id = cursor.lastrowid
+
+    cursor.execute("""
+        SELECT comments.id, comments.content, users.username, users.avatar
+        FROM comments
+        JOIN users ON comments.user_id = users.id
+        WHERE comments.id = ?
+    """, (comment_id,))
+
+    cmt = cursor.fetchone()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "comment": {
+            "id": cmt[0],
+            "content": cmt[1],
+            "username": cmt[2],
+            "avatar": cmt[3]
+        }
+    })
+
+@app.route("/comment/delete/<int:comment_id>", methods=["POST"])
+def delete_comment(comment_id):
+
+    if "user_id" not in session:
+        return jsonify({"success": False})
+
+    conn = sqlite3.connect("data/smart_tourism.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT user_id FROM comments WHERE id = ?
+    """, (comment_id,))
+
+    owner = cursor.fetchone()
+
+    if not owner or owner[0] != session["user_id"]:
+        conn.close()
+        return jsonify({"success": False})
+
+    cursor.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True})
+
+@app.route("/comment/list/<int:post_id>")
+def get_comment_list(post_id):
+
+    # ✅ GỌI HÀM TỪ DATABASE.PY
+    rows = get_comments_by_post(post_id) 
+
+    data = []
+    for r in rows:
+        # ✅ TRUY CẬP DỮ LIỆU BẰNG TÊN CỘT (vì đã dùng get_db_connection() trong database.py)
+        data.append({
+            "id": r["id"],
+            "content": r["content"],
+            "username": r["username"],
+            "avatar": r["avatar"],
+            "user_id": r["user_id"]
+        })
+
+    return jsonify(data)
 
 
 if __name__ == '__main__':

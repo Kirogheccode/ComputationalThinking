@@ -157,7 +157,8 @@ translations = {
         "unit_cur": "Đơn vị",
         "way": "Cách đổi",
         "foreign": "Bản địa",
-        "convert": "Đổi"
+        "convert": "Đổi",
+        "comment": "Bình luận"
     },
 
     "en": {
@@ -318,6 +319,7 @@ translations = {
         "unit_cur": "Currency",
         "way": "Direction",
         "foreign": "Foreign",
-        "convert": "Convert"
+        "convert": "Convert",
+        "comment": "Comment"
     }
 }

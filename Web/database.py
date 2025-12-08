@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime, timedelta
 import uuid 
 import random
+from flask import session
 from werkzeug.security import generate_password_hash
 
 DATABASE = 'data/smart_tourism.db'
@@ -299,50 +300,97 @@ def remove_favorite(user_id, place_id):
     conn.commit()
     conn.close()
 
-# GET 10 random posts
-def get_feed_random(limit=10, offset=0):
+
+# database.py
+
+# ✅ FIX: Đổi tên và thêm tham số search_term
+def get_feed(limit=10, offset=0, search_term=None): 
     conn = get_db_connection()
-
-    rows = conn.execute("""
+    # Lấy user_id, mặc định là 0 nếu chưa đăng nhập
+    user_id = session.get("user_id", 0) 
+    
+    # 1. Base Query (Giữ nguyên các truy vấn con dùng reactions/comments)
+    query = """
         SELECT 
-            fp.id,
-            fp.food_name,
-            fp.description,
-            fp.image_filename,
-            fp.posted_at,
-            fp.rating,
-
-            u.username,
-            u.avatar,
-
+            fp.id, fp.food_name, fp.description, fp.image_filename, fp.posted_at, fp.rating,
+            u.username, u.avatar,
             (SELECT COUNT(*) FROM reactions r WHERE r.post_id = fp.id) AS like_count,
-            (SELECT COUNT(*) FROM comments c WHERE c.post_id = fp.id) AS comment_count
-
+            (SELECT COUNT(*) FROM comments c WHERE c.post_id = fp.id) AS comment_count,
+            EXISTS (
+                SELECT 1 FROM reactions r2 
+                WHERE r2.post_id = fp.id 
+                AND r2.user_id = ?
+            ) AS is_liked
         FROM food_posts fp
         JOIN users u ON fp.user_id = u.id
-        ORDER BY RANDOM()
-        LIMIT ? OFFSET ?
-    """, (limit, offset)).fetchall()
+    """
+    
+    params = [user_id] # Tham số đầu tiên: user_id cho EXISTS(SELECT 1 ... AND r2.user_id = ?)
+
+    # 2. THÊM ĐIỀU KIỆN TÌM KIẾM
+    if search_term:
+        query += " WHERE fp.food_name LIKE ?"
+        # ✅ FIX: Thêm tham số tìm kiếm vào danh sách tham số
+        params.append(f"%{search_term}%")
+    
+    # 3. SẮP XẾP BÀI VIẾT
+    if search_term:
+        # Khi tìm kiếm, sắp xếp theo ngày đăng mới nhất
+        query += " ORDER BY fp.posted_at DESC"
+    else:
+        # Mặc định (không tìm kiếm) là sắp xếp ngẫu nhiên
+        query += " ORDER BY RANDOM()"
+        
+    # 4. PHÂN TRANG
+    query += " LIMIT ? OFFSET ?"
+    # ✅ Thêm limit và offset vào cuối danh sách tham số
+    params.extend([limit, offset])
+
+    # Thực thi truy vấn
+    rows = conn.execute(query, tuple(params)).fetchall()
 
     conn.close()
-
+    
+    # ... (Phần trả về giữ nguyên)
     result = []
     for row in rows:
         result.append({
             "id": row["id"],
             "username": row["username"],
-            "avatar": row["avatar"],   # ✅ AVATAR FIX CHUẨN
+            "avatar": row["avatar"],
             "food_name": row["food_name"],
             "description": row["description"],
             "image_filename": row["image_filename"],
             "posted_at": row["posted_at"],
-            "rating": row["rating"],   # ✅ RATING TRUYỀN ĐÚNG
+            "rating": row["rating"],
             "like_count": row["like_count"],
-            "comment_count": row["comment_count"]
+            "comment_count": row["comment_count"],
+            "is_liked": bool(row["is_liked"])
         })
-
     return result
 
+# ======================================
+# COMMENT FUNCTIONS
+# ======================================
+# ... (thêm vào cuối file)
+
+def get_comments_by_post(post_id):
+    # Dùng hàm chuẩn để lấy kết nối và đảm bảo row_factory
+    conn = get_db_connection() 
+    
+    rows = conn.execute("""
+        SELECT c.id, c.content, c.created_at,
+               u.username, u.avatar, u.id AS user_id
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.post_id = ?
+        ORDER BY c.id DESC
+    """, (post_id,)).fetchall()
+    
+    conn.close()
+
+    # Trả về list of sqlite3.Row objects (dict-like)
+    return rows
 
 if __name__ == '__main__':
     init_db()
