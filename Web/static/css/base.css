@@ -137,3 +137,66 @@ body {
     font-size: 0.85rem;
     color: var(--color-muted);
 }
+
+/* ===== NAV LINK CHUNG ===== */
+.nav-link {
+    position: relative;
+    transition: color 0.2s ease;
+    color: #333;
+}
+
+/* ===== HOVER → CAM ===== */
+.nav-link:hover {
+    color: #fd7e14 !important;  /* ✅ CAM */
+}
+
+/* ===== ACTIVE (SELECTED - LIGHT MODE) ===== */
+body:not(.dark) .nav-link.active {
+    color: #fd7e14 !important;  /* ✅ CAM */
+    font-weight: 600;
+}
+
+/* ===== UNDERLINE - CAM (LIGHT MODE) ===== */
+body:not(.dark) .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 10%;
+    bottom: -6px;
+    width: 80%;
+    height: 3px;
+    background-color: #fd7e14;
+    border-radius: 2px;
+}
+
+/* ================= DARK MODE ================= */
+
+/* Chữ thường */
+body.dark .nav-link {
+    color: #dddddd;
+}
+
+/* Hover vẫn CAM */
+body.dark .nav-link:hover {
+    color: #fd7e14 !important;
+}
+
+/* ✅ ACTIVE TRẮNG (KHÔNG BỊ TRÙNG NỀN) */
+body.dark .nav-link.active {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* ✅ UNDERLINE DARK MODE vẫn CAM */
+body.dark .nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 10%;
+    bottom: -6px;
+    width: 80%;
+    height: 3px;
+    background-color: #fd7e14;
+    border-radius: 2px;
+}
+
+
+

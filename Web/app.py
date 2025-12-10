@@ -4,6 +4,8 @@ import math
 import re # Import re để dùng trong search
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from datetime import datetime
+import sqlite3
 
 # Import các module tự viết
 import Routing
@@ -15,8 +17,9 @@ from Search_Clone_2 import replyToUser
 from extensions import oauth
 from lang import translations
 from database import (
-    init_db, add_food_post, get_food_posts_by_user, 
-    add_favorite, get_favorites_by_user, remove_favorite, delete_food_post 
+    init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
+    add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
+    get_feed, get_db_connection, get_comments_by_post
 )
 
 # Load environment variables
@@ -37,6 +40,9 @@ oauth.init_app(app)
 UPLOAD_FOLDER = os.path.join(app.root_path, "static/images/user_uploads")
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Cấu hình thư mục user avatar
+app.config['AVATAR_UPLOAD_FOLDER'] = 'static/images/avatars'
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -170,7 +176,21 @@ def account_page():
                 "hours": ""
             })
 
-    return render_template('account.html', username=username, posts=user_posts, favorites=enriched_favorites)
+    user = get_user_by_id(user_id)
+
+    avatar_url = (
+        url_for('static', filename=user['avatar'])
+        if user and user['avatar']
+        else url_for('static', filename='images/default-avatar.jpg')
+    )
+
+    return render_template(
+        'account.html',
+        username=username,
+        avatar_url=avatar_url,   # ✅ THÊM DÒNG NÀY
+        posts=user_posts,
+        favorites=enriched_favorites
+    )
 
 @app.route('/account', methods=['POST'])
 @login_required
@@ -179,6 +199,7 @@ def your_account():
     food_name = request.form['food_name']
     description = request.form['description']
     image_file = request.files.get('image')
+    rating = int(request.form.get("rating", 5))
 
     if not food_name or not description:
         flash('Vui lòng điền tên món ăn và đánh giá.', 'danger')
@@ -193,7 +214,7 @@ def your_account():
         # Lưu đường dẫn vào DB (dạng relative path để static url_for dùng được)
         image_filename = f"images/user_uploads/{filename}"
     
-    add_food_post(user_id, food_name, description, image_filename)
+    add_food_post(user_id, food_name, description, image_filename, rating)
     flash('Bài đăng của bạn đã được thêm thành công!', 'success')
     return redirect(url_for('account_page'))
 
@@ -317,6 +338,190 @@ def api_remove_favorite():
         
     remove_favorite(session["user_id"], place_id)
     return jsonify({"status": "success"})
+
+@app.route("/api/feed")
+def api_feed():
+    
+    page = request.args.get("page", 1, type=int)
+    limit = 10
+    offset = (page - 1) * limit
+    
+    # ✅ LẤY TỪ KHÓA TÌM KIẾM TỪ REQUEST
+    search_term = request.args.get("search", "")
+
+    # ✅ GỌI HÀM get_feed MỚI VÀ TRUYỀN CẢ LIMIT, OFFSET VÀ SEARCH_TERM
+    posts = get_feed(limit, offset, search_term)
+
+    return jsonify(posts)
+
+@app.route('/upload-avatar', methods=['POST'])
+@login_required
+def upload_avatar():
+    user_id = session['user_id']
+    file = request.files.get('avatar')
+
+    if not file or file.filename == '':
+        flash("Vui lòng chọn ảnh", "danger")
+        return redirect(url_for("account_page"))
+
+    if not allowed_file(file.filename):
+        flash("Chỉ được upload ảnh (png, jpg, jpeg)", "danger")
+        return redirect(url_for("account_page"))
+
+    # Đặt tên file theo user id để tránh trùng
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    filename = f"user_{user_id}.{ext}"
+
+    save_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], filename)
+    file.save(save_path)
+
+    avatar_db_path = f"images/avatars/{filename}"
+
+    # ✅ UPDATE VÀO DB
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE users SET avatar = ? WHERE id = ?",
+        (avatar_db_path, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+    flash("✅ Đổi avatar thành công!", "success")
+    return redirect(url_for("account_page"))
+
+# Tính năng like
+@app.route("/toggle-like/<int:post_id>", methods=["POST"])
+def toggle_like(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id FROM reactions 
+        WHERE post_id = ? AND user_id = ?
+    """, (post_id, user_id))
+
+    liked = cursor.fetchone()
+
+    if liked:
+        cursor.execute("""
+            DELETE FROM reactions 
+            WHERE post_id = ? AND user_id = ?
+        """, (post_id, user_id))
+        status = "unliked"
+    else:
+        cursor.execute("""
+            INSERT INTO reactions (post_id, user_id)
+            VALUES (?, ?)
+        """, (post_id, user_id))
+        status = "liked"
+
+    conn.commit()
+
+    cursor.execute("""
+        SELECT COUNT(*) FROM reactions WHERE post_id = ?
+    """, (post_id,))
+    total_likes = cursor.fetchone()[0]
+
+    conn.close()
+
+    return jsonify({
+        "status": status,
+        "total_likes": total_likes
+    })
+
+#Tính năng comment
+@app.route("/comment/add/<int:post_id>", methods=["POST"])
+def add_comment(post_id):
+
+    if "user_id" not in session:
+        return jsonify({"success": False})
+
+    content = request.form.get("content")
+
+    if not content or content.strip() == "":
+        return jsonify({"success": False})
+
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = sqlite3.connect("data/smart_tourism.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO comments (post_id, user_id, content, created_at)
+        VALUES (?, ?, ?, ?)
+    """, (post_id, session["user_id"], content, created_at))
+
+    conn.commit()
+    comment_id = cursor.lastrowid
+
+    cursor.execute("""
+        SELECT comments.id, comments.content, users.username, users.avatar
+        FROM comments
+        JOIN users ON comments.user_id = users.id
+        WHERE comments.id = ?
+    """, (comment_id,))
+
+    cmt = cursor.fetchone()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "comment": {
+            "id": cmt[0],
+            "content": cmt[1],
+            "username": cmt[2],
+            "avatar": cmt[3]
+        }
+    })
+
+@app.route("/comment/delete/<int:comment_id>", methods=["POST"])
+def delete_comment(comment_id):
+
+    if "user_id" not in session:
+        return jsonify({"success": False})
+
+    conn = sqlite3.connect("data/smart_tourism.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT user_id FROM comments WHERE id = ?
+    """, (comment_id,))
+
+    owner = cursor.fetchone()
+
+    if not owner or owner[0] != session["user_id"]:
+        conn.close()
+        return jsonify({"success": False})
+
+    cursor.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"success": True})
+
+@app.route("/comment/list/<int:post_id>")
+def get_comment_list(post_id):
+
+    # ✅ GỌI HÀM TỪ DATABASE.PY
+    rows = get_comments_by_post(post_id) 
+
+    data = []
+    for r in rows:
+        # ✅ TRUY CẬP DỮ LIỆU BẰNG TÊN CỘT (vì đã dùng get_db_connection() trong database.py)
+        data.append({
+            "id": r["id"],
+            "content": r["content"],
+            "username": r["username"],
+            "avatar": r["avatar"],
+            "user_id": r["user_id"]
+        })
+
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)

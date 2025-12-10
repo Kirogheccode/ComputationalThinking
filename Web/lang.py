@@ -143,8 +143,22 @@ translations = {
         "wrong_email": "Nhập sai Email?",
 
         "processing_task": "Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!",
-        "input_required": "Hãy nhập liệu vào ô input."
+        "input_required": "Hãy nhập liệu vào ô input.",
+        "change": "Đổi ảnh",
 
+        "your_feed": "Bảng tin của bạn",
+        "end_view": "Bạn đã xem hết bài viết rồi",
+        "loading_posts": "Đang tải bài viết",
+        "currency": "Tiền tệ",
+
+        "currency_title": "Trang đổi tiền",
+        "currency_amount": "Số lượng",
+        "enter_amount": "Nhập số lượng",
+        "unit_cur": "Đơn vị",
+        "way": "Cách đổi",
+        "foreign": "Bản địa",
+        "convert": "Đổi",
+        "comment": "Bình luận"
     },
 
     "en": {
@@ -291,7 +305,21 @@ translations = {
         "wrong_email": "Wrong email?",
 
         "processing_task": "Task is being processed, please wait!",
-        "input_required": "Please enter text."
+        "input_required": "Please enter text.",
+        "change": "Change",
 
+        "your_feed": "Your feeds",
+        "end_view": "You have viewed all posts",
+        "loading_posts": "Loading posts",
+        "currency": "Currency",
+
+        "currency_title": "Currency converter",
+        "currency_amount": "Amount",
+        "enter_amount": "Enter amount",
+        "unit_cur": "Currency",
+        "way": "Direction",
+        "foreign": "Foreign",
+        "convert": "Convert",
+        "comment": "Comment"
     }
 }
