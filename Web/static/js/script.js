@@ -2,7 +2,6 @@ let loadingDiv = null;
 let uploadedImage = null;
 let isProcess = false;
 let currentPrefix = "";
-
 function scrollAnimation() {
     // Initialize AOS for scroll animations
     if (window.AOS) {
@@ -48,7 +47,7 @@ function foodModal() {
 }
 
 // --- Hàm lọc, chỉ redirect khi Enter ---
-window.applyFilters = function() {
+window.applyFilters = function () {
     const area = document.getElementById('areaSelect').value;
     const q = document.getElementById('searchInput').value.trim();
     const params = new URLSearchParams({ area: area, q: q, page: 1 });
@@ -56,7 +55,7 @@ window.applyFilters = function() {
 };
 
 // --- Hàm xóa filter nhưng không redirect ngay ---
-window.clearFilters = function() {
+window.clearFilters = function () {
     document.getElementById('areaSelect').value = 'all';
     document.getElementById('searchInput').value = '';
     applyFilters();
@@ -184,7 +183,7 @@ function mapModal() {
     }
 }
 
-function displayUserMessage(messageText, chatWindow){
+function displayUserMessage(messageText, chatWindow) {
     const userMessageDiv = document.createElement('div');
     userMessageDiv.classList.add('message', 'user-message');
     userMessageDiv.innerHTML = `<p>${messageText}</p>`;
@@ -193,7 +192,7 @@ function displayUserMessage(messageText, chatWindow){
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function createLoadingBubble(chatWindow){
+function createLoadingBubble(chatWindow) {
     loadingDiv = document.createElement('div');
     loadingDiv.classList.add('message', 'bot-message', 'loading-message');
     loadingDiv.innerHTML = `<p></p>`;
@@ -201,16 +200,15 @@ function createLoadingBubble(chatWindow){
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function removeLoadingBubble(){
+function removeLoadingBubble() {
     if (loadingDiv) {
         loadingDiv.remove();
         loadingDiv = null; // tránh lỗi nếu gọi remove nhiều lần
     }
 }
 
-function displayBotMessage(botText, chatWindow) 
-{
-    if(botText=="")
+function displayBotMessage(botText, chatWindow) {
+    if (botText == "")
         return;
     const botMessageDiv = document.createElement('div');
     botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
@@ -222,12 +220,195 @@ function displayBotMessage(botText, chatWindow)
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
+function removeOutput(container)
+{
+    const cards = container.querySelectorAll('.card-food');
+    cards.forEach(card => {
+        if (card)
+            card.remove();
+    });
 
-async function sendText(messageText){
+
+    let textBox = container.querySelector('.text-box');
+    if (textBox)
+        textBox.remove();
+
+    const recipeBoxes = container.querySelectorAll('.drop-box');
+    recipeBoxes.forEach(recipeBox => {
+        if(recipeBox)
+            recipeBox.remove();
+    });
+
+    let menuBox = container.querySelector('.menu-box');
+    if (menuBox)
+        menuBox.remove();
+}
+function displayForRestaurant(container,data,chatWindow, recongizeText = "")
+{
+    let botText = recongizeText + data.reply;
+    botText = botText.replace(/\n/g, '<br>');
+    removeLoadingBubble();
+    displayBotMessage(botText, chatWindow);
+    renderFoodCards(container, data.food_data);
+}
+function displayForCulture(container,data,chatWindow,recognizeText = "")
+{
+    const placeholder = document.getElementById("food-placeholder");
+
+    let Intro = recognizeText + "Here is your answer about Vietnamese culture !";
+    Intro = Intro.replace(/\n/g, '<br>');
+    removeLoadingBubble();
+    displayBotMessage(Intro,chatWindow);
+    let botText = data.reply;
+    botText = botText.replace(/\r/g, "");
+    botText = botText.replace(/^\s*###\s*(.*)$/gm, "<h3>$1</h3>");
+    botText = botText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    botText = botText.replace(/\n/g, '<br>');
+    
+    removeOutput(container);
+    //Có thể cần thêm 2 dòng như trên để xoá cho output mỗi chức năng
+
+    if (botText) {
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
+    }
+    else {
+        if (placeholder) {
+            placeholder.style.display = "flex";
+        }
+        return;
+    }
+    const textBox = document.createElement('div');
+    textBox.classList.add('text-box');
+    textBox.innerHTML = `<p>${botText}</p>`;
+    container.appendChild(textBox);
+}
+function displayForRecipe(container,data,chatWindow,recognizeText = "")
+{
+    const placeholder = document.getElementById("food-placeholder");
+    
+    let botText = recognizeText + data.reply;
+    botText = botText.replace(/\n/g, '<br>');
+    removeLoadingBubble();
+    displayBotMessage(botText, chatWindow);
+
+    removeOutput(container);
+    const foodArray = data.food_data;
+    if (foodArray && foodArray.length > 0)
+    {
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
+    }
+    else {
+        if (placeholder) {
+            placeholder.style.display = "flex";
+        }
+        return;
+    }
+    var cnt = 1;
+    foodArray.forEach(food => {
+        const dropDownBox = document.createElement('div');
+
+        dropDownBox.classList.add('drop-box', 'mb-2'); 
+
+        const collapseId = `box${cnt}Collapse`; 
+
+        dropDownBox.innerHTML = `
+            <button class="recipe-btn collapsed w-100 btn" 
+                    type="button"
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#${collapseId}" 
+                    aria-expanded="false" 
+                    aria-controls="${collapseId}">
+                <h5 class="food-name m-0">${food.Name}</h5>
+            </button>
+            <div class="collapse" id="${collapseId}">
+                <div class="recipe-info card card-body mt-1">
+                    <p class="recipe-description"><b>Description</b>: ${food.Description}</p> 
+                    <p class="recipe-authencity"><b>Authenticity</b>: ${food.AuthencityNote}</p> 
+                    <p class="recipe-dietary"><b>Dietary</b>: ${food.DietaryCompatibility}</p>
+                    <p class="recipe-foodunit"><b>Nutritional Values for ${food.FoodUnitToCalculateNutritions}:</b></p>
+                    <ul class="recipe-nutrition">
+                        <li class="recipe-calo"><b>Calories</b>: ${food.Calories}</li>
+                        <li class="recipe-protein"><b>Protein</b>: ${food.Protein}</li>
+                        <li class="recipe-carbs"><b>Carbs</b>: ${food.Carbs}</li>
+                        <li class="recipe-fat"><b>Fat</b>: ${food.Fat}</li>
+                    </ul>
+                </div>
+            </div>`;
+            container.appendChild(dropDownBox);
+            cnt++;
+    });
+}
+function displayForMenu(container,data,chatWindow,recognizeText = "")
+{
+    const placeholder = document.getElementById("food-placeholder");
+    
+    let botText = recognizeText + data.reply;
+    botText = botText.replace(/\n/g, '<br>');
+    removeLoadingBubble();
+    displayBotMessage(botText, chatWindow);
+
+    removeOutput(container);
+    const menu = data.food_data;
+    if (menu && menu.length > 0)
+    {
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
+    }
+    else {
+        if (placeholder) {
+            placeholder.style.display = "flex";
+        }
+        return;
+    }
+
+    const menuBox = document.createElement('div');
+    menuBox.classList.add('menu-box');
+    const titleMenu = document.createElement('span');
+    titleMenu.classList.add('menu-title');
+    titleMenu.innerHTML = `<h3><b>MENU FOR TODAY</b></h3>`;
+    menuBox.appendChild(titleMenu);
+    var cnt = 1;
+    
+    menu.forEach(meal => {
+        const dropDownBox = document.createElement('div');
+
+        dropDownBox.classList.add('drop-box', 'mb-2'); 
+
+        const collapseId = `box${cnt}Collapse`; 
+
+        dropDownBox.innerHTML = `
+            <button class="recipe-btn collapsed w-100 btn" 
+                    type="button"
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#${collapseId}" 
+                    aria-expanded="false" 
+                    aria-controls="${collapseId}">
+                <h5 class="food-name m-0">${meal.MainMeal}</h5>
+            </button>
+            <div class="collapse" id="${collapseId}">
+                <div class="recipe-info card card-body mt-1">
+                    <p class="menu-foodname"><b>Dish</b>: ${meal.FoodName}</p> 
+                    <p class="menu-cultural"><b>Cutural Significance</b>: ${meal.CulturalSignificance}</p> 
+                    <p class="menu-foodunit"><b>Nutritional Values:</b></p>
+                    <ul class="menu-nutrition">
+                        <li class="menu-calo"><b>Calories</b>: ${meal.Calories}</li>
+                        <li class="menu-protein"><b>Protein</b>: ${meal.Protein}</li>
+                        <li class="menu-fat"><b>Fat</b>: ${meal.Fat}</li>
+                    </ul>
+                </div>
+            </div>`;
+            menuBox.appendChild(dropDownBox);
+            cnt++;
+    });
+    container.appendChild(menuBox);
+}
+async function sendText(messageText) {
     isProcess = true;
-    const imageBtn = document.getElementById('imageInputBtn');
-    const imageInput = document.getElementById('imageInput');
-    const previewWrapper = document.getElementById('imagePreviewWrapper')
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('userInput');
 
@@ -242,44 +423,48 @@ async function sendText(messageText){
     // Create loading bubble
     createLoadingBubble(chatWindow);
 
-   const safePrefix = currentPrefix || "";
-    const finalPayload = safePrefix + messageText;
-
     // DEBUG: Check console (F12) to see if prefix is attached
-    console.log("Sending Payload:", finalPayload);
-
     let botText = "";
     try {
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: finalPayload }) // <--- Send the combined text
+            body: JSON.stringify({
+                message: messageText,
+                mode: currentPrefix
+            }) // <--- Send the combined text
         });
 
         // Nhận dữ liệu JSON trả về
         const data = await response.json();
         console.log("DEBUG: toàn bộ data nhận về từ API:", data);
-            
-        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
-        botText = data.reply;
 
-        // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
-        // để chúng hiển thị đúng trong HTML
-        botText = botText.replace(/\n/g, '<br>');
+        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
         const container = document.getElementById("carousel");
-        renderFoodCards(container, data.food_data);
+        if (currentPrefix == "/place_")
+        {
+            displayForRestaurant(container,data,chatWindow);
+        }
+        else if (currentPrefix == "/recipe_")
+        {
+            displayForRecipe(container,data,chatWindow);
+        }
+        else if (currentPrefix == "/plan_")
+        {
+            displayForMenu(container,data,chatWindow);
+        }
+        else
+        {
+            displayForCulture(container,data,chatWindow);
+        }
 
     }
     catch (err) {
         console.error("Lỗi khi gọi API:", err);
         botText = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
+        removeLoadingBubble();
+        displayBotMessage(botText, chatWindow);
     }
-
-    // Remove loading bubble
-    removeLoadingBubble();
-
-    // Display bot response
-    displayBotMessage(botText, chatWindow);
     isProcess = false;
 }
 
@@ -315,15 +500,15 @@ async function sendImage(text) {
     previewImg.src = '';
     previewWrapper.classList.add('d-none');
     imageInput.value = '';
-    
-    displayUserMessage(text,chatWindow);
+
+    displayUserMessage(text, chatWindow);
     if (userInput) {
         userInput.value = '';
     }
 
     // 2. Tạo loading bubble cho bot
     createLoadingBubble(chatWindow);
-   
+
     // 3.1. Gửi ảnh lên backend (nếu có API) để nhận diện
     let botText1 = "";
     let food_predict = "";
@@ -343,7 +528,7 @@ async function sendImage(text) {
         console.error("Lỗi khi gửi ảnh:", err);
         botText1 = "Xin lỗi, hệ thống gặp sự cố khi gửi ảnh.";
     }
-    
+
     // 3.2. Gửi câu prompt lên API để xử lý và trả lời
     let botText2 = "";
     let messageText = (food_predict || '') + " " + (text || '');
@@ -355,7 +540,10 @@ async function sendImage(text) {
                 'Content-Type': 'application/json'
             },
             // Gửi tin nhắn dưới dạng JSON
-            body: JSON.stringify({ message: messageText })
+            body: JSON.stringify({
+                message: messageText,
+                mode: currentPrefix
+            })
         });
 
         if (!response.ok) {
@@ -366,28 +554,29 @@ async function sendImage(text) {
         // Nhận dữ liệu JSON trả về
         const data = await response.json();
         console.log("DEBUG: toàn bộ data nhận về từ API:", data);
-            
-        // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
-        botText2 = data.reply;
 
-        // RẤT QUAN TRỌNG: Thay thế ký tự xuống dòng (\n) bằng thẻ <br>
-        // để chúng hiển thị đúng trong HTML
-        botText2 = botText2.replace(/\n/g, '<br>');
         const container = document.getElementById("carousel");
-        renderFoodCards(container, data.food_data);
+        if (currrentPrefix == "/place_")
+        {
+            displayForRestaurant(container,data,chatWindow,botText1 + "\n");
+        }
+        else if (currentPrefix == "/_recipe")
+        {
+            displayForRecipe(container,data,chatWindow,botText1 + "\n");
+        }
+        else
+        {
+            displayForCulture(container,data,chatWindow,botText1 + "\n");
+        }
 
     }
     catch (err) {
         console.error("Lỗi khi gọi API:", err);
         botText2 = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
+        removeLoadingBubble();
+        let botText = botText1 + "<br>" + botText2;
+        displayBotMessage(botText, chatWindow);
     }
-    // 4. Xoá loading bubble
-    removeLoadingBubble();
-    let botText = botText1 + "<br>" + botText2;
-    // 5. Hiển thị tin nhắn trả lời từ bot
-    displayBotMessage(botText, chatWindow);
-
-    // 6. Reset preview và input
     uploadedImage = null;
     isProcess = false;
 }
@@ -403,13 +592,13 @@ function showNotification(text) {
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = text;
-    
+
     // Thêm icon nếu cần (tùy chọn)
     notification.innerHTML = `<i class="fa-solid fa-check-circle me-2"></i>${text}`;
 
     // 2. Thêm vào container và hiển thị
     container.appendChild(notification);
-    
+
     // Sử dụng setTimeout để thêm class 'show' sau một chút để kích hoạt transition
     setTimeout(() => {
         notification.classList.add('show');
@@ -419,14 +608,14 @@ function showNotification(text) {
     setTimeout(() => {
         // Bắt đầu hiệu ứng ẩn
         notification.classList.remove('show');
-        
+
         // Sau khi hiệu ứng ẩn hoàn tất (0.3s theo CSS), loại bỏ phần tử khỏi DOM
         setTimeout(() => {
             if (container.contains(notification)) {
                 container.removeChild(notification);
             }
         }, 300); // 300ms phải khớp với transition trong CSS
-        
+
     }, 2000); // Thời gian hiển thị (2 giây)
 }
 
@@ -491,7 +680,7 @@ function themeMode() {
     const textDark = themeToggleBtn.dataset.dark;
     const textLight = themeToggleBtn.dataset.light;
 
-    
+
     // === Theme initialization ===
     const savedTheme = localStorage.getItem("theme");
 
@@ -521,15 +710,14 @@ function renderFoodCards(container, data) {
     const placeholder = document.getElementById("food-placeholder");
 
     // 1. XÓA các card cũ trước khi render mới
-    const cards = container.querySelectorAll('.card-food');
-    cards.forEach(card => card.remove()); // xóa card cũ, giữ placeholder
+    removeOutput(container);
 
     // 2. Nếu có data → ẩn placeholder
     if (data && data.length > 0) {
         if (placeholder) {
             placeholder.style.display = "none";
         }
-    } 
+    }
     // 3. Nếu KHÔNG có dữ liệu → hiện placeholder và thoát hàm
     else {
         if (placeholder) {
@@ -540,22 +728,22 @@ function renderFoodCards(container, data) {
 
     // 4. Render các card mới
     data.forEach(food => {
-    const card = document.createElement('div');
-    card.classList.add('card-food');
+        const card = document.createElement('div');
+        card.classList.add('card-food');
 
-    // Fallback ảnh mặc định
-    const imageSrc = food.img && food.img.trim() !== ""
-        ? `/static/${food.img}`
-        : "/static/images/default_food.jpg";
+        // Fallback ảnh mặc định
+        const imageSrc = food.img && food.img.trim() !== ""
+            ? `/static/${food.img}`
+            : "/static/images/default_food.jpg";
 
-    card.innerHTML = `
+        card.innerHTML = `
         <img src="${imageSrc}" alt="${food.Name}">
         <div class="food-info">
             <h5 class="food-name">${food.Name}</h5>
             <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
             <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
             <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
-            <p class="food-description"><b>Mô tả<b>: ${food.Description}</p>
+            <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
             <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
         </div>
         <button class="location-btn location-dot"
@@ -569,8 +757,8 @@ function renderFoodCards(container, data) {
             <i class="fa-solid fa-location-dot"></i>
         </button>
     `;
-    container.appendChild(card);
-});
+        container.appendChild(card);
+    });
 
 }
 
@@ -638,14 +826,14 @@ function uploadImageFeature() {
     const text = userInput.value.trim();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    
+document.addEventListener("DOMContentLoaded", function () {
+
     // Lấy tất cả nút tim
     const favoriteButtons = document.querySelectorAll('.btn-favorite');
 
     favoriteButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault(); 
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
 
             const placeId = this.getAttribute('data-place-id');
             const placeName = this.getAttribute('data-place-name');
@@ -661,29 +849,29 @@ document.addEventListener("DOMContentLoaded", function() {
                     place_name: placeName
                 })
             })
-            .then(response => {
-                // TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP (Lỗi 401)
-                if (response.status === 401) {
-                    return response.json().then(data => {
-                        // Hiện thông báo yêu cầu
-                        alert(data.message); 
-                        // Chuyển hướng sang trang đăng nhập
-                        window.location.href = "/login"; 
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // TRƯỜNG HỢP 2: THÀNH CÔNG
-                if (data && data.status === 'success') {
-                    // Chỉ đổi màu icon, KHÔNG hiện alert nữa
-                    if(icon) {
-                        icon.classList.remove('far'); // Xóa tim rỗng
-                        icon.classList.add('fas', 'text-danger'); // Thêm tim đặc màu đỏ
+                .then(response => {
+                    // TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP (Lỗi 401)
+                    if (response.status === 401) {
+                        return response.json().then(data => {
+                            // Hiện thông báo yêu cầu
+                            alert(data.message);
+                            // Chuyển hướng sang trang đăng nhập
+                            window.location.href = "/login";
+                        });
                     }
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                    return response.json();
+                })
+                .then(data => {
+                    // TRƯỜNG HỢP 2: THÀNH CÔNG
+                    if (data && data.status === 'success') {
+                        // Chỉ đổi màu icon, KHÔNG hiện alert nữa
+                        if (icon) {
+                            icon.classList.remove('far'); // Xóa tim rỗng
+                            icon.classList.add('fas', 'text-danger'); // Thêm tim đặc màu đỏ
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         });
     });
 });
@@ -695,7 +883,7 @@ function suggestionChips() {
     if (!userInput || suggestionBtns.length === 0) return;
 
     suggestionBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             // Toggle Logic
             if (this.classList.contains('active')) {
                 // De-select
@@ -706,15 +894,14 @@ function suggestionChips() {
                 suggestionBtns.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 currentPrefix = this.getAttribute('data-prefix'); // Set global variable
+                userInput.focus();
             }
-            userInput.focus();
             console.log("Mode selected:", currentPrefix); // Debug log
         });
     });
 }
 
-function main()
-{
+function main() {
     console.log("Main() is running!");
     document.addEventListener('DOMContentLoaded', function () {
         //==============================NAVIGATION BAR=============================
@@ -735,7 +922,7 @@ function main()
         uploadImageFeature()
         suggestionChips()
         //=========================================================================
-        
+
         console.log("Filter JS loaded!");
 
         const areaSelect = document.getElementById("areaSelect");

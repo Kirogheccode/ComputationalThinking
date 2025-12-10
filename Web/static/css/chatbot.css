@@ -11,11 +11,15 @@
 }
 
 .chat-window {
+    border-color: white !important;
     flex-grow: 1;
     padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    border-radius: 8px;
+    height: 450px;
+    border: 1px solid #ddd;
 }
 
 .message {
@@ -73,13 +77,10 @@
     background-color: #fff;
 }
 
-.send-btn {
+.btn-primary {
     background-color: #007bff;
     color: #fff;
     border: none;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -88,7 +89,7 @@
     transition: transform 0.15s ease, background-color 0.2s;
 }
 
-.send-btn:hover {
+.btn-primary:hover {
     background-color: #0056b3;
     transform: scale(1.1);
 }
@@ -123,13 +124,25 @@ body.dark #themeToggleBtn {
     100% { content: 'Đang xử lý yêu cầu của bạn...'; }
 }
 
-.carousel {
-    height: 60vh;
-    width: 100%;
-    overflow-y: auto;
+.carousel { 
+    height: 60vh; 
+    width: 100%; 
+    overflow-y: auto; 
     position: relative;
+    scrollbar-gutter: stable both-edges;
+}
+.carousel::-webkit-scrollbar {
+    width: 8px; 
 }
 
+.carousel::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 8px;
+}
+
+.carousel::-webkit-scrollbar-track {
+    background: transparent;
+}
 .group {
     display: flex;
     flex-direction: column;
@@ -231,16 +244,37 @@ body.dark #themeToggleBtn {
     background-color: #fff; /* Màu trắng mặc định */
 }
 
+#suggestion-chips {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;     
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+}
 /* Active state for Suggestion Chips */
 .suggestion-btn.active {
-    background-color: #e7f1ff !important; /* Light blue background */
-    border-color: #0d6efd !important;     /* Blue border */
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); /* Glow effect */
+    background-color: #e7f1ff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+    color: #0d6efd !important;
 }
 
 /* Ensure icons keep their colors even when active */
 .suggestion-btn.active i {
     /* Icons remain their original colors (text-danger, etc.) */
+    color: #0d6efd !important;
+}
+
+.suggestion-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-color: black !important;
+    gap: 8px;
+}
+.suggestion-btn:hover {
+    background-color : #959a8db5;
 }
 
 .chat-window {
@@ -326,19 +360,104 @@ body.dark #themeToggleBtn {
     opacity: 1; /* Hiển thị */
     transform: translateY(0); /* Di chuyển về vị trí */
 }
+.text-box {
+    max-width:97%;
+    width:100%;
+    color: black;
+    text-align:justify;
+    hyphens: auto;
+}
+.menu-box {
+    max-width: 97%;
+    width: 100%;
 
+    display: flex;             
+    flex-direction: column;          
+    padding: 15px 0;
+
+    background-color: rgba(209, 231, 221, 0.9);
+    border: 2px solid #000000 !important;
+    border-radius: 15px;
+}
+.menu-box .recipe-btn{
+    background-color: #ffffff;
+    color: #198754; 
+    border: 1px solid #c3e6cb;
+    box-shadow: 0 4px 6px rgba(25, 135, 84, 0.15); 
+}
+.menu-box .recipe-info{
+    text-align: justify;
+    hyphens:auto;
+}
+.menu-box .menu-title {
+    color: #0f5132;
+    text-shadow: none;
+    font-weight: 700;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content:center;
+}
+.recipe-btn {
+    max-width:97%;
+    width: 100%;                
+    display: flex;              
+    justify-content: center;    
+    align-items: center;       
+    
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;    
+    border-radius: 15px;       
+    
+    padding: 12px 20px;        
+    margin-bottom: 10px;       
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+
+.recipe-btn:hover {
+    background-color: #f1f8e9;
+    border-color: #ced4da;  
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.recipe-btn .food-name {
+    margin: 0;
+    font-weight: 600;
+    color: #333;
+}
+.recipe-btn:not(.collapsed) {
+    
+    background-color: #198754;
+    border-color: #146c43;
+    
+    
+    box-shadow: 0 4px 15px rgba(25, 135, 84, 0.4); 
+    transform: translateY(0px);
+}
+.recipe-btn:not(.collapsed) .food-name {
+    color: white;
+}
+.recipe-info {
+    max-width:97%;
+    width: 100%;
+    text-align: justify;
+    hyphens:auto;
+}
 /* KHI BẬT DARK MODE */
 
 /* Khung bao ngoài Chatbot */
 body.dark .chatbot-container {
-    background-color: #1e1e1e;
-    border-color: #444;
+    background-color: transparent;
+    border-color: none;
 }
 
 /* Cửa sổ chat (nơi hiện tin nhắn) */
 body.dark .chat-window {
     background-color: #1e1e1e !important; /* Ghi đè màu sáng */
-    border-color: #444 !important;
+    border-color: #1e1e1e !important;
 }
 
 /* Khu vực nhập tin nhắn (Input area) */
@@ -364,12 +483,19 @@ body.dark .bot-message p {
     color: #e0e0e0; /* Chữ trắng mờ */
 }
 
+body.dark .bot-message {
+    background-color: transparent !important;
+}
+
 /* Bong bóng chat của User (Giữ màu xanh nhưng chỉnh lại chút cho dịu) */
 body.dark .user-message p {
-    background-color: #0d6efd; 
+    background-color: #fd690d; 
     color: #fff;
 }
 
+body.dark .user-message {
+    background-color: transparent !important;
+}
 body.dark .user-image-wrapper {
     background-color: #0d6efd; 
 }
@@ -377,7 +503,10 @@ body.dark .user-image-wrapper {
 body.dark .user-chat-image {
     filter: brightness(0.95);
 }
-
+/* --- 1. TEXT BOX STYLE (Carousel) --- */
+body.dark .text-box {
+    color: white;
+}
 /* --- 2. FOOD CARD STYLE (Carousel) --- */
 
 body.dark .card-food {
@@ -410,6 +539,27 @@ body.dark .modal .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
+body.dark .suggestion-btn.active {
+    background-color:  #333333 !important;
+    border-color: #fd7e14 !important;
+    box-shadow: 0 0 0 2px rgba(253, 126, 20, 0.25);
+    color: #fd7e14 !important;
+}
+body.dark .suggestion-btn {
+    background-color: #333333;
+    color: white;
+    border-color: white !important;
+}
+
+/* Ensure icons keep their colors even when active */
+body.dark .suggestion-btn.active i {
+    /* Icons remain their original colors (text-danger, etc.) */
+    color: #fd7e14 !important;
+}
+body.dark .suggestion-btn:hover {
+    background-color: #838580b5;
+}
+
 body.dark .food-location,
 body.dark .food-rating,
 body.dark .food-distance,
@@ -423,4 +573,34 @@ body.dark .food-budget {
 body.dark .food-placeholder{
     color: white;
 }
-
+body.dark .recipe-btn .food-name {
+    color: #ffffff;
+}
+body.dark .recipe-btn:hover {
+    background-color: #343a40;
+    border-color: #6c757d; 
+}
+body.dark .recipe-btn:not(.collapsed) {
+    
+    background-color: #198754; 
+    border-color: #198754;
+    
+    
+    box-shadow: 0 0 15px rgba(25, 135, 84, 0.6);
+    transform: translateY(0px);
+}
+body.dark .recipe-btn:not(.collapsed) .food-name {
+    color: white;
+}
+body.dark .recipe-btn {   
+    background-color: #252525;
+    border: 1px solid #323334;       
+}
+body.dark .menu-box .menu-title {
+    color: #ff8000;
+    
+}
+body.dark .menu-box {
+    background-color: rgba(242, 145, 0, 0.9);
+    border: 2px solid #ffffff !important;
+}

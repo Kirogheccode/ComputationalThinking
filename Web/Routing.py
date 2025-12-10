@@ -7,7 +7,7 @@ import requests
 
 load_dotenv()
 ORS_API_KEY = os.getenv("ORS_API_KEY")
-GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API")
+GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
 ors_client = openrouteservice.Client(key=ORS_API_KEY)
 
 
