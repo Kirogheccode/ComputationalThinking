@@ -236,6 +236,8 @@ def predict_food():
     img_file = request.files["image"]
     return replyToImage(img_file)
 
+
+# --- CURRENCY API ---
 @app.route('/api/convert_currency', methods=['POST'])
 def api_convert_currency():
     data = request.get_json()
@@ -258,6 +260,35 @@ def api_convert_currency():
     result = Currency.calculate_conversion(amount, currency_code, direction)
 
     return jsonify(result)
+
+
+@app.route('/api/scan_money', methods=['POST'])
+def api_scan_money():
+    if 'image' not in request.files:
+        return jsonify({"success": False, "error": "No image uploaded"})
+
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"success": False, "error": "No file selected"})
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # Save temporarily
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Call Gemini logic
+        result = Currency.scan_money_image(filepath)
+
+        # Clean up (delete) the file after scanning to save space
+        try:
+            os.remove(filepath)
+        except:
+            pass
+
+        return jsonify(result)
+
+    return jsonify({"success": False, "error": "Invalid file type"})
 
 # --- FAVORITE API ---
 

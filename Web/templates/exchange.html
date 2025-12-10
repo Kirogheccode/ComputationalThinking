@@ -1,17 +1,29 @@
 {% extends "base.html" %}
+
 {% block content %}
 <div class="container mt-5">
-    <div class="card shadow p-4 mx-auto" style="max_width: 500px;">
-        <h2 class="text-center mb-4">💱 Currency Converter</h2>
-
+    <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+        <h2 class="text-center mb-4 text-primary">
+            <i class="fa-solid fa-money-bill-transfer"></i> Currency Converter
+        </h2>
+        
         <form id="convertForm">
+            
             <div class="mb-3">
-                <label for="amount" class="form-label">Amount</label>
-                <input type="number" class="form-control" id="amount" placeholder="Enter amount" required min="0" step="0.01">
+                <label for="amount" class="form-label fw-bold">Amount</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="amount" 
+                           placeholder="Enter amount or Scan image" required min="0" step="0.01">
+                    
+                    <button class="btn btn-warning text-dark fw-bold" type="button" id="scanBtn" title="Scan Money Image">
+                        <i class="fa-solid fa-camera"></i> Scan
+                    </button>
+                </div>
+                <input type="file" id="moneyUpload" accept="image/*" hidden>
             </div>
 
             <div class="mb-3">
-                <label for="currency" class="form-label">Currency</label>
+                <label for="currency" class="form-label fw-bold">Currency</label>
                 <select class="form-select" id="currency">
                     {% for key, code in currencies.items() %}
                         <option value="{{ code }}">{{ code }}</option>
@@ -20,46 +32,51 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Direction</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="direction" id="dir1" value="1" checked>
-                    <label class="form-check-label" for="dir1">
-                        Foreign ➝ VND (Buy VND)
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="direction" id="dir2" value="2">
-                    <label class="form-check-label" for="dir2">
-                        VND ➝ Foreign (Sell VND)
-                    </label>
+                <label class="form-label fw-bold">Direction</label>
+                <div class="card card-body bg-light border-0 p-2">
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="radio" name="direction" id="dir1" value="1" checked>
+                        <label class="form-check-label" for="dir1">
+                            Foreign ➝ VND (Buy VND)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="direction" id="dir2" value="2">
+                        <label class="form-check-label" for="dir2">
+                            VND ➝ Foreign (Sell VND)
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Convert</button>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2">
+                Convert
+            </button>
         </form>
 
-        <div id="resultBox" class="alert alert-success mt-4 d-none">
-            <h4 id="resultValue" class="text-center fw-bold"></h4>
-            <p id="rateValue" class="text-center mb-0 small text-muted"></p>
+        <div id="resultBox" class="alert alert-success mt-4 d-none text-center">
+            <h4 id="resultValue" class="fw-bold mb-1"></h4>
+            <p id="rateValue" class="mb-0 small text-muted"></p>
         </div>
-
-        <div id="errorBox" class="alert alert-danger mt-4 d-none"></div>
+        
+        <div id="errorBox" class="alert alert-danger mt-4 d-none text-center"></div>
     </div>
 </div>
 
 <script>
 document.getElementById('convertForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-
+    
     // UI Elements
     const resultBox = document.getElementById('resultBox');
     const errorBox = document.getElementById('errorBox');
-    const btn = this.querySelector('button');
-
+    const btn = this.querySelector('button[type="submit"]');
+    
     // Reset UI
     resultBox.classList.add('d-none');
     errorBox.classList.add('d-none');
     btn.disabled = true;
+    const originalBtnText = btn.innerText;
     btn.innerText = "Converting...";
 
     // Gather Data
@@ -75,7 +92,7 @@ document.getElementById('convertForm').addEventListener('submit', async function
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
         });
-
+        
         const result = await response.json();
 
         if (result.success) {
@@ -91,7 +108,7 @@ document.getElementById('convertForm').addEventListener('submit', async function
         errorBox.classList.remove('d-none');
     } finally {
         btn.disabled = false;
-        btn.innerText = "Convert";
+        btn.innerText = originalBtnText;
     }
 });
 </script>
