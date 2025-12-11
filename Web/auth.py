@@ -6,6 +6,7 @@ import random
 import smtplib
 import os
 import uuid
+import re
 from extensions import oauth
 from dotenv import load_dotenv
 from email.mime.text import MIMEText
@@ -86,6 +87,31 @@ def send_email_otp(to_email, otp):
         print(f"Lỗi gửi mail: {e}")
         return False
 
+# Kiểm tra mật khẩu mạnh
+
+def is_strong_password(password):
+    # ít nhất 8 ký tự
+    if len(password) < 8:
+        return False
+    
+    # có chữ in hoa
+    if not re.search(r"[A-Z]", password):
+        return False
+
+    # có chữ thường
+    if not re.search(r"[a-z]", password):
+        return False
+
+    # có số
+    if not re.search(r"[0-9]", password):
+        return False
+
+    # có ký tự đặc biệt
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False
+
+    return True
+
 # --- ROUTES ---
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -99,9 +125,10 @@ def register():
             flash('Vui lòng điền đầy đủ thông tin.', 'danger')
             return render_template('register.html')
 
-        if len(password) < 6:
-            flash('Mật khẩu phải có ít nhất 6 ký tự.', 'danger')
+        if not is_strong_password(password):
+            flash('Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.', 'danger')
             return render_template('register.html', username=username, email=email)
+
         
         if get_user_by_username(username):
             flash('Tên người dùng đã tồn tại.', 'danger')

@@ -110,7 +110,7 @@ translations = {
         "register_email_note": "*Chúng tôi sẽ gửi mã OTP xác nhận qua email này.",
 
         "register_password": "Mật khẩu",
-        "register_password_hint": "Tối thiểu 6 ký tự",
+        "register_password_hint": "Ít nhất 8 ký tự.",
 
         "register_continue": "TIẾP TỤC",
         "register_have_account": "Đã có tài khoản?",
