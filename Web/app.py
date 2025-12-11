@@ -228,6 +228,7 @@ def your_account():
     flash('Bài đăng của bạn đã được thêm thành công!', 'success')
     return redirect(url_for('account_page'))
 
+
 @app.route('/post/delete/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):

@@ -108,7 +108,8 @@ def add_user(username, email, password_hash):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, 1)",
+        default_avatar = "images/default-avatar.png"
+        cursor.execute("INSERT INTO users (username, email, password, verified, avatar) VALUES (?, ?, ?, 1, ?)",
                        (username, email, password_hash))
         conn.commit()
         return True
@@ -220,8 +221,10 @@ def get_or_create_oauth_user(username, email):
         if cursor.fetchone():
             username = f"{username}_{random.randint(1000, 9999)}"
 
-        cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, 1)",
-                       (username, email, hashed_password))
+        default_avatar = "images/default-avatar.png"
+
+        cursor.execute("INSERT INTO users (username, email, password, verified, avatar) VALUES (?, ?, ?, 1, ?)",
+                       (username, email, hashed_password, default_avatar))
         conn.commit()
         
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
@@ -406,24 +409,42 @@ def update_user_info(user_id, new_username, new_bio):
     try:
         cursor = conn.cursor()
         
-        # Kiểm tra xem username mới có bị trùng với người KHÁC không
-        cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (new_username, user_id))
+        # --- DEBUG: In ra để xem chuyện gì đang xảy ra ---
+        print(f"DEBUG: Đang thử đổi tên User ID {user_id} thành '{new_username}'")
+        
+        # BƯỚC 1: KIỂM TRA TRÙNG TÊN (Dùng TRIM để loại bỏ dấu cách ẩn trong DB)
+        # Logic: Tìm xem có thằng nào (khác mình) có tên GIỐNG Y HỆT không (bỏ qua dấu cách thừa 2 đầu)
+        cursor.execute("""
+            SELECT id, username FROM users 
+            WHERE TRIM(username) = ? AND id != ?
+        """, (new_username.strip(), user_id))
+        
         existing_user = cursor.fetchone()
         
         if existing_user:
-            return False, "username_taken" # Tên đăng nhập đã tồn tại
+            print(f"DEBUG: Đã tìm thấy trùng với User ID {existing_user['id']} tên là '{existing_user['username']}'")
+            return False, "username_taken"
 
+        # BƯỚC 2: UPDATE
+        # Kiểm tra thêm 1 lần nữa ở tầng database catch lỗi
         cursor.execute("""
             UPDATE users 
             SET username = ?, bio = ? 
             WHERE id = ?
-        """, (new_username, new_bio, user_id))
+        """, (new_username.strip(), new_bio, user_id))
         
         conn.commit()
+        print("DEBUG: Cập nhật thành công!")
         return True, "success"
+
+    except sqlite3.IntegrityError:
+        print("DEBUG: Lỗi IntegrityError (UNIQUE constraint) đã bắt được!")
+        return False, "username_taken"
+        
     except Exception as e:
         print(f"Lỗi update profile: {e}")
         return False, "error"
+        
     finally:
         conn.close()
 
