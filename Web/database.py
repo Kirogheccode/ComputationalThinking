@@ -25,9 +25,14 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             verified INTEGER DEFAULT 0,
-            avatar TEXT DEFAULT 'default.png'
+            avatar TEXT DEFAULT 'default.png',
+            bio TEXT DEFAULT ''
         )
     """)
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
 
     # Bảng OTP
     cursor.execute("""
@@ -391,6 +396,36 @@ def get_comments_by_post(post_id):
 
     # Trả về list of sqlite3.Row objects (dict-like)
     return rows
+
+# ======================================
+# USER UPDATE FUNCTIONS (THÊM MỚI)
+# ======================================
+
+def update_user_info(user_id, new_username, new_bio):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Kiểm tra xem username mới có bị trùng với người KHÁC không
+        cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (new_username, user_id))
+        existing_user = cursor.fetchone()
+        
+        if existing_user:
+            return False, "username_taken" # Tên đăng nhập đã tồn tại
+
+        cursor.execute("""
+            UPDATE users 
+            SET username = ?, bio = ? 
+            WHERE id = ?
+        """, (new_username, new_bio, user_id))
+        
+        conn.commit()
+        return True, "success"
+    except Exception as e:
+        print(f"Lỗi update profile: {e}")
+        return False, "error"
+    finally:
+        conn.close()
 
 if __name__ == '__main__':
     init_db()

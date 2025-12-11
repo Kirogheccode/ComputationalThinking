@@ -33,8 +33,21 @@
                     </form>
                 </div>
 
-                <h3 class="fw-bold mb-1">{{ username }}</h3>
-                <p class="text-secondary small mb-3">{{ lang.profile_member }}</p>
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                    <h3 class="fw-bold mb-0">{{ username }}</h3>
+                    <!-- Nút bấm mở Modal sửa đổi -->
+                    <button class="btn btn-sm btn-link text-secondary p-0" data-bs-toggle="modal" data-bs-target="#editProfileModal" title="{{ lang.edit_profile }}">
+                        <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
+                    </button>
+                </div>
+
+                <!-- Hiển thị Bio nếu có, nếu không thì hiện dòng mặc định -->
+                {% if user_bio %}
+                    <p class="text-muted fst-italic small mb-3 px-2">"{{ user_bio }}"</p>
+                {% else %}
+                    <p class="text-secondary small mb-3">{{ lang.profile_member }}</p>
+                {% endif %}
+
                 <div class="d-flex justify-content-center gap-3 text-center">
                     <div>
                         <div class="fw-bold">{{ posts|length }}</div>
@@ -235,6 +248,40 @@
     </div>
 </div>
 
+<!-- Modal Chỉnh sửa Hồ sơ -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">{{ lang.edit_profile }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3">
+                <form action="{{ url_for('update_info') }}" method="POST">
+                    
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label for="usernameInput" class="form-label fw-bold small text-muted">Username</label>
+                        <input type="text" class="form-control flat-input" id="usernameInput" name="username" value="{{ username }}" required>
+                        <div class="form-text small">Tên đăng nhập là duy nhất.</div>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="mb-4">
+                        <label for="bioInput" class="form-label fw-bold small text-muted">{{ lang.bio }}</label>
+                        <textarea class="form-control flat-input" id="bioInput" name="bio" rows="4" placeholder="{{ lang.bio_placeholder }}" maxlength="150">{{ user_bio }}</textarea>
+                        <div class="text-end text-muted small mt-1">Max 150 chars</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark fw-bold">{{ lang.save_changes }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let currentId = null;
@@ -321,6 +368,8 @@ function updateStars(value) {
         star.classList.toggle('active', parseInt(star.dataset.value) <= value);
     });
 }
+
+
 </script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">

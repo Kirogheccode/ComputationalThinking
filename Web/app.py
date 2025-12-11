@@ -19,7 +19,7 @@ from lang import translations
 from database import (
     init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
     add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
-    get_feed, get_db_connection, get_comments_by_post
+    get_feed, get_db_connection, get_comments_by_post, update_user_info
 )
 
 # Load environment variables
@@ -143,7 +143,15 @@ def exchange_page():
 @login_required
 def account_page():
     user_id = session['user_id']
-    username = session['username']
+
+    user = get_user_by_id(user_id)
+    
+    # Cập nhật lại session username nếu trong DB khác session (phòng trường hợp vừa đổi tên xong)
+    if user and user['username'] != session.get('username'):
+        session['username'] = user['username']
+
+    username = user['username']
+    user_bio = user['bio'] if user['bio'] else ""
 
     user_posts = get_food_posts_by_user(user_id)
     raw_favorites = get_favorites_by_user(user_id) 
@@ -186,8 +194,10 @@ def account_page():
 
     return render_template(
         'account.html',
+        user=user, 
         username=username,
-        avatar_url=avatar_url,   # ✅ THÊM DÒNG NÀY
+        user_bio=user_bio,
+        avatar_url=avatar_url,
         posts=user_posts,
         favorites=enriched_favorites
     )
@@ -226,6 +236,33 @@ def delete_post(post_id):
         flash('Đã xóa bài viết thành công.', 'success')
     else:
         flash('Không thể xóa bài viết này.', 'danger')
+    return redirect(url_for('account_page'))
+
+@app.route('/account/update-info', methods=['POST'])
+@login_required
+def update_info():
+    user_id = session['user_id']
+    new_username = request.form.get('username').strip()
+    new_bio = request.form.get('bio').strip()
+    
+    current_lang = session.get("lang", "vi")
+
+    if not new_username:
+        flash(translations[current_lang]['input_required'], 'danger')
+        return redirect(url_for('account_page'))
+
+    success, message_code = update_user_info(user_id, new_username, new_bio)
+
+    if success:
+        # Cập nhật lại session username ngay lập tức
+        session['username'] = new_username
+        flash(translations[current_lang]['update_success'], 'success')
+    else:
+        if message_code == "username_taken":
+            flash(translations[current_lang]['username_taken'], 'danger')
+        else:
+            flash("Error updating profile", 'danger')
+
     return redirect(url_for('account_page'))
 
 # --- API ROUTES ---
