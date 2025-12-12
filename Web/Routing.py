@@ -137,8 +137,3 @@ def drawPathToDestionation(data):
     except Exception as e:
         print(f"Lỗi tìm đường: {e}")
         return jsonify({'error': str(e)}), 500
-
-if __name__ == "__main__":
-    testing_address = "123123 Nguyễn Hoàng Cừ"
-    testing_lat, testing_lon = geocode_address(testing_address)
-    print(f"Địa chỉ: {testing_address}\nToạ độ: {testing_lat}, {testing_lon}")
