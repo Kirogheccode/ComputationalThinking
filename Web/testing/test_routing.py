@@ -146,7 +146,7 @@ class TestRoutingEdgeCases(unittest.TestCase):
     @patch('Routing.geocode_address')
     def test_case_5_non_existent_destination(self, mock_geocode, mock_db, mock_route):
         """
-        Case 4: Nhập địa không tồn tại trên bản đồ (189 Nguyễn Lê Hoàng Khải).
+        Case 5: Nhập địa không tồn tại trên bản đồ (189 Nguyễn Lê Hoàng Khải).
         Kỳ vọng: Trả về toạ độ phù hợp nhất với địa chỉ.
         """
         mock_geocode.side_effect = self.mock_geocode_side_effect
