@@ -109,7 +109,7 @@ class TestFoodRecognition(unittest.TestCase):
 
         # --- CASE 4: Ảnh bị lỗi (static/images/testing/error_picture.png) ---
         """
-        Test các trường hợp nhận diện món ăn.
+        Case 4: Ảnh bị lỗi không đọc được.
         Kỳ vọng: Trả về không định dạng được tên món ăn.
         """
         file_error = MagicMock()
