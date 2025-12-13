@@ -82,7 +82,7 @@ body.dark .btn-search:hover {
 }
 .btn-explore:hover {
   background-color: #464545;
-  transform: none;
+  transform: none !important;
 }
 body.dark .btn-explore:hover {
   background-color: #464545;
