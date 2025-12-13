@@ -1,426 +1,288 @@
+
 {% extends "base.html" %}
 
 {% block title %}{{ lang.home }} - Smart Tourism{% endblock %}
 
 {% block content %}
+<section class="hero d-flex align-items-center justify-content-center text-center">
+  <div class="container">
+    <div class="hero-inner" data-aos="fade-up">
+      <h1 class="display-5 hero-title">{{ lang.hero_title }}<br class="d-none d-md-block"> {{ lang.hero_city }}</h1>
+      <p class="lead hero-sub">{{ lang.hero_sub }}</p>
+      <div class="mt-4">
+            <a href="#featured" class="btn btn-warning btn-lg me-2 hero-cta">{{ lang.hero_start }}</a>
+            <a href="{{ url_for('map_page') }}" class="btn btn-outline-light btn-lg">{{ lang.hero_map }}</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div class="container mt-4">
-    <div id="page-data" data-user-id="{{ session.get('user_id', 0) }}"></div>
-    <h3 class="fw-bold mb-4">{{lang.your_feed}}</h3>
+<section class="py-4 filter-bar" id="filterBar">
+  <div class="container d-flex flex-column flex-md-row align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+      <select id="areaSelect" class="form-select form-select-sm">
+        <option value="all" {% if area_selected == 'all' %}selected{% endif %}>{{ lang.all_area }}</option>
+        <option value="Quận 1" {% if area_selected == 'Quận 1' %}selected{% endif %}>Quận 1</option>
+        <option value="Quận 3" {% if area_selected == 'Quận 3' %}selected{% endif %}>Quận 3</option>
+        <option value="Quận 4" {% if area_selected == 'Quận 4' %}selected{% endif %}>Quận 4</option>
+        <option value="Quận 5" {% if area_selected == 'Quận 5' %}selected{% endif %}>Quận 5</option>
+        <option value="Quận 6" {% if area_selected == 'Quận 6' %}selected{% endif %}>Quận 6</option>
+        <option value="Quận 7" {% if area_selected == 'Quận 7' %}selected{% endif %}>Quận 7</option>
+        <option value="Quận 8" {% if area_selected == 'Quận 8' %}selected{% endif %}>Quận 8</option>
+        <option value="Quận 10" {% if area_selected == 'Quận 10' %}selected{% endif %}>Quận 10</option>
+        <option value="Quận 11" {% if area_selected == 'Quận 11' %}selected{% endif %}>Quận 11</option>
+        <option value="Quận 12" {% if area_selected == 'Quận 12' %}selected{% endif %}>Quận 12</option>
+        <option value="Bình Tân" {% if area_selected == 'Bình Tân' %}selected{% endif %}>Bình Tân</option>
+        <option value="Bình Thạnh" {% if area_selected == 'Bình Thạnh' %}selected{% endif %}>Bình Thạnh</option>
+        <option value="Gò Vấp" {% if area_selected == 'Gò Vấp' %}selected{% endif %}>Gò Vấp</option>
+        <option value="Phú Nhuận" {% if area_selected == 'Phú Nhuận' %}selected{% endif %}>Phú Nhuận</option>
+        <option value="Tân Bình" {% if area_selected == 'Tân Bình' %}selected{% endif %}>Tân Bình</option>
+        <option value="Tân Phú" {% if area_selected == 'Tân Phú' %}selected{% endif %}>Tân Phú</option>
+        <option value="Thủ Đức" {% if area_selected == 'Thủ Đức' %}selected{% endif %}>Thủ Đức</option>
+      </select>
+    </div>
+    <div class="flex-fill">
+      <input id="searchInput" class="form-control form-control-sm" type="text"
+             placeholder="{{ lang.search_placeholder }}"
+             value="{{ search_query }}">
+    </div>
+    <div>
+      <button id="clearFilters" class="btn btn-sm btn-outline-light">{{t["clear"]}}</button>
+    </div>
+  </div>
+</section>
 
-    <form id="searchForm" class="input-group mb-4" onsubmit="handleSearch(event)">
-        <input type="text" id="searchInput" class="form-control" 
-               placeholder="{{lang.search}}..." 
-               value="{{ request.args.get('search', '') }}">
-        <button class="btn btn-primary" type="submit">{{lang.search}}</button>
-        <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
-            <i class="fas fa-times"></i>
-        </button>
-    </form>
+<section class="py-5" id="featured">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">{{ lang.trend_food }}</h2>
+      <small class="text-muted">{{ lang.rcm }}</small>
+    </div>
 
-    <div id="feedContainer"></div>
+    <div class="row" id="foodsGrid">
+          {% for food in foods %}
+          {% set is_fav = (food.id | string) in favorite_ids %}
+          
+          <div class="col-lg-4 col-md-6 mb-4 food-item" 
+              data-area="{{ food.location }}" 
+              data-name="{{ food.name | lower }}">
+            
+            <div class="card h-100 food-card shadow-sm"
+                data-bs-toggle="modal" 
+                data-bs-target="#foodModal"
+                data-id="{{ food.id }}" 
+                data-name="{{ food.name }}"
+                data-location="{{ food.location }}"
+                data-price="{{ food.price }}"
+                data-hours="{{ food.hours }}"
+                data-image="{{ url_for('static', filename=food.image) }}"
+                data-rating="{{ food.rating }}⭐"
+                data-is-fav="{{ 'true' if is_fav else 'false' }}"
+                data-aos="fade-up"
+                data-aos-duration="800"
+                data-aos-delay="{{ (loop.index0 % 3) * 150 }}">
+                <div class="card-img-wrap">
+                <img loading="lazy" src="{{ url_for('static', filename=food.image) }}" class="card-img-top img-hover-zoom" alt="{{ food.name }}">
+                <div class="card-overlay">
+                  <div class="overlay-text">
+                    <h5 class="mb-0">{{ food.name }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate fw-bold">{{ food.name }}</h5>
+                <p class="card-text mb-1 text-truncate text-muted small"><i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ food.location }}</p>
+                
+                <div class="d-flex justify-content-between align-items-center mt-auto pt-3">
+                    <span class="badge bg-warning text-dark rounded-pill px-3"><i class="fas fa-star me-1"></i> {{ food.rating }}</span>
+                    {% if is_fav %}
+                        <span class="text-danger" title="Đã yêu thích"><i class="fas fa-heart fa-lg animate__animated animate__heartBeat"></i></span>
+                    {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+      {% endfor %}
+    </div>
+    </div>
+  </div>
+</section>
 
-    <p id="endMessage" class="text-center text-muted mt-4" style="display:none">
-        {{lang.end_view}}.
-    </p>
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page - 1 }}&area={{ area_selected }}&q={{ search_query }}">« {{ lang.front }}</a>
+    </li>
+    {% if page > 3 %}
+      <li class="page-item"><a class="page-link" href="?page=1&area={{ area_selected }}&q={{ search_query }}">1</a></li>
+      {% if page > 4 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endif %}
+    {% for p in range(page-2, page+3) %}
+      {% if p >= 1 and p <= total_pages %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?page={{ p }}&area={{ area_selected }}&q={{ search_query }}">{{ p }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages - 2 %}
+      {% if page < total_pages - 3 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+      <li class="page-item"><a class="page-link" href="?page={{ total_pages }}&area={{ area_selected }}&q={{ search_query }}">{{ total_pages }}</a></li>
+    {% endif %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page + 1 }}&area={{ area_selected }}&q={{ search_query }}">{{ lang.back }} »</a>
+    </li>
+  </ul>
+</nav>
 
-    <div id="loading" class="text-center mt-4 text-muted" style="display:none">
-        {{lang.loading_posts}}...
+<div class="modal fade" id="foodModal" tabindex="-1" aria-labelledby="foodModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="modalFoodName"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <img id="modalFoodImage" src="" class="img-fluid rounded shadow-sm w-100" style="object-fit: cover; height: 300px;" alt="Food Image">
+                    </div>
+                    <div class="col-md-6 d-flex flex-column justify-content-center">
+                        <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>{{ lang.address }}:</strong> <span id="modalFoodLocation"></span></p>
+                        <p class="mb-2"><i class="fas fa-star text-warning me-2"></i><strong>{{ lang.rating }}:</strong> <span id="modalFoodRating"></span></p>
+                        <p class="mb-2"><i class="fas fa-tag text-success me-2"></i><strong>{{ lang.price }}:</strong> <span id="modalFoodPrice"></span></p>
+                        <p class="mb-4"><i class="fas fa-clock text-primary me-2"></i><strong>{{ lang.time }}:</strong> <span id="modalFoodHours"></span></p>
+                        
+                        <div class="d-flex gap-2">
+                            <button id="btnViewMap" class="btn btn-outline-primary flex-grow-1">
+                                <i class="fa-solid fa-map-location-dot me-1"></i> {{ lang.hero_map }}
+                            </button>
+                            
+                            <button id="btnSaveFavorite" class="btn btn-warning flex-grow-1">
+                                <i class="far fa-heart me-1"></i> {{ lang.fav }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-let page = 1;         
-let loading = false; 
-let done = false;
-const CURRENT_USER_ID = parseInt(document.getElementById("page-data").dataset.userId);  
+document.addEventListener('DOMContentLoaded', function() {
+    let currentFoodId = null;
+    let currentFoodName = null;
+    let currentCard = null; // Thẻ card đang được click
+    let currentLocation = null; // Lưu địa chỉ để chuyển qua map
 
-const MAX_DOM_POSTS = 40; // ✅ Giữ tối đa 40 bài trên màn hình
-let currentSearchTerm = "";
-
-async function loadFeed() {
-    if (loading || done) return;
-
-    loading = true;
-    document.getElementById("loading").style.display = "block";
-
-    // ✅ FIX: Thêm tham số search vào URL
-    const searchParam = currentSearchTerm ? `&search=${encodeURIComponent(currentSearchTerm)}` : '';
-    const url = `/api/feed?page=${page}${searchParam}`;
-
-    const res = await fetch(url);
-    const posts = await res.json();
-
-    document.getElementById("loading").style.display = "none";
-    loading = false;
-
-    // ✅ HẾT BÀI
-    if (posts.length === 0) {
-        done = true;
-        document.getElementById("endMessage").style.display = "block";
-        return;
-    }
-
-    const feedContainer = document.getElementById("feedContainer");
-
-    posts.forEach(post => {
-        const rating = post.rating || 5;
-
-        let stars = "";
-        for (let i = 1; i <= 5; i++) {
-            stars += i <= rating 
-                ? `<i class="fas fa-star text-warning"></i>` 
-                : `<i class="far fa-star text-muted"></i>`;
-        }
-
-        feedContainer.innerHTML += `
-            <div class="card mb-4 shadow-sm feed-item">
-
-                <!-- ✅ HEADER -->
-                <div class="card-header border-0 d-flex align-items-center gap-2 mt-3">
-                    <img src="/static/${post.avatar || '/static/images/default-avatar.jpg'}" 
-                         class="rounded-circle"
-                         width="60" height="60"
-                         onerror="this.src='/static/images/default-avatar.jpg'">
-
-                    <div>
-                        <div class="fw-bold">@${post.username}</div>
-                        <div class="small text-muted">${post.posted_at}</div>
-                    </div>
-                </div>
-
-                <!-- ✅ BODY -->
-                <div class="card-body pt-2">
-                    <h6 class="fw-bold mb-1">${post.food_name}</h6>
-
-                    <!-- ⭐ RATING -->
-                    <div class="mb-2">${stars}</div>
-
-                    <p class="mb-3">${post.description}</p>
-
-                    ${
-                        post.image_filename 
-                        ? `<img src="/static/${post.image_filename}" class="img-fluid rounded mb-3">` 
-                        : ""
-                    }
-
-                    <div class="d-flex justify-content-around border-top pt-2 text-muted">
-                        <div class="like-btn d-flex align-items-center gap-1"
-                            style="cursor:pointer"
-                            onclick="toggleLike(${post.id})">
-
-                            <i id="like-icon-${post.id}" 
-                            class="${post.is_liked ? "fas fa-thumbs-up text-primary" : "far fa-thumbs-up"}">
-                            </i>
-
-                            <span id="like-count-${post.id}">
-                                ${post.like_count}
-                            </span>
-                            Like
-                        </div>
-
-                        <div class="comment-btn d-flex align-items-center gap-1"
-                            style="cursor:pointer"
-                            onclick="toggleComments(${post.id})">
-
-                            💬 <span id="comment-count-${post.id}">
-                                ${post.comment_count}
-                            </span> {{lang.comment}}
-                        </div>
-                    </div>
-
-                    <div id="comment-section-${post.id}" class="px-3 pt-3" style="display:none">
-
-                        ${CURRENT_USER_ID > 0 ? `
-                        <form onsubmit="addComment(event, ${post.id})" class="d-flex gap-2">
-                            <input type="text" class="form-control form-control-sm"
-                                placeholder="{{lang.comment}}..." required>
-                            <button class="btn btn-sm btn-primary flex-shrink-0">Gửi</button>
-                        </form>
-                        ` : `
-                            <p class="text-center text-muted small">
-                                <a href="/login">Đăng nhập để bình luận</a>
-                            </p>
-                        `}
-
-                        <div id="comment-list-${post.id}" class="mt-3">
-                            </div>
-
-                    </div>
-
-                </div>
-            </div>
-`; // Thẻ đóng của card-body và feed-item
-    });
-
-    // ✅ TỰ ĐỘNG XÓA BÀI CŨ NẾU QUÁ 40 BÀI
-    const items = document.querySelectorAll(".feed-item");
-    if (items.length > MAX_DOM_POSTS) {
-        const excess = items.length - MAX_DOM_POSTS;
-        for (let i = 0; i < excess; i++) {
-            items[i].remove(); 
-        }
-    }
-
-    page++;       
-    loading = false;
-}
-
-
-// ✅ SỰ KIỆN LƯỚT TỚI CUỐI TRANG
-window.addEventListener("scroll", () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
-        loadFeed();
-    }
-});
-
-function toggleLike(postId) {
-    fetch(`/toggle-like/${postId}`, {
-        method: "POST"
-    })
-    .then(res => {
-        if (res.status === 401) {
-            alert("Bạn phải đăng nhập để like!");
-            return;
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (!data) return;
-
-        const icon = document.getElementById(`like-icon-${postId}`);
-        const count = document.getElementById(`like-count-${postId}`);
-
-        if (data.status === "liked") {
-            icon.className = "fas fa-thumbs-up text-primary";
-        } else {
-            icon.className = "far fa-thumbs-up";
-        }
-
-        count.innerText = data.total_likes;
-    });
-}
-
-// Tính năng comment
-function loadComments(postId) {
-    fetch(`/comment/list/${postId}`)
-        .then(res => res.json())
-        .then(data => {
-            const box = document.getElementById(`comment-list-${postId}`);
-            if (!box) return;
-
-            box.innerHTML = "";
-
-            data.forEach(cmt => {
-                const isOwner = cmt.user_id == CURRENT_USER_ID;
-
-                const wrapper = document.createElement("div");
-                wrapper.className = "d-flex gap-2 mt-2";
-                wrapper.id = `comment-${cmt.id}`;
-
-                const img = document.createElement("img");
-                img.src = `/static/${cmt.avatar}`;
-                img.width = 32;
-                img.style.height = "32px"; 
-                img.style.objectFit = "cover";
-                img.className = "rounded-circle";
-
-                const contentBox = document.createElement("div");
-
-                const username = document.createElement("b");
-                username.innerText = cmt.username;
-
-                const content = document.createElement("div");
-                content.innerText = cmt.content;
-
-                contentBox.appendChild(username);
-                contentBox.appendChild(content);
-
-                if (isOwner) {
-                    const btn = document.createElement("button");
-                    btn.className = "btn btn-sm btn-danger mt-1";
-                    btn.innerText = "Xóa";
-                    btn.onclick = () => deleteComment(cmt.id, postId);
-                    contentBox.appendChild(btn);
-                }
-
-                wrapper.appendChild(img);
-                wrapper.appendChild(contentBox);
-                box.appendChild(wrapper);
-            });
+    // 1. Bắt sự kiện click vào Card (thay vì nút chi tiết)
+    const foodCards = document.querySelectorAll('.food-card');
+    
+    foodCards.forEach(card => {
+        card.addEventListener('click', function() {
+            currentCard = this; 
+            currentFoodId = this.getAttribute('data-id');
+            currentFoodName = this.getAttribute('data-name');
+            currentLocation = this.getAttribute('data-location');
+            
+            const isFav = this.getAttribute('data-is-fav') === 'true';
+            
+            // Cập nhật thông tin vào Modal
+            document.getElementById('modalFoodName').innerText = currentFoodName;
+            document.getElementById('modalFoodImage').src = this.getAttribute('data-image');
+            document.getElementById('modalFoodLocation').innerText = currentLocation;
+            document.getElementById('modalFoodRating').innerText = this.getAttribute('data-rating');
+            
+            // Cập nhật thông tin mới (Giá & Giờ)
+            document.getElementById('modalFoodPrice').innerText = this.getAttribute('data-price');
+            document.getElementById('modalFoodHours').innerText = this.getAttribute('data-hours');
+            
+            // Xử lý nút Yêu thích
+            setupFavoriteButton(isFav);
         });
-}
-
-function addComment(e, postId) {
-    e.preventDefault();
-
-    const form = e.target;
-    const input = form.querySelector("input");
-    const content = input.value.trim();
-
-    if (!content) return;
-
-    fetch(`/comment/add/${postId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: `content=${encodeURIComponent(content)}`
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            alert("Không thể gửi bình luận!");
-            return;
-        }
-
-        // ✅ THÊM COMMENT VÀO DOM (KHÔNG CẦN LOAD LẠI TẤT CẢ)
-        const cmt = data.comment;
-        const list = document.getElementById(`comment-list-${postId}`);
-        if (!list) return;
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "d-flex gap-2 mt-2";
-        wrapper.id = `comment-${cmt.id}`;
-
-        const img = document.createElement("img");
-        img.src = `/static/${cmt.avatar}`;
-        img.width = 32;
-        img.style.height = "32px"; 
-        img.style.objectFit = "cover";
-        img.className = "rounded-circle";
-
-        const contentBox = document.createElement("div");
-
-        const username = document.createElement("b");
-        username.innerText = cmt.username;
-
-        const text = document.createElement("div");
-        text.innerText = cmt.content;
-
-        contentBox.appendChild(username);
-        contentBox.appendChild(text);
-
-        // ✅ DO COMMENT VỪA THÊM NÊN CHẮC CHẮN LÀ CỦA USER HIỆN TẠI
-        const btn = document.createElement("button");
-        btn.className = "btn btn-sm btn-danger mt-1";
-        btn.innerText = "Xóa";
-        btn.onclick = () => deleteComment(cmt.id, postId);
-        contentBox.appendChild(btn);
-
-        wrapper.appendChild(img);
-        wrapper.appendChild(contentBox);
-
-        // ✅ THÊM LÊN ĐẦU DANH SÁCH
-        list.prepend(wrapper);
-
-        // ✅ TĂNG COMMENT COUNT
-        const countBox = document.getElementById(`comment-count-${postId}`);
-        if (countBox) {
-            countBox.innerText = parseInt(countBox.innerText) + 1;
-        }
-
-        // ✅ CLEAR INPUT
-        input.value = "";
-    })
-    .catch(err => {
-        console.error("Add comment error:", err);
     });
-}
 
-function deleteComment(commentId, postId) {
-    if (!confirm("Xóa bình luận này?")) return;
-
-    fetch(`/comment/delete/${commentId}`, {
-        method: "POST"
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            alert("Không thể xóa!");
-            return;
-        }
-
-        // ✅ XÓA TRÊN DOM
-        const el = document.getElementById(`comment-${commentId}`);
-        if (el) el.remove();
-
-        // ✅ GIẢM COMMENT COUNT
-        const countBox = document.getElementById(`comment-count-${postId}`);
-        if (countBox) {
-            countBox.innerText = parseInt(countBox.innerText) - 1;
+    // 2. Xử lý nút "Xem bản đồ" - Chuyển trang kèm tham số
+    document.getElementById('btnViewMap').addEventListener('click', function() {
+        if (currentLocation) {
+            // Encode địa chỉ để an toàn trên URL
+            const encodedLocation = encodeURIComponent(currentLocation);
+            window.location.href = `/map?destination=${encodedLocation}`;
         }
     });
-}
 
-const commentLoaded = {}; // lưu trạng thái đã load hay chưa
+    // 3. Hàm xử lý nút Yêu thích (Tách riêng cho gọn)
+    function setupFavoriteButton(isFav) {
+        const btnSave = document.getElementById('btnSaveFavorite');
+        if(!btnSave) return;
 
-function toggleComments(postId) {
-    const sectionBox = document.getElementById(`comment-section-${postId}`); // Thay đổi: Lấy container chung
-    if (!sectionBox) return;
+        // Reset button clone để xóa event listener cũ
+        const newBtn = btnSave.cloneNode(true);
+        btnSave.parentNode.replaceChild(newBtn, btnSave);
+        const finalBtn = document.getElementById('btnSaveFavorite');
 
-    // ✅ Nếu đang mở → đóng
-    if (sectionBox.style.display === "block") {
-        sectionBox.style.display = "none";
-        return;
+        // Set trạng thái ban đầu
+        updateFavoriteButtonUI(finalBtn, isFav);
+
+        // Gán sự kiện click
+        finalBtn.addEventListener('click', function() {
+            handleToggleFavorite(finalBtn);
+        });
     }
 
-    // ✅ Nếu chưa load → load lần đầu
-    if (!commentLoaded[postId]) {
-        loadComments(postId);
-        commentLoaded[postId] = true;
+    function updateFavoriteButtonUI(btn, isFav) {
+        if (isFav) {
+            btn.innerHTML = '<i class="fas fa-heart me-1"></i> {{ lang.profile_fav_done }}';
+            btn.className = "btn btn-danger flex-grow-1"; 
+        } else {
+            btn.innerHTML = '<i class="far fa-heart me-1"></i> {{ lang.fav }}';
+            btn.className = "btn btn-warning flex-grow-1";
+        }
     }
 
-    sectionBox.style.display = "block";
-}
+    function handleToggleFavorite(btn) {
+        if(!currentFoodId) return;
+        const isCurrentlyFav = currentCard.getAttribute('data-is-fav') === 'true';
 
-// ✅ HÀM KÍCH HOẠT TÌM KIẾM (Đã sửa lỗi reset)
-function handleSearch(event) {
-    if (event) event.preventDefault(); // Ngăn hành vi submit mặc định
-    
-    const input = document.getElementById('searchInput');
-    const newSearchTerm = input ? input.value.trim() : ""; 
-
-    if (newSearchTerm === currentSearchTerm) return;
-    
-    currentSearchTerm = newSearchTerm;
-    
-    // Reset feed
-    document.getElementById('feedContainer').innerHTML = '';
-    page = 1; 
-    done = false; 
-    loading = false; // ✅ QUAN TRỌNG: Đảm bảo loading được reset về false
-    
-    loadFeed();
-}
-
-// ✅ HÀM XÓA TÌM KIẾM
-function clearSearch() {
-    const input = document.getElementById('searchInput');
-    if (input) input.value = '';
-    handleSearch(null); // Gọi handleSearch với giá trị rỗng (để kích hoạt loadFeed mặc định)
-}
-
-// ✅ FIX: Kích hoạt tải bài viết mặc định khi trang tải xong
-window.addEventListener('load', () => {
-    // Lấy giá trị tìm kiếm ban đầu từ input (để hỗ trợ load lại từ URL)
-    const input = document.getElementById('searchInput');
-    if (input) {
-        currentSearchTerm = input.value.trim();
+        if (isCurrentlyFav) {
+            // Remove logic
+            fetch('/favorite/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ place_id: currentFoodId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    updateFavoriteButtonUI(btn, false);
+                    currentCard.setAttribute('data-is-fav', 'false');
+                }
+            });
+        } else {
+            // Add logic
+            fetch('/favorite/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    place_id: currentFoodId,
+                    place_name: currentFoodName
+                })
+            })
+            .then(response => {
+                if(response.status === 401) {
+                    window.location.href = "/login";
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if(data && data.status === 'success') {
+                    updateFavoriteButtonUI(btn, true);
+                    currentCard.setAttribute('data-is-fav', 'true');
+                }
+            });
+        }
     }
-    loadFeed();
 });
-
-// Giữ lại logic cuộn trang (Infinite Scroll)
-window.onscroll = function() {
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-        loadFeed();
-    }
-};
-
-
-// ✅ LOAD 10 BÀI ĐẦU TIÊN
-loadFeed();
 </script>
-
 {% endblock %}

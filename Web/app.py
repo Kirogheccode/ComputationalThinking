@@ -21,6 +21,7 @@ from database import (
     add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
     get_feed, get_db_connection, get_comments_by_post
 )
+from SaveAnswer import queryAnswerForUser, resetDB
 
 # Load environment variables
 load_dotenv()
@@ -87,6 +88,56 @@ def index():
     if 'user_id' in session:
         user_favs = get_favorites_by_user(session['user_id'])
         favorite_ids = [str(item['place_id']) for item in user_favs]
+    # ---------------------------------------------------------
+
+    filtered_foods = []
+    for food in foods_data:
+        location = food["location"].strip()
+        name = food["name"].strip().lower()
+
+        if area.lower() != "all":
+            pattern = r'\b{}\b'.format(re.escape(area.lower()))
+            if not re.search(pattern, location.lower()):
+                continue
+
+        if q and q not in name:
+            continue
+
+        filtered_foods.append(food)
+
+    per_page = 9
+    total_pages = math.ceil(len(filtered_foods) / per_page)
+    foods_to_render = filtered_foods[(page-1)*per_page : page*per_page]
+
+    return render_template(
+        "index.html",
+        foods=foods_to_render,
+        page=page,
+        total_pages=total_pages,
+        area_selected=area,
+        search_query=q,
+        favorite_ids=favorite_ids  
+    )
+
+@app.route('/map')
+def map_page():
+    return render_template('map.html')
+
+@app.route('/chatbot')
+def chatbot_page():
+    resetDB()
+    return render_template('chatbot.html')
+
+@app.route('/forum')
+def forum_page():
+    page = int(request.args.get("page", 1))
+    area = request.args.get("area", "all").strip()
+    q = request.args.get("q", "").strip().lower()
+
+    favorite_ids = []
+    if 'user_id' in session:
+        user_favs = get_favorites_by_user(session['user_id'])
+        favorite_ids = [str(item['place_id']) for item in user_favs]
 
     filtered_foods = []
     for food in foods_data:
@@ -113,7 +164,7 @@ def index():
     foods_to_render = filtered_foods[start:end]
 
     return render_template(
-        "index.html",
+        "forum.html",
         foods=foods_to_render,
         page=page,
         total_pages=total_pages,
@@ -121,18 +172,6 @@ def index():
         search_query=q,
         favorite_ids=favorite_ids  
     )
-
-@app.route('/map')
-def map_page():
-    return render_template('map.html')
-
-@app.route('/chatbot')
-def chatbot_page():
-    return render_template('chatbot.html')
-
-@app.route('/about')
-def about_page():
-    return render_template('about.html')
 
 @app.route('/exchange')
 def exchange_page():
@@ -310,6 +349,14 @@ def api_scan_money():
         return jsonify(result)
 
     return jsonify({"success": False, "error": "Invalid file type"})
+# --- SHOW PREVIOUS ANSWER ---
+@app.route("/api/showanswer",methods=["POST"])
+def api_show_answer():
+    if 'user_id' not in session:
+        return jsonify({"message": "Please login to use save answer function!"}), 401
+    
+    data = request.get_json()
+    return jsonify(queryAnswerForUser(data))
 
 # --- FAVORITE API ---
 
@@ -524,4 +571,4 @@ def get_comment_list(post_id):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True, use_reloader=False)

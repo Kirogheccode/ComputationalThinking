@@ -8,6 +8,7 @@
     flex-direction: column;
     height: 60vh;
     background-color: #f9f9f9;
+    position: relative;
 }
 
 .chat-window {
@@ -44,13 +45,23 @@
     object-fit: cover;
 }
 
+.bot-message .botchat-btn{
+    background-color: #e9ecef;
+    padding: 8px 12px;
+    border-radius: 10px;
+    max-width: 98%;
+    text-align: left;
+    border-color:transparent;
+}
 .bot-message p {
-    background: #e9ecef;
+    background-color: #e9ecef;
     padding: 8px 12px;
     border-radius: 10px;
     max-width: 80%;
 }
-
+.bot-message .botchat-btn:hover {
+    background-color : #959a8db5;
+}
 .user-message {
     display: flex;
     justify-content: flex-end;
@@ -68,7 +79,6 @@
     max-width: 80%; 
     line-height: 1.4;
 }
-
 
 .chat-input-area {
     display: flex;
@@ -271,7 +281,7 @@ body.dark #themeToggleBtn {
     align-items: center !important;
     justify-content: center !important;
     border-color: black !important;
-    gap: 8px;
+    gap: 5px;
 }
 .suggestion-btn:hover {
     background-color : #959a8db5;
@@ -482,7 +492,13 @@ body.dark .bot-message p {
     background-color: #333 !important; /* Nền xám đậm */
     color: #e0e0e0; /* Chữ trắng mờ */
 }
-
+body.dark .bot-message .botchat-btn{
+    background-color: #333 !important; /* Nền xám đậm */
+    color: #e0e0e0;
+}
+body.dark .bot-message .botchat-btn:hover {
+    background-color: #d3d9de;
+}
 body.dark .bot-message {
     background-color: transparent !important;
 }

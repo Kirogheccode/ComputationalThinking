@@ -65,12 +65,29 @@ body.dark .filter-bar {
     color: black;
     background: white;
 }
-
+#clearFilters:hover {
+  background-color: #b5b2b2;
+}
 #themeToggleBtn{
   color: black;
   border-color: black;
 }
-
+.btn-search:hover {
+  background-color: #464545;
+  transform: none;
+}
+body.dark .btn-search:hover {
+  background-color: #464545;
+  transform: none;
+}
+.btn-explore:hover {
+  background-color: #464545;
+  transform: none;
+}
+body.dark .btn-explore:hover {
+  background-color: #464545;
+  transform: none;
+}
 /* === CARDS (CẬP NHẬT MỚI: Hiệu ứng mượt hơn, bỏ footer) === */
 .card {
   border: none;

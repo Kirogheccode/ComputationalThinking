@@ -1,5 +1,6 @@
 translations = {
     "vi": {
+        "forum":"Diễn đàn",
         "home": "Trang chủ",
         "map": "Bản đồ",
         "search": "Tìm kiếm",
@@ -31,6 +32,8 @@ translations = {
         "info": "Chi tiết",
         "address": "Địa chỉ",
         "rating": "Đánh giá",
+        "time": "Giờ mở cửa",
+        "price": "Giá",
         "front": "Trước",
         "back": "Sau",
         "fav": "Yêu thích",
@@ -142,7 +145,7 @@ translations = {
         "resend_otp": "Gửi lại mã",
         "wrong_email": "Nhập sai Email?",
 
-        "processing_task": "Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!",
+        "processing_task": "Đang tìm!",
         "input_required": "Hãy nhập liệu vào ô input.",
         "change": "Đổi ảnh",
 
@@ -162,6 +165,7 @@ translations = {
     },
 
     "en": {
+        "forum": "Forum",
         "home": "Home",
         "search": "Search",
         "map": "Map",
@@ -193,6 +197,8 @@ translations = {
         "info": "View",
         "address": "Address",
         "rating": "Rating",
+        "time": "Opening time",
+        "price": "Price",
         "front": "Front",
         "back": "Back",
         "fav": "Favourite",
@@ -304,7 +310,7 @@ translations = {
         "resend_otp": "Resend code",
         "wrong_email": "Wrong email?",
 
-        "processing_task": "Task is being processed, please wait!",
+        "processing_task": "Finding!",
         "input_required": "Please enter text.",
         "change": "Change",
 
