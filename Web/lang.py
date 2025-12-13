@@ -113,7 +113,7 @@ translations = {
         "register_email_note": "*Chúng tôi sẽ gửi mã OTP xác nhận qua email này.",
 
         "register_password": "Mật khẩu",
-        "register_password_hint": "Tối thiểu 6 ký tự",
+        "register_password_hint": "Ít nhất 8 ký tự.",
 
         "register_continue": "TIẾP TỤC",
         "register_have_account": "Đã có tài khoản?",
@@ -161,7 +161,14 @@ translations = {
         "way": "Cách đổi",
         "foreign": "Bản địa",
         "convert": "Đổi",
-        "comment": "Bình luận"
+        "comment": "Bình luận",
+
+        "bio": "Tiểu sử",
+        "bio_placeholder": "Giới thiệu ngắn về bản thân...",
+        "save_changes": "Lưu thay đổi",
+        "update_success": "Cập nhật thông tin thành công!",
+        "username_taken": "Tên đăng nhập này đã có người sử dụng.",
+        "edit_profile": "Chỉnh sửa hồ sơ",
     },
 
     "en": {
@@ -326,6 +333,13 @@ translations = {
         "way": "Direction",
         "foreign": "Foreign",
         "convert": "Convert",
-        "comment": "Comment"
+        "comment": "Comment",
+
+        "bio": "Bio",
+        "bio_placeholder": "Short introduction about yourself...",
+        "save_changes": "Save changes",
+        "update_success": "Profile updated successfully!",
+        "username_taken": "This username is already taken.",
+        "edit_profile": "Edit Profile",
     }
 }

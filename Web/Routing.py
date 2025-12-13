@@ -40,25 +40,21 @@ def geocode_address(address: str):
 def get_coordinates_from_db(location: str):
     """
     Lấy trực tiếp Latitude/Longitude của nhà hàng từ SQLite
-    Cập nhật: Sửa tên bảng và cột thành chữ thường để khớp với foody_data.sqlite mới
+    Kết nối vào bảng restaurants để lấy dữ liệu vị trí
     """
-    # Đảm bảo đường dẫn file database chính xác
     db_path = 'data/foody_data.sqlite'
     if not os.path.exists(db_path):
-        # Fallback nếu file nằm cùng cấp thư mục
         db_path = 'data/foody_data.sqlite'
         
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    # SỬA Ở ĐÂY: Tên bảng 'restaurants' và cột viết thường
     cursor.execute("SELECT latitude, longitude FROM restaurants WHERE location = ?", (location,))
     row = cursor.fetchone()
     conn.close()
 
     if row:
-        # SỬA Ở ĐÂY: Truy xuất key viết thường
         return row["latitude"], row["longitude"]
     else:
         return None, None
@@ -82,15 +78,17 @@ def get_route(user_lat: float, user_lon: float, dest_lat: float, dest_lon: float
 
 
 def drawMarkerByCoordinate(data):
+    """
+    Xử lý API lấy tọa độ để vẽ marker lên bản đồ.
+    Kiểm tra địa chỉ trong database trước, nếu không có sẽ dùng Geoapify.
+    """
     try:
         location = data.get('address')
         if not location:
             return jsonify({'error': 'Thiếu địa chỉ'}), 400
 
-        # Lấy tọa độ nhà hàng từ DB
         lat, lon = get_coordinates_from_db(location)
         
-        # Nếu DB không có (ví dụ quán mới chưa crawl), fallback sang Geoapify
         if lat is None:
             print(f"Không tìm thấy '{location}' trong DB, đang gọi Geoapify...")
             lat, lon = geocode_address(location)
@@ -102,6 +100,10 @@ def drawMarkerByCoordinate(data):
 
 
 def drawPathToDestionation(data):
+    """
+    Xử lý API vẽ đường đi từ điểm xuất phát (người dùng nhập) đến điểm đến.
+    Bao gồm kiểm tra tính hợp lệ của địa chỉ đầu vào.
+    """
     origin_text = data.get('origin')
     destination_text = data.get('destination')
 
@@ -109,10 +111,14 @@ def drawPathToDestionation(data):
         return jsonify({'error': 'Thiếu địa chỉ đi hoặc đến'}), 400
 
     try:
-        # 1. Lấy tọa độ người dùng (luôn dùng Geoapify vì là vị trí bất kỳ)
+        float(origin_text)
+        return jsonify({'error': 'Địa chỉ xuất phát không hợp lệ'}), 400
+    except ValueError:
+        pass
+
+    try:
         user_lat, user_lon = geocode_address(origin_text)
 
-        # 2. Lấy tọa độ điểm đến (ưu tiên lấy từ DB cho chính xác)
         dest_lat, dest_lon = get_coordinates_from_db(destination_text)
         
         if dest_lat is None:
@@ -121,7 +127,6 @@ def drawPathToDestionation(data):
             except Exception:
                 return jsonify({'error': 'Không tìm thấy tọa độ điểm đến'}), 404
 
-        # 3. Tính toán đường đi
         route_geometry = get_route(user_lat, user_lon, dest_lat, dest_lon)
 
         return jsonify({
