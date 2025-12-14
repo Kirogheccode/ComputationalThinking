@@ -108,9 +108,8 @@ def add_user(username, email, password_hash):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        default_avatar = "images/default-avatar.png"
-        cursor.execute("INSERT INTO users (username, email, password, verified, avatar) VALUES (?, ?, ?, 1, ?)",
-                       (username, email, password_hash))
+        cursor.execute("INSERT INTO users (username, email, password, verified) VALUES (?, ?, ?, ?)",
+                       (username, email, password_hash, 1))
         conn.commit()
         return True
     except sqlite3.IntegrityError:

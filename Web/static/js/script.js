@@ -411,6 +411,7 @@ function displayForMenu(container,data)
 function showPreviousAnswer()
 {
     const chatWindow = document.getElementById('chat-window');
+    if (!chatWindow) return;
 
     chatWindow.addEventListener('click', async function (e) {
         const btn = e.target.closest('.botchat-btn');
@@ -804,49 +805,32 @@ function renderFoodCards(container, data) {
                 ? `/static/${food.img}`
                 : "/static/images/default_food.jpg";
 
-            card.innerHTML = `
-            <img src="${imageSrc}" alt="${food.Name}">
-            <div class="food-info">
-                <h5 class="food-name">${food.Name}</h5>
-                <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
-                <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
-                <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
-                <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
-                <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
-            </div>
-            <button class="location-btn location-dot"
-                    title="Xem trên bản đồ"
-                    data-bs-toggle="modal"
-                    data-bs-target="#mapModal"
-                    data-name="${food.Name}"
-                    data-rating="${food.Rating}"
-                    data-location="${food.Address}"
-                    data-image="${imageSrc}">
-                <i class="fa-solid fa-location-dot"></i>
-            </button>
-            <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
-                <i class="far fa-heart me-1"></i> Yêu thích
-            </button>
-        `;
-        container.appendChild(card);
-        card.addEventListener('click', function () {
-            currentCard = card;
-            currentFoodId = food.id;
-            currentFoodName = food.Name;
-            currentLocation = food.Address;
-
-            const isFav = card.getAttribute("data-is-fav") === "true";
-
-            document.getElementById('modalFoodName').innerText = food.Name;
-            document.getElementById('modalFoodImage').src = imageSrc;
-            document.getElementById('modalFoodLocation').innerText = food.Address;
-            document.getElementById('modalFoodRating').innerText = food.Rating;
-            document.getElementById('modalFoodPrice').innerText = food.Budget;
-
-            setupFavoriteButton(isFav);
-        });
-
-    });
+        card.innerHTML = `
+        <img src="${imageSrc}" alt="${food.Name}">
+        <div class="food-info">
+            <h5 class="food-name">${food.Name}</h5>
+            <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
+            <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
+            <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
+            <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
+            <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
+        </div>
+        <button class="location-btn location-dot"
+                title="Xem trên bản đồ"
+                data-bs-toggle="modal"
+                data-bs-target="#mapModal"
+                data-name="${food.Name}"
+                data-rating="${food.Rating}"
+                data-location="${food.Address}"
+                data-image="${imageSrc}">
+            <i class="fa-solid fa-location-dot"></i>
+        </button>
+        <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
+            <i class="far fa-heart me-1"></i> Yêu thích
+        </button>
+    `;
+    container.appendChild(card);
+});
 
 }
 

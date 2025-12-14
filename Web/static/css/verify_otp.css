@@ -7,8 +7,15 @@
     align-items: center;
     justify-content: center;
     
-    /* Kéo lên */
-    margin-top: -3rem;
+    /* ❌ XÓA hoặc CHUYỂN THÀNH 0: */
+    /* margin-top: -3rem; */
+    margin-top: 0; /* Đặt lại margin về 0 */
+}
+
+/* Thêm thuộc tính này cho thẻ thông báo (Nếu nó nằm ngay dưới body/main) */
+.alert {
+    position: relative;
+    z-index: 100; /* Đảm bảo nó luôn nằm trên các nội dung khác */
 }
 
 .otp-card {
@@ -19,8 +26,13 @@
     padding: 2rem;
     text-align: center;
     position: relative;
-    overflow: hidden;
-    /* Đã XÓA transition */
+    /* XÓA: overflow: hidden; (để đề phòng thông báo flash bị cắt nếu nó nằm bên ngoài card) */
+}
+
+/* Thêm quy tắc để đảm bảo thông báo Flash luôn có z-index cao hơn nếu cần */
+.flash-messages-container {
+    position: relative; 
+    z-index: 10; 
 }
 
 /* Tắt hiệu ứng hover */

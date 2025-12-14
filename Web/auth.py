@@ -38,8 +38,8 @@ SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
 if not os.getenv("GOOGLE_CLIENT_ID") or not os.getenv("GOOGLE_CLIENT_SECRET"):
     print("Warning: Google OAuth credentials missing.")
 
-if not os.getenv("FACEBOOK_CLIENT_ID") or not os.getenv("FACEBOOK_CLIENT_SECRET"):
-    print("Warning: Facebook OAuth credentials missing.")
+if not os.getenv("GITHUB_CLIENT_ID") or not os.getenv("GITHUB_CLIENT_SECRET"):
+    print("Warning: Github OAuth credentials missing.")
 
 # Đăng ký Google
 oauth.register(
@@ -50,15 +50,19 @@ oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
-# Đăng ký Facebook
+# Đăng ký GitHub
 oauth.register(
-    name='facebook',
-    client_id=os.getenv("FACEBOOK_CLIENT_ID"),
-    client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
-    api_base_url='https://graph.facebook.com/v19.0/',
-    access_token_url='https://graph.facebook.com/v19.0/oauth/access_token',
-    authorize_url='https://www.facebook.com/v19.0/dialog/oauth',
-    client_kwargs={'scope': 'email public_profile'}
+    name='github',
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+    # Loại bỏ server_metadata_url vì GitHub không hỗ trợ OIDC tiêu chuẩn
+    
+    # Cung cấp trực tiếp các URL endpoint của GitHub OAuth
+    api_base_url='https://api.github.com/', 
+    access_token_url='https://github.com/login/oauth/access_token',
+    authorize_url='https://github.com/login/oauth/authorize',
+    
+    client_kwargs={'scope': 'user:email'}
 )
 
 def send_email_otp(to_email, otp):
@@ -274,22 +278,31 @@ def google_auth():
         flash("Lỗi đăng nhập Google.", "danger")
         return redirect(url_for('auth.login'))
 
-@auth_bp.route('/login/facebook')
-def login_facebook():
-    redirect_uri = url_for('auth.facebook_auth', _external=True)
-    return oauth.facebook.authorize_redirect(redirect_uri)
+@auth_bp.route('/login/github')
+def login_github():
+    redirect_uri = url_for('auth.github_auth', _external=True)
+    return oauth.github.authorize_redirect(redirect_uri)
 
-@auth_bp.route('/login/facebook/callback')
-def facebook_auth():
+@auth_bp.route('/login/github/callback')
+def github_auth():
     try:
-        token = oauth.facebook.authorize_access_token()
-        resp = oauth.facebook.get('me?fields=id,name,email')
-        profile = resp.json()
-        email = profile.get('email')
-        name = profile.get('name')
+        token = oauth.github.authorize_access_token()
+        
+        # Lấy thông tin người dùng cơ bản (bao gồm tên)
+        user_resp = oauth.github.get('user')
+        user_info = user_resp.json()
+        
+        # Lấy danh sách email vì GitHub có thể trả về nhiều email hoặc không trả email công khai
+        emails_resp = oauth.github.get('user/emails')
+        emails_info = emails_resp.json()
+        
+        # Tìm email chính/ưu tiên đã xác minh
+        email = next((e['email'] for e in emails_info if e['primary'] and e['verified']), user_info.get('email'))
+        
+        name = user_info.get('name') or user_info.get('login') # Dùng 'login' nếu không có 'name'
 
         if not email:
-            flash('Facebook không cung cấp Email.', 'warning')
+            flash('GitHub không cung cấp Email công khai hoặc đã xác minh.', 'warning')
             return redirect(url_for('auth.register'))
 
         user = get_user_by_email(email)
@@ -298,9 +311,9 @@ def facebook_auth():
             session['username'] = user['username']
             return redirect(url_for('index'))
         else:
-            session['oauth_temp_data'] = {'email': email, 'name': name, 'provider': 'Facebook'}
+            session['oauth_temp_data'] = {'email': email, 'name': name, 'provider': 'GitHub'}
             return redirect(url_for('auth.complete_oauth'))
     except Exception as e:
-        print(f"Facebook Auth Error: {e}")
-        flash("Lỗi đăng nhập Facebook.", "danger")
+        print(f"GitHub Auth Error: {e}")
+        flash("Lỗi đăng nhập GitHub.", "danger")
         return redirect(url_for('auth.login'))

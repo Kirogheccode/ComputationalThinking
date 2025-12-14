@@ -102,3 +102,64 @@ body.dark .text-muted {
 body.dark .header-or { 
     background-color: #2d3436 !important; 
 }
+
+/* ===== AUTH BUTTON (Google + GitHub) ===== */
+.btn-auth {
+    font-weight: 500;
+    border-radius: 8px;
+
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.btn-auth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    text-decoration: none;
+}
+
+.btn-auth:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+.btn-auth i {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+}
+
+.btn-auth:hover i {
+    transform: translateX(3px);
+}
+
+.btn-google {
+    background-color: #db4437;
+    color: #ffffff;
+    border: 1px solid #c1351d;
+}
+
+.btn-google:hover {
+    background-color: #c1351d;
+    color: #ffffff;
+}
+
+.btn-github {
+    background-color: #24292f;
+    color: #ffffff;
+    border: 1px solid #1b1f23;
+}
+
+.btn-github:hover {
+    background-color: #1b1f23;
+    color: #ffffff;
+}
+
+body.dark .btn-auth {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+
