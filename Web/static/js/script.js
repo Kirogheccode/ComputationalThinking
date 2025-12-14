@@ -415,6 +415,7 @@ function displayForMenu(container,data)
 function showPreviousAnswer()
 {
     const chatWindow = document.getElementById('chat-window');
+    if (!chatWindow) return;
 
     chatWindow.addEventListener('click', async function (e) {
         const btn = e.target.closest('.botchat-btn');
@@ -833,23 +834,6 @@ function renderFoodCards(container, data) {
         </button>
     `;
     container.appendChild(card);
-    card.addEventListener('click', function () {
-        currentCard = card;
-        currentFoodId = food.id;
-        currentFoodName = food.Name;
-        currentLocation = food.Address;
-
-        const isFav = card.getAttribute("data-is-fav") === "true";
-
-        document.getElementById('modalFoodName').innerText = food.Name;
-        document.getElementById('modalFoodImage').src = imageSrc;
-        document.getElementById('modalFoodLocation').innerText = food.Address;
-        document.getElementById('modalFoodRating').innerText = food.Rating;
-        document.getElementById('modalFoodPrice').innerText = food.Budget;
-
-        setupFavoriteButton(isFav);
-    });
-
 });
 
 }

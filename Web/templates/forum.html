@@ -420,7 +420,9 @@ window.onscroll = function() {
 
 
 // ✅ LOAD 10 BÀI ĐẦU TIÊN
-loadFeed();
+document.addEventListener("DOMContentLoaded", () => {
+    loadFeed();
+});
 </script>
 
 {% endblock %}

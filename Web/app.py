@@ -387,6 +387,7 @@ def api_scan_money():
         return jsonify(result)
 
     return jsonify({"success": False, "error": "Invalid file type"})
+
 # --- SHOW PREVIOUS ANSWER ---
 @app.route("/api/showanswer",methods=["POST"])
 def api_show_answer():
