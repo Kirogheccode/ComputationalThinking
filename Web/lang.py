@@ -41,9 +41,9 @@ translations = {
 
         "map_title": "Tìm đường đến quán ăn",
         "your_location": "Vị trí của bạn:",
-        "location_placeholder": "VD: Chợ Bến Thành, Quận 1...",
+        "location_placeholder": "Nhập địa chỉ hiện tại của bạn",
         "find_route": "Tìm đường",
-        "location_hint": "Nhập địa chỉ hiện tại của bạn để xem đường đi.",
+        "location_hint": "Nhập địa chỉ nơi bạn muốn đến",
 
         "about_title": "Giới thiệu",
         "about_heading": "Giới thiệu Dự án",
@@ -213,9 +213,9 @@ translations = {
 
         "map_title": "Get directions to the restaurant",
         "your_location": "Your location:",
-        "location_placeholder": "E.g: Ben Thanh Market, District 1...",
+        "location_placeholder": "Enter your current address",
         "find_route": "Find route",
-        "location_hint": "Enter your current address to view the route.",
+        "location_hint": "Enter your destination address",
 
         "about_title": "About",
         "about_heading": "About the Project",
