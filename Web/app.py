@@ -19,8 +19,9 @@ from lang import translations
 from database import (
     init_db, add_food_post, get_food_posts_by_user, get_user_by_id,
     add_favorite, get_favorites_by_user, remove_favorite, delete_food_post,
-    get_feed, get_db_connection, get_comments_by_post
+    get_feed, get_db_connection, get_comments_by_post, update_user_info
 )
+from SaveAnswer import queryAnswerForUser, resetDB
 
 # Load environment variables
 load_dotenv()
@@ -87,6 +88,56 @@ def index():
     if 'user_id' in session:
         user_favs = get_favorites_by_user(session['user_id'])
         favorite_ids = [str(item['place_id']) for item in user_favs]
+    # ---------------------------------------------------------
+
+    filtered_foods = []
+    for food in foods_data:
+        location = food["location"].strip()
+        name = food["name"].strip().lower()
+
+        if area.lower() != "all":
+            pattern = r'\b{}\b'.format(re.escape(area.lower()))
+            if not re.search(pattern, location.lower()):
+                continue
+
+        if q and q not in name:
+            continue
+
+        filtered_foods.append(food)
+
+    per_page = 9
+    total_pages = math.ceil(len(filtered_foods) / per_page)
+    foods_to_render = filtered_foods[(page-1)*per_page : page*per_page]
+
+    return render_template(
+        "index.html",
+        foods=foods_to_render,
+        page=page,
+        total_pages=total_pages,
+        area_selected=area,
+        search_query=q,
+        favorite_ids=favorite_ids  
+    )
+
+@app.route('/map')
+def map_page():
+    return render_template('map.html')
+
+@app.route('/chatbot')
+def chatbot_page():
+    resetDB()
+    return render_template('chatbot.html')
+
+@app.route('/forum')
+def forum_page():
+    page = int(request.args.get("page", 1))
+    area = request.args.get("area", "all").strip()
+    q = request.args.get("q", "").strip().lower()
+
+    favorite_ids = []
+    if 'user_id' in session:
+        user_favs = get_favorites_by_user(session['user_id'])
+        favorite_ids = [str(item['place_id']) for item in user_favs]
 
     filtered_foods = []
     for food in foods_data:
@@ -113,7 +164,7 @@ def index():
     foods_to_render = filtered_foods[start:end]
 
     return render_template(
-        "index.html",
+        "forum.html",
         foods=foods_to_render,
         page=page,
         total_pages=total_pages,
@@ -121,18 +172,6 @@ def index():
         search_query=q,
         favorite_ids=favorite_ids  
     )
-
-@app.route('/map')
-def map_page():
-    return render_template('map.html')
-
-@app.route('/chatbot')
-def chatbot_page():
-    return render_template('chatbot.html')
-
-@app.route('/about')
-def about_page():
-    return render_template('about.html')
 
 @app.route('/exchange')
 def exchange_page():
@@ -143,7 +182,15 @@ def exchange_page():
 @login_required
 def account_page():
     user_id = session['user_id']
-    username = session['username']
+
+    user = get_user_by_id(user_id)
+    
+    # Cập nhật lại session username nếu trong DB khác session (phòng trường hợp vừa đổi tên xong)
+    if user and user['username'] != session.get('username'):
+        session['username'] = user['username']
+
+    username = user['username']
+    user_bio = user['bio'] if user['bio'] else ""
 
     user_posts = get_food_posts_by_user(user_id)
     raw_favorites = get_favorites_by_user(user_id) 
@@ -186,8 +233,10 @@ def account_page():
 
     return render_template(
         'account.html',
+        user=user, 
         username=username,
-        avatar_url=avatar_url,   # ✅ THÊM DÒNG NÀY
+        user_bio=user_bio,
+        avatar_url=avatar_url,
         posts=user_posts,
         favorites=enriched_favorites
     )
@@ -218,6 +267,7 @@ def your_account():
     flash('Bài đăng của bạn đã được thêm thành công!', 'success')
     return redirect(url_for('account_page'))
 
+
 @app.route('/post/delete/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):
@@ -226,6 +276,33 @@ def delete_post(post_id):
         flash('Đã xóa bài viết thành công.', 'success')
     else:
         flash('Không thể xóa bài viết này.', 'danger')
+    return redirect(url_for('account_page'))
+
+@app.route('/account/update-info', methods=['POST'])
+@login_required
+def update_info():
+    user_id = session['user_id']
+    new_username = request.form.get('username').strip()
+    new_bio = request.form.get('bio').strip()
+    
+    current_lang = session.get("lang", "vi")
+
+    if not new_username:
+        flash(translations[current_lang]['input_required'], 'danger')
+        return redirect(url_for('account_page'))
+
+    success, message_code = update_user_info(user_id, new_username, new_bio)
+
+    if success:
+        # Cập nhật lại session username ngay lập tức
+        session['username'] = new_username
+        flash(translations[current_lang]['update_success'], 'success')
+    else:
+        if message_code == "username_taken":
+            flash(translations[current_lang]['username_taken'], 'danger')
+        else:
+            flash("Error updating profile", 'danger')
+
     return redirect(url_for('account_page'))
 
 # --- API ROUTES ---
@@ -310,6 +387,14 @@ def api_scan_money():
         return jsonify(result)
 
     return jsonify({"success": False, "error": "Invalid file type"})
+# --- SHOW PREVIOUS ANSWER ---
+@app.route("/api/showanswer",methods=["POST"])
+def api_show_answer():
+    if 'user_id' not in session:
+        return jsonify({"message": "Please login to use save answer function!"}), 401
+    
+    data = request.get_json()
+    return jsonify(queryAnswerForUser(data))
 
 # --- FAVORITE API ---
 
@@ -524,4 +609,4 @@ def get_comment_list(post_id):
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True, use_reloader=False)

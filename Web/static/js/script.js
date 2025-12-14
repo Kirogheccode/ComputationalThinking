@@ -2,6 +2,8 @@ let loadingDiv = null;
 let uploadedImage = null;
 let isProcess = false;
 let currentPrefix = "";
+let numAns = 1;
+let curAns = "";
 function scrollAnimation() {
     // Initialize AOS for scroll animations
     if (window.AOS) {
@@ -191,7 +193,6 @@ function displayUserMessage(messageText, chatWindow) {
     userInput.value = '';
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
-
 function createLoadingBubble(chatWindow) {
     loadingDiv = document.createElement('div');
     loadingDiv.classList.add('message', 'bot-message', 'loading-message');
@@ -212,9 +213,25 @@ function displayBotMessage(botText, chatWindow) {
         return;
     const botMessageDiv = document.createElement('div');
     botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
+    curAns = `answer-${numAns}`;
     botMessageDiv.innerHTML = `
         <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
-        <p>${botText}</p>
+        <button class="botchat-btn" data-answer=${curAns}>${botText}</button>
+    `;
+    numAns++;
+    chatWindow.appendChild(botMessageDiv);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+function displayForError(errMess,chatWindow)
+{
+    if (errMess == "")
+        return;
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'bot-message', 'd-flex', 'align-items-start');
+    botMessageDiv.innerHTML = `
+        <img src="/static/images/jane.jpg" class="bot-avatar" alt="Bot Avatar">
+        <p>${errMess}</p>
     `;
     chatWindow.appendChild(botMessageDiv);
 
@@ -243,31 +260,29 @@ function removeOutput(container)
     if (menuBox)
         menuBox.remove();
 }
-function displayForRestaurant(container,data,chatWindow, recongizeText = "")
+function displayForChatWindow(text,chatWindow)
 {
-    let botText = recongizeText + data.reply;
-    botText = botText.replace(/\n/g, '<br>');
+    text = text.replace(/\n/g, '<br>');
     removeLoadingBubble();
-    displayBotMessage(botText, chatWindow);
+    displayBotMessage(text, chatWindow);
+}
+function displayForRestaurant(container,data)
+{
     renderFoodCards(container, data.food_data);
 }
-function displayForCulture(container,data,chatWindow,recognizeText = "")
+function displayForCulture(container,data)
 {
-    const placeholder = document.getElementById("food-placeholder");
-
-    let Intro = recognizeText + "Here is your answer about Vietnamese culture !";
-    Intro = Intro.replace(/\n/g, '<br>');
-    removeLoadingBubble();
-    displayBotMessage(Intro,chatWindow);
+    
+    
     let botText = data.reply;
     botText = botText.replace(/\r/g, "");
     botText = botText.replace(/^\s*###\s*(.*)$/gm, "<h3>$1</h3>");
     botText = botText.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     botText = botText.replace(/\n/g, '<br>');
-    
     removeOutput(container);
     //Có thể cần thêm 2 dòng như trên để xoá cho output mỗi chức năng
-
+    
+    const placeholder = document.getElementById("food-placeholder");
     if (botText) {
         if (placeholder) {
             placeholder.style.display = "none";
@@ -284,24 +299,19 @@ function displayForCulture(container,data,chatWindow,recognizeText = "")
     textBox.innerHTML = `<p>${botText}</p>`;
     container.appendChild(textBox);
 }
-function displayForRecipe(container,data,chatWindow,recognizeText = "")
+function displayForRecipe(container,data)
 {
-    const placeholder = document.getElementById("food-placeholder");
     
-    let botText = recognizeText + data.reply;
-    botText = botText.replace(/\n/g, '<br>');
-    removeLoadingBubble();
-    displayBotMessage(botText, chatWindow);
-
     removeOutput(container);
     const foodArray = data.food_data;
+    const placeholder = document.getElementById("food-placeholder");
     if (foodArray && foodArray.length > 0)
-    {
-        if (placeholder) {
-            placeholder.style.display = "none";
+        {
+            if (placeholder) {
+                placeholder.style.display = "none";
+            }
         }
-    }
-    else {
+        else {
         if (placeholder) {
             placeholder.style.display = "flex";
         }
@@ -342,16 +352,11 @@ function displayForRecipe(container,data,chatWindow,recognizeText = "")
             cnt++;
     });
 }
-function displayForMenu(container,data,chatWindow,recognizeText = "")
+function displayForMenu(container,data)
 {
-    const placeholder = document.getElementById("food-placeholder");
     
-    let botText = recognizeText + data.reply;
-    botText = botText.replace(/\n/g, '<br>');
-    removeLoadingBubble();
-    displayBotMessage(botText, chatWindow);
-
     removeOutput(container);
+    const placeholder = document.getElementById("food-placeholder");
     const menu = data.food_data;
     if (menu && menu.length > 0)
     {
@@ -407,6 +412,57 @@ function displayForMenu(container,data,chatWindow,recognizeText = "")
     });
     container.appendChild(menuBox);
 }
+function showPreviousAnswer()
+{
+    const chatWindow = document.getElementById('chat-window');
+
+    chatWindow.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.botchat-btn');
+        if (!btn) return;
+
+        const order = btn.dataset.answer;
+        if (order === curAns) return;
+
+        try {
+            const response = await fetch('/api/showanswer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answer_order: order })
+            });
+
+            const data = await response.json();
+
+            if (response.status === 401) {
+                showNotification(data.message);
+                return;
+            }
+
+            if (data.status === 'success') {
+                const container = document.getElementById("carousel");
+                if (data.mode == "/place_")
+                {
+                    displayForRestaurant(container,data);
+                }
+                else if (data.mode == "/recipe_")
+                {
+                    displayForRecipe(container,data);
+                }
+                else if (data.mode == "/plan_")
+                {
+                    displayForMenu(container,data);
+                }
+                else
+                {
+                    displayForCulture(container,data);
+                }
+                curAns = order;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+}
+
 async function sendText(messageText) {
     isProcess = true;
     const chatWindow = document.getElementById('chat-window');
@@ -441,20 +497,25 @@ async function sendText(messageText) {
 
         // Lấy nội dung trả lời từ key 'reply' (đã định nghĩa trong app.py)
         const container = document.getElementById("carousel");
+        
         if (currentPrefix == "/place_")
         {
-            displayForRestaurant(container,data,chatWindow);
+            displayForChatWindow(data.reply,chatWindow);
+            displayForRestaurant(container,data);
         }
         else if (currentPrefix == "/recipe_")
         {
-            displayForRecipe(container,data,chatWindow);
+            displayForChatWindow(data.reply,chatWindow);
+            displayForRecipe(container,data);
         }
         else if (currentPrefix == "/plan_")
         {
-            displayForMenu(container,data,chatWindow);
+            displayForChatWindow(data.reply,chatWindow);
+            displayForMenu(container,data);
         }
         else
         {
+            displayForChatWindow("Here is your answer about Vietnamese culture!",chatWindow);
             displayForCulture(container,data,chatWindow);
         }
 
@@ -463,7 +524,7 @@ async function sendText(messageText) {
         console.error("Lỗi khi gọi API:", err);
         botText = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
         removeLoadingBubble();
-        displayBotMessage(botText, chatWindow);
+        displayForError(botText, chatWindow);
     }
     isProcess = false;
 }
@@ -558,15 +619,23 @@ async function sendImage(text) {
         const container = document.getElementById("carousel");
         if (currrentPrefix == "/place_")
         {
-            displayForRestaurant(container,data,chatWindow,botText1 + "\n");
+            displayForChatWindow(botText1+"\n"+data.reply,chatWindow);
+            displayForRestaurant(container,data);
         }
-        else if (currentPrefix == "/_recipe")
+        else if (currentPrefix == "/recipe_")
         {
-            displayForRecipe(container,data,chatWindow,botText1 + "\n");
+            displayForChatWindow(botText1+"\n"+data.reply,chatWindow);
+            displayForRecipe(container,data);
+        }
+        else if (currentPrefix == "/plan_")
+        {
+            displayForChatWindow(botText1+"\n"+data.reply,chatWindow);
+            displayForMenu(container,data);
         }
         else
         {
-            displayForCulture(container,data,chatWindow,botText1 + "\n");
+            displayForChatWindow(botText1+"\n"+"Here is your answer about Vietnamese culture!",chatWindow);
+            displayForCulture(container,data);
         }
 
     }
@@ -575,7 +644,7 @@ async function sendImage(text) {
         botText2 = "Xin lỗi, hệ thống đang gặp sự cố. Bạn vui lòng thử lại sau.";
         removeLoadingBubble();
         let botText = botText1 + "<br>" + botText2;
-        displayBotMessage(botText, chatWindow);
+        displayForError(botText, chatWindow);
     }
     uploadedImage = null;
     isProcess = false;
@@ -848,7 +917,6 @@ function uploadImageFeature() {
     });
     const text = userInput.value.trim();
 }
-
 document.addEventListener("DOMContentLoaded", function () {
 
     // Lấy tất cả nút tim
@@ -1022,6 +1090,7 @@ function main() {
         chatBot()
         uploadImageFeature()
         suggestionChips()
+        showPreviousAnswer()
         //=========================================================================
 
         //=================================EXCHANGE================================

@@ -16,9 +16,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/darkmode.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
@@ -51,9 +51,13 @@
                         {{ lang.chatbot_chat_title }}
                     </a>
 
-                    <a class="nav-link {% if request.endpoint == 'about_page' %}active{% endif %}" 
-                        href="{{ url_for('about_page') }}">
-                        {{ lang.us }}
+                    <a class="nav-link {% if request.endpoint == 'forum_page' %}active{% endif %}" 
+                        href="{{ url_for('forum_page') }}">
+                        {{ lang.forum }}
+                    </a>
+                    <a class="nav-link {% if request.endpoint == 'exchange_page' %}active{% endif %}" 
+                        href="{{ url_for('exchange_page') }}">
+                        {{lang.currency}}
                     </a>
 
                     {% if session.get('user_id') %}
@@ -75,10 +79,6 @@
                         {{ lang.login }}
                     </a>
                     {% endif %}
-                    <a class="nav-link {% if request.endpoint == 'exchange_page' %}active{% endif %}" 
-                        href="{{ url_for('exchange_page') }}">
-                        {{lang.currency}}
-                    </a>
 
                     <li class="nav-item dropdown ms-2">
                         <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -132,7 +132,8 @@
                         <li><a href="{{ url_for('index') }}">{{ lang.home }}</a></li>
                         <li><a href="{{ url_for('map_page') }}">{{ lang.map }}</a></li>
                         <li><a href="{{ url_for('chatbot_page') }}">{{ lang.chatbot_chat_title }}</a></li>
-                        <li><a href="{{ url_for('about_page') }}">{{ lang.us }}</a></li>
+                        <li><a href="{{ url_for('forum_page') }}">{{ lang.forum }}</a></li>
+                        <li><a href="{{ url_for('exchange_page') }}">{{ lang.currency }}</a></li>
                         
                         {% if session.get('user_id') %}
                         <li><a href="{{ url_for('your_account') }}">{{ lang.your_account }}</a></li>

@@ -1,5 +1,6 @@
 translations = {
     "vi": {
+        "forum":"Diễn đàn",
         "home": "Trang chủ",
         "map": "Bản đồ",
         "search": "Tìm kiếm",
@@ -31,6 +32,8 @@ translations = {
         "info": "Chi tiết",
         "address": "Địa chỉ",
         "rating": "Đánh giá",
+        "time": "Giờ mở cửa",
+        "price": "Giá",
         "front": "Trước",
         "back": "Sau",
         "fav": "Yêu thích",
@@ -38,9 +41,9 @@ translations = {
 
         "map_title": "Tìm đường đến quán ăn",
         "your_location": "Vị trí của bạn:",
-        "location_placeholder": "VD: Chợ Bến Thành, Quận 1...",
+        "location_placeholder": "Nhập địa chỉ hiện tại của bạn",
         "find_route": "Tìm đường",
-        "location_hint": "Nhập địa chỉ hiện tại của bạn để xem đường đi.",
+        "location_hint": "Nhập địa chỉ nơi bạn muốn đến",
 
         "about_title": "Giới thiệu",
         "about_heading": "Giới thiệu Dự án",
@@ -110,7 +113,7 @@ translations = {
         "register_email_note": "*Chúng tôi sẽ gửi mã OTP xác nhận qua email này.",
 
         "register_password": "Mật khẩu",
-        "register_password_hint": "Tối thiểu 6 ký tự",
+        "register_password_hint": "Ít nhất 8 ký tự.",
 
         "register_continue": "TIẾP TỤC",
         "register_have_account": "Đã có tài khoản?",
@@ -142,7 +145,7 @@ translations = {
         "resend_otp": "Gửi lại mã",
         "wrong_email": "Nhập sai Email?",
 
-        "processing_task": "Đang xử lý tác vụ, hãy đợi cho đến khi thực hiện xong!",
+        "processing_task": "Đang tìm!",
         "input_required": "Hãy nhập liệu vào ô input.",
         "change": "Đổi ảnh",
 
@@ -158,10 +161,18 @@ translations = {
         "way": "Cách đổi",
         "foreign": "Bản địa",
         "convert": "Đổi",
-        "comment": "Bình luận"
+        "comment": "Bình luận",
+
+        "bio": "Tiểu sử",
+        "bio_placeholder": "Giới thiệu ngắn về bản thân...",
+        "save_changes": "Lưu thay đổi",
+        "update_success": "Cập nhật thông tin thành công!",
+        "username_taken": "Tên đăng nhập này đã có người sử dụng.",
+        "edit_profile": "Chỉnh sửa hồ sơ",
     },
 
     "en": {
+        "forum": "Forum",
         "home": "Home",
         "search": "Search",
         "map": "Map",
@@ -193,6 +204,8 @@ translations = {
         "info": "View",
         "address": "Address",
         "rating": "Rating",
+        "time": "Opening time",
+        "price": "Price",
         "front": "Front",
         "back": "Back",
         "fav": "Favourite",
@@ -200,9 +213,9 @@ translations = {
 
         "map_title": "Get directions to the restaurant",
         "your_location": "Your location:",
-        "location_placeholder": "E.g: Ben Thanh Market, District 1...",
+        "location_placeholder": "Enter your current address",
         "find_route": "Find route",
-        "location_hint": "Enter your current address to view the route.",
+        "location_hint": "Enter your destination address",
 
         "about_title": "About",
         "about_heading": "About the Project",
@@ -304,7 +317,7 @@ translations = {
         "resend_otp": "Resend code",
         "wrong_email": "Wrong email?",
 
-        "processing_task": "Task is being processed, please wait!",
+        "processing_task": "Finding!",
         "input_required": "Please enter text.",
         "change": "Change",
 
@@ -320,6 +333,13 @@ translations = {
         "way": "Direction",
         "foreign": "Foreign",
         "convert": "Convert",
-        "comment": "Comment"
+        "comment": "Comment",
+
+        "bio": "Bio",
+        "bio_placeholder": "Short introduction about yourself...",
+        "save_changes": "Save changes",
+        "update_success": "Profile updated successfully!",
+        "username_taken": "This username is already taken.",
+        "edit_profile": "Edit Profile",
     }
 }
