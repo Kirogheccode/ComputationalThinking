@@ -310,8 +310,11 @@ def update_info():
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     try:
+        makeCollection = ""
+        if 'user_id' in session:
+            makeCollection = session.get('username')
         data = request.get_json()
-        result = replyToUser(data)
+        result = replyToUser(data,makeCollection)
         return jsonify(result)
     except Exception as e:
         print("Lỗi xử lý chat:", e)
@@ -393,8 +396,9 @@ def api_show_answer():
     if 'user_id' not in session:
         return jsonify({"message": "Please login to use save answer function!"}), 401
     
+    makeCollection = session.get('username')
     data = request.get_json()
-    return jsonify(queryAnswerForUser(data))
+    return jsonify(queryAnswerForUser(data,makeCollection))
 
 # --- FAVORITE API ---
 

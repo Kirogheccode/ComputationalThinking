@@ -18,11 +18,9 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
     height: 450px;
     border: 1px solid #ddd;
 }
-
 .message {
     max-width: 80%;
     padding: 10px 15px;
@@ -137,12 +135,14 @@ body.dark #themeToggleBtn {
 .carousel { 
     height: 60vh; 
     width: 100%; 
-    overflow-y: auto; 
+    overflow-y: auto;
+    overflow-x: auto; 
     position: relative;
     scrollbar-gutter: stable both-edges;
 }
 .carousel::-webkit-scrollbar {
     width: 8px; 
+    height: 8px;
 }
 
 .carousel::-webkit-scrollbar-thumb {
@@ -151,6 +151,9 @@ body.dark #themeToggleBtn {
 }
 
 .carousel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.carousel::-webkit-scrollbar-corner {
     background: transparent;
 }
 .group {
@@ -169,6 +172,7 @@ body.dark #themeToggleBtn {
     position: relative; 
     display: flex;
     flex-direction: column;
+    max-width: 97%;
     width: 100%;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -384,20 +388,21 @@ body.dark #themeToggleBtn {
     display: flex;             
     flex-direction: column;          
     padding: 15px 0;
-
-    background-color: rgba(209, 231, 221, 0.9);
-    border: 2px solid #000000 !important;
-    border-radius: 15px;
 }
 .menu-box .recipe-btn{
     background-color: #ffffff;
     color: #198754; 
     border: 1px solid #c3e6cb;
     box-shadow: 0 4px 6px rgba(25, 135, 84, 0.15); 
+    width: 120px; height: 200px; flex-shrink: 0; border-radius: 12px;
+    display: flex;
 }
 .menu-box .recipe-info{
     text-align: justify;
     hyphens:auto;
+    max-width: 97%;
+    width:100%;
+    height: 200px;
 }
 .menu-box .menu-title {
     color: #0f5132;
@@ -472,7 +477,7 @@ body.dark .chat-window {
 
 /* Khu vực nhập tin nhắn (Input area) */
 body.dark .chat-input-area {
-    background-color: #252525;
+    background-color: #1e1e1e;
     border-top-color: #444;
 }
 
@@ -497,7 +502,7 @@ body.dark .bot-message .botchat-btn{
     color: #e0e0e0;
 }
 body.dark .bot-message .botchat-btn:hover {
-    background-color: #d3d9de;
+    background-color: #9a9898 !important;
 }
 body.dark .bot-message {
     background-color: transparent !important;
@@ -616,7 +621,6 @@ body.dark .menu-box .menu-title {
     color: #ff8000;
     
 }
-body.dark .menu-box {
-    background-color: rgba(242, 145, 0, 0.9);
-    border: 2px solid #ffffff !important;
+body.dark #suggestion-chips {
+    background-color: #1e1e1e;
 }

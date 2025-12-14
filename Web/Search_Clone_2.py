@@ -497,7 +497,7 @@ def main_chatbot():
 # ============================================================
 
 
-def replyToUser(data):
+def replyToUser(data,users = "users"):
     user_msg = data.get("message", "").strip()
     task = data.get("mode")
 
@@ -511,22 +511,22 @@ def replyToUser(data):
     # Execute the logic and get the text string
     if task == "":
         reply_text = handle_culture_query(user_msg)
-        saveAnswerForUser(reply_text,task)
+        saveAnswerForUser(reply_text,task,users)
     elif task == "/place_":
         response = handle_restaurant_recommendation(user_msg, entities)
         reply_text =  response["text"]
         food_data = response["restaurants"]
-        saveAnswerForUser(food_data,task)
+        saveAnswerForUser(food_data,task,users)
     elif task == '/recipe_':
         response = handle_food_recommendation(user_msg, entities)
         reply_text =  response["text"]
         food_data = response["restaurants"]
-        saveAnswerForUser(food_data,task)
+        saveAnswerForUser(food_data,task,users)
     elif task == '/plan_':
         response = handle_daily_menu(user_msg, entities)
         reply_text =  response["text"]
         food_data = response["menu"]
-        saveAnswerForUser(food_data,task)
+        saveAnswerForUser(food_data,task,users)
     else:
         reply_text = "I'm not sure how to help with that."
     

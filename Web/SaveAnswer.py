@@ -3,18 +3,18 @@ from dotenv import load_dotenv
 from auth import login_required
 import os
 load_dotenv()
-PasswordToMgo = os.getenv("MONGODB_PASS")
-client = MongoClient(f"mongodb+srv://grp1_db_user:{PasswordToMgo}@cluster01.qfddpco.mongodb.net/?appName=Cluster01")
+MONGDB_URI = os.getenv("MONGODB_URI")
+client = MongoClient(MONGDB_URI)
 
 db = client["test_db"]
-collection = db["users"]
 
 cnt = 1
 @login_required
-def saveAnswerForUser(answer,mode):
+def saveAnswerForUser(answer,mode,users):
     global cnt
     try:
         if answer:
+            collection = db[users]
             collection.insert_one({"order":f"answer-{cnt}","answer":answer,"mode":mode})
             cnt+=1
             print("Successfully save")
@@ -28,6 +28,7 @@ def closeConnection():
         # CHỈ cố gắng dọn dẹp nếu client còn sống
         db.command("ping")  # kiểm tra còn kết nối
         for name in db.list_collection_names():
+            print(name)
             db.drop_collection(name)
         print("All collections dropped")
     except Exception as e:
@@ -39,8 +40,9 @@ def closeConnection():
     except:
         print("Client already closed")
 
-def queryAnswerForUser(data):
+def queryAnswerForUser(data,users):
     order = data.get('answer_order','')
+    collection = db[users]
     result = collection.find_one({"order":order})
     if result:
         if result.get('mode') == "":
@@ -72,7 +74,4 @@ def resetDB():
     cnt = 1
     
 if __name__ == '__main__':
-    docs= collection.find()
-    for doc in docs:
-        print(doc)
     closeConnection()

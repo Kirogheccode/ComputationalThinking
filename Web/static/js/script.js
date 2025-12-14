@@ -164,7 +164,8 @@ function mapModal() {
                         if (routeLayer) map.removeLayer(routeLayer);
 
                         // Đảo ngược tọa độ cho Leaflet [lat, lon]
-                        const latLngs = data.geometry.map(coord => [coord[1], coord[0]]);
+                        console.log(data.geometry);
+                        const latLngs = data.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
                         routeLayer = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(map);
                         map.fitBounds(routeLayer.getBounds());
@@ -382,12 +383,12 @@ function displayForMenu(container,data)
     menu.forEach(meal => {
         const dropDownBox = document.createElement('div');
 
-        dropDownBox.classList.add('drop-box', 'mb-2'); 
+        dropDownBox.classList.add('drop-box', 'mb-2', 'd-flex', 'align-items-stretch', 'gap-2'); 
 
         const collapseId = `box${cnt}Collapse`; 
 
         dropDownBox.innerHTML = `
-            <button class="recipe-btn collapsed w-100 btn" 
+            <button class="recipe-btn collapsed btn" 
                     type="button"
                     data-bs-toggle="collapse" 
                     data-bs-target="#${collapseId}" 
@@ -395,16 +396,11 @@ function displayForMenu(container,data)
                     aria-controls="${collapseId}">
                 <h5 class="food-name m-0">${meal.MainMeal}</h5>
             </button>
-            <div class="collapse" id="${collapseId}">
-                <div class="recipe-info card card-body mt-1">
+            <div class="collapse collapse-horizontal" id="${collapseId}">
+                <div class="recipe-info card card-body mt-0">
                     <p class="menu-foodname"><b>Dish</b>: ${meal.FoodName}</p> 
                     <p class="menu-cultural"><b>Cutural Significance</b>: ${meal.CulturalSignificance}</p> 
                     <p class="menu-foodunit"><b>Nutritional Values:</b></p>
-                    <ul class="menu-nutrition">
-                        <li class="menu-calo"><b>Calories</b>: ${meal.Calories}</li>
-                        <li class="menu-protein"><b>Protein</b>: ${meal.Protein}</li>
-                        <li class="menu-fat"><b>Fat</b>: ${meal.Fat}</li>
-                    </ul>
                 </div>
             </div>`;
             menuBox.appendChild(dropDownBox);
@@ -797,60 +793,60 @@ function renderFoodCards(container, data) {
 
     // 4. Render các card mới
     data.forEach(food => {
-    const card = document.createElement('div');
-    card.classList.add('card-food');
-    card.setAttribute("data-is-fav", food.is_fav === true ? "true" : "false");
-    card.setAttribute("data-id", food.id);
-    card.setAttribute("data-name", food.Name);
+        const card = document.createElement('div');
+        card.classList.add('card-food');
+        card.setAttribute("data-is-fav", food.is_fav === true ? "true" : "false");
+        card.setAttribute("data-id", food.id);
+        card.setAttribute("data-name", food.Name);
 
-        // Fallback ảnh mặc định
-        const imageSrc = food.img && food.img.trim() !== ""
-            ? `/static/${food.img}`
-            : "/static/images/default_food.jpg";
+            // Fallback ảnh mặc định
+            const imageSrc = food.img && food.img.trim() !== ""
+                ? `/static/${food.img}`
+                : "/static/images/default_food.jpg";
 
-        card.innerHTML = `
-        <img src="${imageSrc}" alt="${food.Name}">
-        <div class="food-info">
-            <h5 class="food-name">${food.Name}</h5>
-            <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
-            <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
-            <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
-            <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
-            <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
-        </div>
-        <button class="location-btn location-dot"
-                title="Xem trên bản đồ"
-                data-bs-toggle="modal"
-                data-bs-target="#mapModal"
-                data-name="${food.Name}"
-                data-rating="${food.Rating}"
-                data-location="${food.Address}"
-                data-image="${imageSrc}">
-            <i class="fa-solid fa-location-dot"></i>
-        </button>
-        <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
-            <i class="far fa-heart me-1"></i> Yêu thích
-        </button>
-    `;
-    container.appendChild(card);
-    card.addEventListener('click', function () {
-        currentCard = card;
-        currentFoodId = food.id;
-        currentFoodName = food.Name;
-        currentLocation = food.Address;
+            card.innerHTML = `
+            <img src="${imageSrc}" alt="${food.Name}">
+            <div class="food-info">
+                <h5 class="food-name">${food.Name}</h5>
+                <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
+                <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
+                <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
+                <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
+                <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
+            </div>
+            <button class="location-btn location-dot"
+                    title="Xem trên bản đồ"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mapModal"
+                    data-name="${food.Name}"
+                    data-rating="${food.Rating}"
+                    data-location="${food.Address}"
+                    data-image="${imageSrc}">
+                <i class="fa-solid fa-location-dot"></i>
+            </button>
+            <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
+                <i class="far fa-heart me-1"></i> Yêu thích
+            </button>
+        `;
+        container.appendChild(card);
+        card.addEventListener('click', function () {
+            currentCard = card;
+            currentFoodId = food.id;
+            currentFoodName = food.Name;
+            currentLocation = food.Address;
 
-        const isFav = card.getAttribute("data-is-fav") === "true";
+            const isFav = card.getAttribute("data-is-fav") === "true";
 
-        document.getElementById('modalFoodName').innerText = food.Name;
-        document.getElementById('modalFoodImage').src = imageSrc;
-        document.getElementById('modalFoodLocation').innerText = food.Address;
-        document.getElementById('modalFoodRating').innerText = food.Rating;
-        document.getElementById('modalFoodPrice').innerText = food.Budget;
+            document.getElementById('modalFoodName').innerText = food.Name;
+            document.getElementById('modalFoodImage').src = imageSrc;
+            document.getElementById('modalFoodLocation').innerText = food.Address;
+            document.getElementById('modalFoodRating').innerText = food.Rating;
+            document.getElementById('modalFoodPrice').innerText = food.Budget;
 
-        setupFavoriteButton(isFav);
+            setupFavoriteButton(isFav);
+        });
+
     });
-
-});
 
 }
 

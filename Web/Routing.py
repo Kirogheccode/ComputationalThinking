@@ -8,6 +8,7 @@ import requests
 load_dotenv()
 ORS_API_KEY = os.getenv("ORS_API_KEY")
 GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
+GOONG_API_KEY = os.getenv("GOONG_API_KEY")
 ors_client = openrouteservice.Client(key=ORS_API_KEY)
 
 
@@ -15,24 +16,20 @@ def geocode_address(address: str):
     """
     Chỉ dùng để geocode địa chỉ người dùng nhập (origin)
     """
-    if not GEOAPIFY_API_KEY:
-        raise ValueError("GEOAPIFY_API_KEY not found")
-
-    url = "https://api.geoapify.com/v1/geocode/search"
-    params = {
-        "text": address,
-        "apiKey": GEOAPIFY_API_KEY,
-        "limit": 1
-    }
+    if not GOONG_API_KEY:
+        raise ValueError("GOONG_API_KEY not found")
+    
+    url = "https://rsapi.goong.io/Geocode"
+    params = {"address": address, "api_key": GOONG_API_KEY}
     res = requests.get(url, params=params)
     data = res.json()
 
     if res.status_code != 200:
-        raise Exception(f"Lỗi kết nối Geoapify: {res.status_code}")
+        raise Exception(f"Lỗi kết nối Goong.io: {res.status_code}")
 
-    if "features" in data and data["features"]:
-        lon, lat = data["features"][0]["geometry"]["coordinates"]
-        return lat, lon
+    if "results" in data and data["results"]:
+        loc = data["results"][0]["geometry"]["location"]
+        return loc["lat"], loc["lng"]
     else:
         raise ValueError(f"Không tìm thấy toạ độ cho địa chỉ: {address}")
 
