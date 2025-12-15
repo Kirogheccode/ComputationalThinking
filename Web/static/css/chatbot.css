@@ -624,3 +624,10 @@ body.dark .menu-box .menu-title {
 body.dark #suggestion-chips {
     background-color: #1e1e1e;
 }
+body.dark #imagePreview {
+    background-color: #1e1e1e !important;
+    border-color: #4d4d4d !important;
+}
+body.dark #imagePreviewWrapper {
+    background-color: #1e1e1e !important;
+}

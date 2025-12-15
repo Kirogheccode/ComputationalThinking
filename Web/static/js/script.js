@@ -614,7 +614,7 @@ async function sendImage(text) {
         console.log("DEBUG: toàn bộ data nhận về từ API:", data);
 
         const container = document.getElementById("carousel");
-        if (currrentPrefix == "/place_")
+        if (currentPrefix == "/place_")
         {
             displayForChatWindow(botText1+"\n"+data.reply,chatWindow);
             displayForRestaurant(container,data);
