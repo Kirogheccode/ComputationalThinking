@@ -400,7 +400,6 @@ function displayForMenu(container,data)
                 <div class="recipe-info card card-body mt-0">
                     <p class="menu-foodname"><b>Dish</b>: ${meal.FoodName}</p> 
                     <p class="menu-cultural"><b>Cutural Significance</b>: ${meal.CulturalSignificance}</p> 
-                    <p class="menu-foodunit"><b>Nutritional Values:</b></p>
                 </div>
             </div>`;
             menuBox.appendChild(dropDownBox);
@@ -812,7 +811,8 @@ function renderFoodCards(container, data) {
             <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
             <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
             <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
-            <p class="food-description"><b>Mô tả</b>: ${food.Description}</p>
+            <p class = "food-time"><b>Giờ mở cửa</b>: ${food.OpeningHour} </p>
+            <p class="food-description"><b>Mô tả</b>: ${food.Tags}</p>
             <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
         </div>
         <button class="location-btn location-dot"

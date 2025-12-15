@@ -166,7 +166,7 @@ def is_open_now(hours_str):
 def handle_culture_query(prompt):
     print("-> Executing: Culture Query")
     model = genai.GenerativeModel('gemini-2.5-flash')
-    sys_msg = "You are a Vietnamese cultural expert. Answer clearly in English. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
+    sys_msg = "You are a Vietnamese cultural expert. Always respond in the same language that the user used in their query. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
     return model.generate_content([sys_msg, prompt]).text
 
 
@@ -240,6 +240,13 @@ def handle_restaurant_recommendation(prompt, entities):
 
         if search_term and search_term not in rest_name:
             continue
+        
+        if not rest['opening_hours']:
+            rest['opening_hours'] = "Updating"
+        if not rest['price_range']:
+            rest['price_range'] = "Updating"
+        if not rest['tags']:
+            rest['tags'] = "Family, Office workers"
 
         try:
             rest['rating'] = float(rest['rating'])
@@ -277,7 +284,7 @@ def handle_restaurant_recommendation(prompt, entities):
 
     # 4. Rank
     results.sort(key=lambda x: (-x['rating'], x['distance_km']))
-    top_results = results[:50]
+    top_results = results[:100]
 
     # 5. Send Database Results to Gemini
     restaurant_context = json.dumps(top_results, ensure_ascii=False)
@@ -308,8 +315,9 @@ def handle_restaurant_recommendation(prompt, entities):
                         "Address": {"type": "STRING"},
                         "Rating": {"type": "NUMBER"},
                         "Budget": {"type":"STRING"},
+                        "OpeningHour": {"type":"STRING"},
                         "distance_km": {"type": "NUMBER"},
-                        "Description": {"type": "STRING"},  # <--- THÊM Ở ĐÂY
+                        "Tags": {"type": "STRING"},  # <--- THÊM Ở ĐÂY
                         "img": {"type": "STRING"}
                     },
                     "required": ["Name"]
@@ -373,6 +381,7 @@ def handle_food_recommendation(prompt, entities):
         "1. Recommend 3 specific authentic Vietnamese dishes (english reply) or if users mention certain dishes, focus the answer on them.\n"
         f"2. Warn if dish conflicts with restrictions (e.g. Pork/Halal), based on {DIET_RULES}.\n"
         "3. Provide estimated Calories/Protein/Carbs/Fat and cost."
+        "Always respond in the same language that the user used in their query."
     )
     response = model.generate_content(
         [sys_msg, prompt],
@@ -402,6 +411,7 @@ def handle_daily_menu(prompt, entities):
         f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner) (english reply). Diet: {diet}.\n"
         "Return ONLY a valid JSON object with keys 'breakfast', 'lunch', 'dinner'.\n"
         "Value should be the Vietnamese dish name (e.g. 'Pho Bo'), avoid the options that users have to cook themselves.\n"
+        "Always respond in the same language that the user used in their query."
     )
     schema = {
         "type": "OBJECT",

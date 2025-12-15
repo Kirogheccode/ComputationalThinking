@@ -198,7 +198,7 @@ body.dark #themeToggleBtn {
     font-size: 1.1rem;
 }
 
-.card-food .food-location, .food-rating, .food-distance, .food-description, .food-budget {
+.card-food .food-location, .food-rating, .food-distance, .food-description, .food-budget, .food-time {
     margin: 0.2em 0;
     font-size: 0.95rem;
     color: #0e0d0d;
@@ -430,7 +430,9 @@ body.dark #themeToggleBtn {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-
+.fa-route:hover {
+    transform: none!important;
+}
 .recipe-btn:hover {
     background-color: #f1f8e9;
     border-color: #ced4da;  
@@ -585,7 +587,8 @@ body.dark .food-location,
 body.dark .food-rating,
 body.dark .food-distance,
 body.dark .food-description,
-body.dark .food-budget {
+body.dark .food-budget,
+body.dark .food-time {
     margin: 0.2em 0;
     font-size: 0.95rem;
     color: whitesmoke;
