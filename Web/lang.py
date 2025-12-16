@@ -165,6 +165,7 @@ translations = {
         "foreign": "Bản địa",
         "convert": "Đổi",
         "comment": "Bình luận",
+        "scan": "Quét",
 
         "bio": "Tiểu sử",
         "bio_placeholder": "Giới thiệu ngắn về bản thân...",
@@ -342,6 +343,7 @@ translations = {
         "foreign": "Foreign",
         "convert": "Convert",
         "comment": "Comment",
+        "scan": "Scan",
 
         "bio": "Bio",
         "bio_placeholder": "Short introduction about yourself...",
