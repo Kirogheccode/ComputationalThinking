@@ -1,0 +1,48 @@
+/* static/css/map.css */
+
+/* --- KHUNG TÌM KIẾM (Search Box) --- */
+.map-search-card {
+    background-color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    
+    /* QUAN TRỌNG: Tắt các hiệu ứng chuyển động từ base.css/index.css */
+    transition: none !important;
+    transform: none !important;
+}
+
+/* Khi rê chuột vào: GIỮ NGUYÊN vị trí, không nổi lên */
+.map-search-card:hover {
+    transform: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* --- BẢN ĐỒ CHÍNH --- */
+#mainMap {
+    height: 600px;
+    width: 100%;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    background-color: #eee; /* Màu nền chờ khi map chưa load */
+    z-index: 1;
+}
+
+/* --- DARK MODE SUPPORT --- */
+body.dark .map-search-card {
+    background-color: #1e1e1e;
+    color: #eee;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+body.dark #mainMap {
+    border-color: #444;
+    background-color: #222;
+}
+
+/* Chỉnh màu chữ label trong darkmode cho rõ hơn */
+body.dark .map-search-card .form-label {
+    color: #ccc;
+}

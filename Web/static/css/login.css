@@ -1,0 +1,162 @@
+/* static/css/login.css */
+
+.login-container {
+    /* Tương tự register */
+    min-height: 35vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Kéo lên */
+    margin-top: -3rem;
+    margin-bottom: 0;
+}
+
+.login-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    overflow: hidden; 
+    background-color: #fff;
+    /* Đã XÓA dòng transition: all 0.3s ease; để tắt hoạt ảnh */
+}
+
+/* Đảm bảo tắt tuyệt đối hiệu ứng hover */
+.login-card:hover {
+    transform: none !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ảnh bên trái */
+.login-image-side {
+    background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background-size: cover;
+    background-position: center;
+    min-height: 500px;
+    position: relative;
+}
+
+.login-image-side::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4));
+}
+
+.form-side {
+    padding: 50px;
+}
+
+.input-group-text {
+    background: transparent;
+    border-right: none;
+    color: #6c757d;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-radius: 0.375rem;
+}
+
+.input-group:focus-within .form-control, 
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+.btn-social {
+    position: relative;
+    font-weight: 500;
+}
+
+/* Dark Mode */
+body.dark .login-card {
+    background-color: #2d3436;
+    color: #dfe6e9;
+}
+
+body.dark .form-control {
+    background-color: transparent !important;
+    color: #dfe6e9;
+    border-color: #636e72;
+}
+
+body.dark .input-group-text {
+    border-color: #636e72;
+    color: #b2bec3;
+}
+
+body.dark .text-muted {
+    color: #b2bec3 !important;
+}
+
+body.dark .header-or { 
+    background-color: #2d3436 !important; 
+}
+
+/* ===== AUTH BUTTON (Google + GitHub) ===== */
+.btn-auth {
+    font-weight: 500;
+    border-radius: 8px;
+
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.btn-auth:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    text-decoration: none;
+}
+
+.btn-auth:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+.btn-auth i {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+}
+
+.btn-auth:hover i {
+    transform: translateX(3px);
+}
+
+.btn-google {
+    background-color: #db4437;
+    color: #ffffff;
+    border: 1px solid #c1351d;
+}
+
+.btn-google:hover {
+    background-color: #c1351d;
+    color: #ffffff;
+}
+
+.btn-github {
+    background-color: #24292f;
+    color: #ffffff;
+    border: 1px solid #1b1f23;
+}
+
+.btn-github:hover {
+    background-color: #1b1f23;
+    color: #ffffff;
+}
+
+body.dark .btn-auth {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+body.dark .form-text {
+    color: rgb(235, 234, 234);
+}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.register_title }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+
+<div class="container register-container my-4">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-10">
+            <div class="card register-card">
+                <div class="row g-0">
+                    
+                    <div class="col-md-6 form-side order-2 order-md-1">
+                        <div class="mb-4">
+                            <h2 class="fw-bold">{{ t.register_heading }}</h2>
+                            <p class="text-muted">{{ t.register_sub }}</p>
+                        </div>
+
+                        <form method="POST" action="{{ url_for('auth.register') }}">
+                            <div class="mb-3">
+                                <label for="username" class="form-label fw-bold small text-uppercase text-muted">
+                                    {{ t.register_display_name }}
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control py-2" id="username" name="username" 
+                                           required value="{{ username if username }}" 
+                                           placeholder="{{ t.register_username_placeholder }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label fw-bold small text-uppercase text-muted">
+                                    {{ t.register_email }}
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control py-2" id="email" name="email" 
+                                           required value="{{ email if email }}" 
+                                           placeholder="{{ t.register_email_placeholder }}">
+                                </div>
+                                <div class="form-text small text-muted fst-italic mt-1">
+                                    {{ t.register_email_note }}
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-bold small text-uppercase text-muted">
+                                    {{ t.register_password }}
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control py-2" id="password" name="password" 
+                                        required minlength="6" maxlength="64"
+                                        placeholder="{{ t.register_password_hint }}">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm">
+                                {{ t.register_continue }} <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-4">
+                            <span class="text-muted">{{ t.register_have_account }}</span> 
+                            <a href="{{ url_for('auth.login') }}" class="fw-bold text-decoration-none ms-1">
+                                {{ t.login }}
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 d-none d-md-block register-image-side order-1 order-md-2">
+                        <div class="d-flex align-items-end h-100 p-4">
+                            <div class="text-white position-relative" style="z-index: 2;">
+                                <h3 class="fw-bold">{{ t.register_right_title }}</h3>
+                                <p class="mb-0">{{ t.register_right_desc }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

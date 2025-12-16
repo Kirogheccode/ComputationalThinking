@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lang.map_title }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-12 text-center">
+            <h2 class="mb-3">{{ lang.map_title }}</h2>
+        </div>
+    </div>
+
+    <div class="card map-search-card">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label for="startPoint" class="form-label fw-bold">{{ lang.your_location }}</label>
+                <input type="text" id="startPoint" class="form-control" placeholder="{{ lang.location_placeholder }}">
+            </div>
+            <div class="col-md-5">
+                <label for="endPoint" class="form-label fw-bold">{{ lang.address }}</label>
+                <input type="text" id="endPoint" class="form-control" placeholder="{{ lang.location_hint }}">
+            </div>
+            <div class="col-md-2">
+                <button id="btnSearchRoute" class="btn btn-primary w-100 fw-bold">
+                    <i class="fa-solid fa-diamond-turn-right"></i> {{ lang.find_route }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainMap"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var map = L.map('mainMap').setView([10.7769, 106.7009], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    var routeLayer = null; 
+    var markers = [];      
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const destinationFromUrl = urlParams.get('destination');
+    
+    if (destinationFromUrl) {
+        document.getElementById("endPoint").value = decodeURIComponent(destinationFromUrl);
+        document.getElementById("startPoint").focus();
+    }
+
+    function clearMap() {
+        if (routeLayer) { map.removeLayer(routeLayer); }
+        markers.forEach(function(marker) { map.removeLayer(marker); });
+        markers = [];
+    }
+
+    function handleRouting() {
+        var origin = document.getElementById("startPoint").value;
+        var destination = document.getElementById("endPoint").value;
+
+        if (!origin || !destination) {
+            alert("{{ lang.input_required }}"); // Sử dụng key từ lang.py
+            return;
+        }
+
+        var btn = document.getElementById("btnSearchRoute");
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ lang.processing_task }}';
+        btn.disabled = true;
+
+        fetch('/api/find_path', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ origin: origin, destination: destination })
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
+            if (data.error) {
+                alert("Lỗi: " + data.error);
+                return;
+            }
+
+            clearMap();
+
+            routeLayer = L.geoJSON(data.geometry, {
+                style: { color: 'blue', weight: 5, opacity: 0.7 }
+            }).addTo(map);
+
+            var startMarker = L.marker(data.start_point).addTo(map)
+                .bindPopup("<b>{{ lang.your_location }}</b><br>" + origin).openPopup();
+            markers.push(startMarker);
+
+            var redIcon = new L.Icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            var endMarker = L.marker(data.end_point, {icon: redIcon}).addTo(map)
+                .bindPopup("<b>{{ lang.address }}</b><br>" + destination);
+            markers.push(endMarker);
+
+            map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Đã xảy ra lỗi kết nối!");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+
+    document.getElementById("btnSearchRoute").addEventListener("click", handleRouting);
+    
+    document.getElementById("endPoint").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") handleRouting();
+    });
+    document.getElementById("startPoint").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") handleRouting();
+    });
+});
+</script>
+{% endblock %}

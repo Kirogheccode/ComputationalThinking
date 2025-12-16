@@ -1,0 +1,159 @@
+/* --- DARK MODE GLOBAL --- */
+body.dark {
+    background-color: #121212;
+    /* Dùng lại gradient tối màu bạn đã chọn */
+    background: linear-gradient(135deg, #2a3a2d, #4b3a1b, #1e2a20);
+    color: #e0e0e0;
+}
+
+/* Navbar */
+body.dark .navbar {
+    background-color: rgba(34, 34, 34, 0.85) !important;
+    border-bottom: 1px solid #444;
+}
+body.dark .nav-link, 
+body.dark .brand-title {
+    color: #eee;
+}
+body.dark .nav-link:hover, 
+body.dark .brand-title:hover {
+    color: var(--brand-secondary);
+}
+
+/* Modal */
+body.dark .modal-content {
+    background-color: #1e1e1e;
+    color: #eee;
+    border-color: #444;
+}
+
+/* Buttons */
+body.dark .btn-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: #fff;
+}
+body.dark .btn-primary:hover {
+    background-color: #e66a00;
+}
+body.dark .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* --- COMMON CARDS & INPUTS --- */
+body.dark .card.shadow-lg,
+body.dark .login-card,
+body.dark .register-card,
+body.dark .otp-card {
+    background-color: #1e1e1e;
+    color: #eee;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+body.dark .form-control {
+    background-color: #2b2b2b;
+    border-color: #444;
+    color: #eee;
+}
+body.dark .form-control::placeholder {
+    color: #888;
+}
+body.dark .form-label {
+    color: #ccc;
+}
+body.dark .input-group-text {
+    border-color: #444;
+    color: #ccc;
+}
+
+/* --- CHATBOT & POSTS --- */
+body.dark .food-card,
+body.dark .chatbot-container {
+    background-color: #1e1e1e;
+    color: #ddd;
+    border-color: #444;
+}
+body.dark .bot-message {
+    background-color: #2b2b2b; /* Sửa màu đen sì thành xám đậm cho dễ đọc */
+    color: #eee;
+}
+body.dark .bot-message p {
+    background-color: transparent; /* Xóa màu background gray thừa */
+}
+body.dark .user-message {
+    background-color: var(--brand-primary);
+    color: white;
+}
+body.dark .food-name {
+    color: var(--brand-secondary);
+}
+
+/* Post Card (Home page) */
+body.dark .post-card {
+    background-color: #2b2b2b;
+    border-color: #444;
+}
+body.dark .post-card .card-title {
+    color: #fff;
+}
+body.dark .post-card .card-text {
+    color: #ccc;
+}
+body.dark .post-card .card-text.small {
+    color: #999;
+}
+
+/* ----------------------------------------------------------- */
+/* --- ACCOUNT PAGE FIXES (Thêm mới để sửa lỗi khó nhìn) --- */
+/* ----------------------------------------------------------- */
+
+/* 1. Sửa khung thẻ phẳng (.flat-card) */
+body.dark .flat-card {
+    background-color: #1e1e1e;
+    border-color: #444;
+    color: #eee;
+}
+body.dark .flat-card:hover {
+    border-color: #777;
+}
+
+/* 2. Sửa ô nhập liệu phẳng (.flat-input) */
+body.dark .flat-input {
+    background-color: #2b2b2b; /* Nền tối thay vì f8f9fa */
+    border: 1px solid #444;
+    color: #eee; /* Chữ sáng */
+}
+body.dark .flat-input:focus {
+    background-color: #333;
+    border-color: var(--brand-secondary);
+    color: #fff;
+}
+
+/* 3. Sửa tab chuyển đổi (.nav-pills) */
+body.dark .nav-pills .nav-link {
+    color: #bbb; /* Màu chữ khi chưa chọn */
+}
+body.dark .nav-pills .nav-link:hover {
+    background-color: #333;
+    color: #fff;
+}
+body.dark .nav-pills .nav-link.active {
+    background-color: var(--brand-primary); /* Cam chủ đạo */
+    color: #fff;
+}
+
+/* 4. Sửa các đoạn văn bản mô tả */
+body.dark .description-text {
+    color: #b0b0b0; /* Sáng hơn màu #555 cũ */
+}
+body.dark .text-muted {
+    color: #888 !important;
+}
+
+/* 5. Avatar placeholder */
+body.dark .avatar-placeholder {
+    background-color: #333; /* Sáng hơn một chút so với nền đen */
+    color: var(--brand-secondary);
+    border: 2px solid #444;
+}

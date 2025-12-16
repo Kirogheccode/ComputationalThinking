@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.chatbot_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4 ps-0">
+    <div class="row">
+
+        <div class="col-md-6">
+            <h2>{{ t.chatbot_food_suggest }}</h2>
+            <div class="carousel" id="carousel">
+                <!-- PLACEHOLDER mặc định -->
+                <div id="food-placeholder" class="food-placeholder">
+                    <i class="fa-solid fa-utensils"></i>
+                    <p>{{ t.chatbot_no_suggest }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h2>{{ t.chatbot_chat_title }}</h2>
+            
+            <div class="chatbot-container">
+                <div class="chat-window" id="chat-window">
+                    <div class="message bot-message d-flex align-items-start mb-3">
+                        <img src="{{ url_for('static', filename='images/jane.jpg') }}"
+                            class="bot-avatar rounded-circle me-2" alt="Bot">
+                        <p class="mb-0">{{ t.chatbot_hello }}</p>
+                    </div>
+                </div>
+
+                <div id="imagePreviewWrapper" class="d-none">
+                    <div class="position-relative" style="width: 180px;">
+                        <img id="imagePreview" class="img-thumbnail rounded" alt="Preview">
+                        <button id="removeImageBtn" class="btn btn-danger btn-sm position-absolute top-0 end-0">×</button>
+
+                    </div>
+                </div>
+                <div class="d-flex gap-2 text-nowrap" id="suggestion-chips">
+                        <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/place_">
+                            <i class="fa-solid fa-location-dot text-danger"></i> Restaurant
+                        </button>
+                        <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/recipe_">
+                            <i class="fa-solid fa-utensils text-success"></i> Food
+                        </button>
+                        <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/plan_">
+                            <i class="fa-solid fa-calendar-days text-primary"></i> Menu
+                        </button>
+                        <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="">
+                            <i class="fa-solid fa-book-open text-warning"></i> Culture
+                        </button>
+                </div>
+
+                <div class="chat-input-area d-flex align-items-center gap-2">
+                    <input type="text" id="userInput" class="form-control" placeholder="{{ t.chatbot_placeholder }}">
+                    <button id="sendMessageBtn" class="btn btn-primary" ...>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                    <button id="imageInputBtn" class="btn btn-primary">
+                        <i class="fa-solid fa-image"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- === MAP MODAL === -->
+<div class="modal fade" id="mapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ t.map_title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t.close }}"></button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="mb-3">
+                    <label for="userOriginInput" class="form-label fw-bold">{{ t.your_location }}</label>
+                    <div class="input-group">
+                        <input type="text" id="userOriginInput" class="form-control" placeholder="{{ t.location_placeholder }}">
+                        <button class="btn btn-primary btn-route" id="btnFindRoute">
+                            <i class="fa-solid fa-route"></i> {{ t.find_route }}
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" id="destinationHidden">
+
+                <div id="map" style="height: 450px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notificationContainer" class="notification-container"></div>
+
+
+{% endblock %}

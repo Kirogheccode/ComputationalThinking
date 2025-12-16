@@ -1,0 +1,93 @@
+/* static/css/register.css */
+
+.register-container {
+    /* Thay đổi min-height và thêm margin-top âm */
+    min-height: 35vh; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Dòng này giúp kéo khung lên trên để bù trừ cho khoảng cách của base.html */
+    margin-top: -3rem; 
+}
+
+/* ... (Các phần code dưới giữ nguyên, chỉ sửa block .register-container ở trên thôi) ... */
+.register-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background-color: #fff;
+    /* transition: all 0.3s ease; -> ĐÃ XÓA */
+}
+
+.register-card:hover {
+    transform: none !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+.register-image-side {
+    background-image: url('https://images.unsplash.com/photo-1715925717150-2a6d181d8846?q=80&w=1972&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-size: cover;
+    background-position: center;
+    min-height: 550px;
+    position: relative;
+}
+
+.register-image-side::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.1));
+}
+
+.form-side {
+    padding: 40px 50px;
+}
+
+.input-group-text {
+    background: transparent;
+    border-right: none;
+    color: #6c757d;
+}
+
+.form-control {
+    border-left: none;
+    padding-left: 0;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-radius: 0.375rem;
+}
+
+.input-group:focus-within .form-control, 
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+/* Dark Mode */
+body.dark .register-card {
+    background-color: #2d3436;
+    color: #dfe6e9;
+}
+
+body.dark .form-control {
+    background-color: transparent;
+    color: #dfe6e9;
+    border-color: #636e72;
+}
+
+body.dark .input-group-text {
+    border-color: #636e72;
+    color: #b2bec3;
+}
+
+body.dark .text-muted {
+    color: #b2bec3 !important;
+}
