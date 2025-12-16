@@ -139,7 +139,9 @@ class TestSearchClone(unittest.TestCase):
             'name': 'Test Food Resto',
             'latitude': 10.0, 'longitude': 100.0,
             'opening_hours': '08:00 - 22:00',
-            'rating': 5.0
+            'rating': 5.0,
+            'price_range': '30000-60000',
+            'tags': 'Family, Office workers'
         }
         mock_cursor.fetchall.return_value = [mock_row]
 

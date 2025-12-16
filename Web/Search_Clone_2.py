@@ -468,10 +468,6 @@ def handle_daily_menu(prompt, entities):
     }
 
 
-def handle_daily_menu_fallback(prompt):
-    # Simple backup if JSON parsing fails
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    return model.generate_content(f"Create a Vietnamese meal plan for: {prompt}").text
 
 # --- 4. MAIN ---
 

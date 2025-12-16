@@ -62,8 +62,7 @@ def queryAnswerForUser(data,users):
 
 def resetDB():
     try:
-        # CHỈ cố gắng dọn dẹp nếu client còn sống
-        db.command("ping")  # kiểm tra còn kết nối
+        db.command("ping")  
         for name in db.list_collection_names():
             db.drop_collection(name)
         print("All collections dropped")

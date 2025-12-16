@@ -229,8 +229,8 @@
                     <div class="col-md-6 d-flex flex-column justify-content-center">
                         <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i><strong>{{ lang.address }}:</strong> <span id="modalAccFoodLocation"></span></p>
                         <p class="mb-2"><i class="fas fa-star text-warning me-2"></i><strong>{{ lang.rating }}:</strong> <span id="modalAccFoodRating"></span></p>
-                        <p class="mb-2"><i class="fas fa-tag text-success me-2"></i><strong>Giá:</strong> <span id="modalAccFoodPrice"></span></p>
-                        <p class="mb-4"><i class="fas fa-clock text-primary me-2"></i><strong>Giờ mở cửa:</strong> <span id="modalAccFoodHours"></span></p>
+                        <p class="mb-2"><i class="fas fa-tag text-success me-2"></i><strong>{{ lang.price }}:</strong> <span id="modalAccFoodPrice"></span></p>
+                        <p class="mb-4"><i class="fas fa-clock text-primary me-2"></i><strong>{{ lang.time }}:</strong> <span id="modalAccFoodHours"></span></p>
                         
                         <div class="d-flex gap-2">
                             <button id="btnAccViewMap" class="btn btn-outline-primary flex-grow-1">
@@ -263,14 +263,14 @@
                     <div class="mb-3">
                         <label for="usernameInput" class="form-label fw-bold small text-muted">Username</label>
                         <input type="text" class="form-control flat-input" id="usernameInput" name="username" value="{{ username }}" required>
-                        <div class="form-text small">Tên đăng nhập là duy nhất.</div>
+                        <div class="form-text small">{{ lang.unique_username }}</div>
                     </div>
 
                     <!-- Bio -->
                     <div class="mb-4">
                         <label for="bioInput" class="form-label fw-bold small text-muted">{{ lang.bio }}</label>
                         <textarea class="form-control flat-input" id="bioInput" name="bio" rows="4" placeholder="{{ lang.bio_placeholder }}" maxlength="150">{{ user_bio }}</textarea>
-                        <div class="text-end text-muted small mt-1">Max 150 chars</div>
+                        <div class="text-end text-muted small mt-1">{{ lang.max_chars }}</div>
                     </div>
 
                     <div class="d-grid">

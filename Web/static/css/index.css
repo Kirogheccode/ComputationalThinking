@@ -74,7 +74,7 @@ body.dark .filter-bar {
 }
 .btn-search:hover {
   background-color: #464545;
-  transform: none;
+  transform: none !important;
 }
 body.dark .btn-search:hover {
   background-color: #464545;

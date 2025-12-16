@@ -125,7 +125,6 @@ function mapModal() {
             const originInput = document.getElementById('userOriginInput');
             if (originInput) {
                 originInput.value = '';
-                originInput.focus();
             }
 
             // Xóa đường cũ
@@ -808,12 +807,12 @@ function renderFoodCards(container, data) {
         <img src="${imageSrc}" alt="${food.Name}">
         <div class="food-info">
             <h5 class="food-name">${food.Name}</h5>
-            <p class="food-location"><b>Địa chỉ</b>: ${food.Address}</p>
-            <p class="food-rating"><b>Đánh giá</b>: ${food.Rating} ⭐</p>
-            <p class = "food-budget"><b>Mức giá</b>: ${food.Budget} </p>
-            <p class = "food-time"><b>Giờ mở cửa</b>: ${food.OpeningHour} </p>
-            <p class="food-description"><b>Mô tả</b>: ${food.Tags}</p>
-            <p class="food-distance"><b>Khoảng cách</b>: ${food.distance_km} km</p>
+            <p class="food-location"><b>Address</b>: ${food.Address}</p>
+            <p class="food-rating"><b>Rating</b>: ${food.Rating} ⭐</p>
+            <p class = "food-budget"><b>Price range</b>: ${food.Budget} </p>
+            <p class = "food-time"><b>Opening time</b>: ${food.OpeningHour} </p>
+            <p class="food-description"><b>Suitable</b>: ${food.Tags}</p>
+            <p class="food-distance"><b>Distance</b>: ${food.distance_km} km</p>
         </div>
         <button class="location-btn location-dot"
                 title="Xem trên bản đồ"
@@ -824,9 +823,6 @@ function renderFoodCards(container, data) {
                 data-location="${food.Address}"
                 data-image="${imageSrc}">
             <i class="fa-solid fa-location-dot"></i>
-        </button>
-        <button id="btnSaveFavorite" class="btn btn-warning w-100 mt-3">
-            <i class="far fa-heart me-1"></i> Yêu thích
         </button>
     `;
     container.appendChild(card);

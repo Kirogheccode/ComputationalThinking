@@ -172,6 +172,8 @@ translations = {
         "update_success": "Cập nhật thông tin thành công!",
         "username_taken": "Tên đăng nhập này đã có người sử dụng.",
         "edit_profile": "Chỉnh sửa hồ sơ",
+        "max_chars": "Tối đa 150 ký tự",
+        "unique_username": "Tên đăng nhập là duy nhất"
     },
 
     "en": {
@@ -347,5 +349,7 @@ translations = {
         "update_success": "Profile updated successfully!",
         "username_taken": "This username is already taken.",
         "edit_profile": "Edit Profile",
+        "max_chars": "Maximum 150 characters",
+        "unique_username": "The username is unique"
     }
 }

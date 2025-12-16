@@ -431,7 +431,10 @@ body.dark #themeToggleBtn {
 }
 
 .fa-route:hover {
-    transform: none!important;
+    transform: none !important;
+}
+.btn-route {
+    transform: none !important;
 }
 .recipe-btn:hover {
     background-color: #f1f8e9;

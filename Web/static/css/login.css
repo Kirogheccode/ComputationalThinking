@@ -53,11 +53,6 @@
     color: #6c757d;
 }
 
-.form-control {
-    border-left: none;
-    padding-left: 0;
-}
-
 .form-control:focus {
     box-shadow: none;
     border-color: #ced4da;
@@ -85,7 +80,7 @@ body.dark .login-card {
 }
 
 body.dark .form-control {
-    background-color: transparent;
+    background-color: transparent !important;
     color: #dfe6e9;
     border-color: #636e72;
 }
@@ -162,4 +157,6 @@ body.dark .btn-auth {
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 
-
+body.dark .form-text {
+    color: rgb(235, 234, 234);
+}

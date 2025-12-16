@@ -38,10 +38,10 @@
                 </div>
                 <div class="d-flex gap-2 text-nowrap" id="suggestion-chips">
                         <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/place_">
-                            <i class="fa-solid fa-location-dot text-danger"></i> Restaurants
+                            <i class="fa-solid fa-location-dot text-danger"></i> Restaurant
                         </button>
                         <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/recipe_">
-                            <i class="fa-solid fa-utensils text-success"></i> Recipes
+                            <i class="fa-solid fa-utensils text-success"></i> Food
                         </button>
                         <button class="btn btn-light border rounded-pill shadow-sm px-3 suggestion-btn" data-prefix="/plan_">
                             <i class="fa-solid fa-calendar-days text-primary"></i> Menu
@@ -80,7 +80,7 @@
                     <label for="userOriginInput" class="form-label fw-bold">{{ t.your_location }}</label>
                     <div class="input-group">
                         <input type="text" id="userOriginInput" class="form-control" placeholder="{{ t.location_placeholder }}">
-                        <button class="btn btn-primary" id="btnFindRoute">
+                        <button class="btn btn-primary btn-route" id="btnFindRoute">
                             <i class="fa-solid fa-route"></i> {{ t.find_route }}
                         </button>
                     </div>
