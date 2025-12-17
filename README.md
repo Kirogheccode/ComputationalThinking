@@ -25,22 +25,22 @@ pip --version
 ## 2️⃣ Project Directory Structure
 ```
 Web/
-|── data/                # Database
-|── static/              # Static files (CSS, JS, images)
+├── data/                # Database
+├── static/              # Static files (CSS, JS, images)
 │   └── images/          # 📂 Large image folder
-│── templates/           # HTML templates (Jinja2)
-│── testing/             # Unit test
-│── app.py/              # Main entry file 
-│── auth.py/             # Login/Register
-│── Currency.py/         # Currency Converter
-│── database.py/         # Handling all SQLite operations
-│── extensions.py/       # Initialize OAuth support
-│── FoodLoading.py/      # Load food data to render
-│── FoodRecognition.py/  # Food recognition
-│── lang.py/             # Language support (EN/VI)
-│── requirements.txt/    # Important libraries
-│── Routing.py/          # Draw route and map
-│── SaveAnswer.py/       # Save user answer for chatbot
+├── templates/           # HTML templates (Jinja2)
+├── testing/             # Unit test
+├── app.py/              # Main entry file 
+├── auth.py/             # Login/Register
+├── Currency.py/         # Currency Converter
+├── database.py/         # Handling all SQLite operations
+├── extensions.py/       # Initialize OAuth support
+├── FoodLoading.py/      # Load food data to render
+├── FoodRecognition.py/  # Food recognition
+├── lang.py/             # Language support (EN/VI)
+├── requirements.txt/    # Important libraries
+├── Routing.py/          # Draw route and map
+├── SaveAnswer.py/       # Save user answer for chatbot
 └── Search_Clone_2.py/   # Chatbot 
 ```
 
@@ -151,298 +151,194 @@ pip install -r requirements.txt
 ```bash
 pip install python-dotenv
 ```
- 
 
-# 🧪 Running Unit Test: Chatbot Module
+# 🧪 UNIT TEST RUNNING GUIDE
 
-This project includes **unit tests** to verify the correctness of core logic, API integrations, and chatbot handling functions.
-
-## 📁 Test File Location
-
-The unit test file is located in the following directory:
-
-```text
-Web/testing/
-└── test_chatbot.py
-```
+This document explains the **unit test directory structure** and **how to run unit test files using Python**.
 
 ---
 
-## ⚙️ Test Environment Requirements
+## 1️⃣ Unit Test Directory Structure
 
-Before running the unit tests, please ensure:
-
-- The **virtual environment is activated**
-- All dependencies have been installed using:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 🗝️ Required Environment Variables
-
-The unit test file **automatically sets dummy API keys** internally before importing the main module:
-
-```python
-os.environ["GOOGLE_API_KEY"] = "TEST_KEY"
-os.environ["GEOAPIFY_API_KEY"] = "TEST_KEY"
-os.environ["SPOONACULAR_API_KEY"] = "TEST_KEY"
-```
-
-📌 **Note:**
-- No real API keys are required to run the unit tests.
-- External API calls are fully mocked using `unittest.mock`.
-
----
-
-## ▶️ How to Run the Test
-
-Navigate to the project root directory (**Web/**), then execute:
-
-```bash
-python -m unittest testing/test_chatbot.py
-```
-
-Alternatively, you may run the test file directly:
-
-```bash
-python testing/test_chatbot.py
-```
-
----
-
-## ✅ Test Coverage Overview
-
-The unit tests cover the following components:
-
-- Mathematical helper functions (distance calculation, bounding box)
-- Time-based logic (opening hours)
-- External API wrappers (Geoapify, Spoonacular) using mocking
-- AI-based intent routing (Gemini)
-- Restaurant recommendation pipeline
-- Daily menu generation
-- Main chatbot entry point (`replyToUser`)
-
-All external services (AI, APIs, database) are **mocked**, ensuring the tests run quickly and deterministically.
-
----
-
-This confirms that the chatbot logic and supporting functions are working as expected.
-# 🧪 Running Unit Test: Food Recognition Module
-
-This section explains how to run the unit test for the **FoodRecognition** feature, which is responsible for identifying food names from uploaded images using an AI model.
-
----
-
-## 📁 Test File Location
-
-The unit test file is located in the `tests/` directory:
-
-```text
-tests/
-└── test_food_recognition.py
-```
-
-This test focuses on validating the behavior of the `replyToImage()` function in `FoodRecognition.py`.
-
----
-
-## ⚙️ Test Environment Requirements
-
-Before running the test, please make sure that:
-
-- Python **3.12+** is installed
-- All dependencies are installed:
-
-```bash
-pip install -r requirements.txt
-```
-
-The project structure is kept unchanged (especially the relative path between `testing/` and `FoodRecognition.py`)
-
----
-
-## ▶️ How to Run the Test
-
-From the **project root directory**, run the following command:
-
-```bash
-python -m unittest testing/test_food_recognition.py
-```
-
-Or, to run all unit tests in the `testing` folder:
-
-```bash
-python -m unittest discover testing
-```
-
----
-
-## 🧠 Test Logic Overview
-
-The unit test uses **mocking** to simulate different image inputs and AI responses:
-
-- `unittest.mock.patch` is used to mock the AI model (`GenerativeModel`)
-- Image files are simulated using fake binary data (`bytes`)
-- Flask application context is manually created for testing API responses
-
----
-
-## ✅ Test Scenarios Covered
-The following cases are tested:
-1. **Blurred food image**  
-   - Expected result: Correct food name (e.g. *Phở Bò*)
-2. **Non-food image (motorbike)**  
-   - Expected result: Closest food prediction (*Xôi gấc*)
-3. **High-resolution food image**  
-   - Expected result: Accurate food name (*Bún giò heo*)
-4. **Corrupted or unreadable image**  
-   - Expected result: `food_name = "undefined"`
-Each test case verifies:
-- HTTP status code (`200`)
-- Returned JSON structure
-- Correctness of the predicted food name
-
----
-
-## 📌 Notes for Lecturers
-
-- The test does **not** call real AI or external APIs
-- All AI responses are mocked to ensure:
-  - Deterministic results
-  - Fast execution
-  - No API key required
-
-This ensures the unit test is **stable**, **repeatable**, and suitable for academic evaluation.
-
-# 🧪 Running Unit Test: Routing Module
-
-This section explains how to run the unit tests for the **Routing** feature, which is responsible for resolving addresses, converting them into geographic coordinates, and generating routes between locations.
-
-The tests focus on validating **edge cases** and **error-handling behavior** of the routing logic.
-
----
-
-## 📁 Test File Location
-
-The unit test file is located in the `testing/` directory:
+All unit test files are located inside the `testing` folder with the following structure:
 
 ```text
 testing/
-└── test_routing_edge_cases.py
+├── test_chatbot.py
+├── test_currency.py
+├── test_favorite.py
+├── test_food_recognition.py
+├── test_register.py
+└── test_routing.py
 ```
-This test validates the behavior of the drawPathToDestionation() function implemented in Routing.py.
-
-## ⚙️ Test Environment Requirements
-Before running the test, please ensure that:
-- Python 3.12+ is installed
-- All required dependencies are installed:
-
+Notes:
+- The testing/ folder contains all unit test files
+- Each test_*.py is responsible for testing a specific module
+## 2️⃣ How to Run Unit Tests
+Open terminal/Command Prompt at the Web directory and execute:
 ```bash
-pip install -r requirements.txt
+python .\testing\file_name.py
 ```
-- The project structure remains unchanged, especially the relative path between:
-
+Example:
 ```bash
-testing/
-Routing.py
+python .testing\test_chatbot.py
 ```
-- No real external services (OpenRouteService, geocoding APIs) are required
+# 🧪 Unit Test Coverage Summary – Search_Clone_2
 
-## ▶️ How to Run the Test
-From the project root directory, run:
+This unit test suite covers the following main areas of the `Search_Clone_2` module:
 
-```bash
-python -m unittest testing/test_routing.py
-```
-To run all unit tests inside the testing folder:
+- **Environment setup**
+  - API key initialization
+  - Safe module importing with mocked dependencies
 
-```bash
-python -m unittest discover testing
-```
-## 🧠 Test Logic Overview
-The routing unit test is designed to validate robustness, fault tolerance, and edge-case handling of the routing pipeline.
-Key techniques used in the test:
-- Mocking external dependencies using unittest.mock.patch
-- Mocked components include:
-  - geocode_address
-  - get_coordinates_from_db
-  - get_route
-- A Flask application context is manually created to allow:
-  - JSON responses
-  - HTTP status code validation
-All test cases are executed without calling real APIs, ensuring:
-- Deterministic behavior
-- Fast execution
-- No API keys required
+- **Helper functions**
+  - Distance calculation (`haversine`)
+  - Geographic bounding box calculation
+  - Opening-hour validation logic
 
-## ✅ Test Scenarios Covered
-The following routing edge cases are tested:
+- **External API wrappers**
+  - Location coordinates retrieval (Geoapify)
+  - Nutrition information lookup (Spoonacular)
 
-### 1️⃣ Origin address is a number
-- Example input:
-  - Origin: "12345
-  - Destination: Valid address
-- Expected behavior:
-  - Return HTTP 400
-  - Error message indicates invalid address
+- **AI-based intent routing**
+  - User intent classification
+  - Culture-related question handling
 
-### 2️⃣ Destination is a strange or meaningless string
-- Example input:
-  - Origin: Valid address
-  - Destination: "skibidi dop dop"
-- Expected behavior:
-  - Routing continues
-  - Destination coordinates are resolved to the closest possible match
-  - HTTP 200 returned
+- **Core application logic**
+  - Restaurant recommendation workflow
+  - Daily menu planning logic
 
-### 3️⃣ Origin and destination are identical
-- Example input:
-  - Origin = Destination
-- Expected behavior:
-  - Routing proceeds normally
-  - Start point and end point coordinates are identical
-  - HTTP 200 returned
+- **Main integration flow**
+  - User request handling via `replyToUser`
+  - Correct handler dispatch based on detected task
+  - Safe persistence calls with mocked database saver
 
-### 4️⃣ Destination address is ambiguous
-- Example input:
-  - Destination: "Nguyễn Văn Cừ"
-- Expected behavior:
-  - Best-matching coordinates are selected
-  - HTTP 200 returned
+All external services, databases, and AI models are fully mocked to ensure isolated, reliable, and repeatable unit tests.
+# 🧪 Unit Test Coverage Summary – Currency Module
 
-### 5️⃣ Destination address does not exist on the map
-- Example input:
-  - Destination: "189 Nguyễn Lê Hoàng Khải"
-- Expected behavior:
-  - Closest valid coordinates are returned
-  - HTTP 200 returned
+The unit tests for the `Currency` module cover the following key areas:
 
-### 6️⃣ Impossible routing scenario (Vietnam → Italy)
-- Example input:
-  - Origin: Ho Chi Minh City
-  - Destination: Italy
-- Expected behavior:
-  - Routing service throws an exception
-  - Exception is caught inside Routing.py
-  - HTTP 500 returned
-  - Error message includes routing failure reason
+- **Environment initialization**
+  - API keys are loaded correctly from environment variables
+  - Module imports safely with test configuration
 
-## 🔍 Assertions Performed
-Each test case verifies:
-- HTTP status code (200, 400, or 500)
-- Correct JSON response structure
-- Correct start_point and end_point coordinates (when applicable)
-- Presence of meaningful error messages in failure cases
+- **Exchange rate API handling**
+  - Successful exchange rate retrieval
+  - API error responses (e.g. invalid key)
+  - Network or unexpected exceptions
 
-## 📌 Notes for Lecturers
-- All routing, geocoding, and database calls are fully mocked
-- Network access is required
-- The test suite is:
-  - Deterministic
-  - Repeatable
-  - Safe for academic grading
+- **Currency conversion logic**
+  - Foreign currency → VND conversion
+  - VND → foreign currency conversion
+  - Proper handling when exchange rate retrieval fails
 
-This unit test ensures that the Routing module behaves correctly under real-world invalid and edge-case inputs, which are common in user-generated location data.
+- **AI-based money recognition (Gemini Vision)**
+  - Successful recognition of a single banknote
+  - Rejection when multiple items are detected
+  - Graceful handling of Gemini API exceptions
+
+All external services (exchange rate API and Gemini AI) are fully mocked to ensure isolated, stable, and repeatable unit tests.
+# 🧪 Unit Test Coverage Summary – Favorite Feature
+
+The unit tests cover the following aspects of the **Favorite** functionality:
+
+- **Application initialization**
+  - Flask app loaded successfully with all dependent modules mocked
+  - Authentication decorator (`login_required`) safely bypassed for testing
+
+- **User session handling**
+  - Simulated logged-in user via Flask session
+  - Handling of unauthenticated requests
+
+- **Favorite management**
+  - Adding a place to favorites when the user is logged in
+  - Correct interaction with the database layer (`add_favorite`)
+  - Proper JSON response on successful favorite addition
+
+- **Access control**
+  - Rejecting favorite actions when the user is not logged in (401 Unauthorized)
+
+- **External dependency isolation**
+  - Database operations fully mocked
+  - Routing, Currency, FoodRecognition, and other modules mocked
+
+These tests ensure the favorite feature behaves correctly for both authenticated and unauthenticated users without relying on real databases or authentication services.
+
+# 🧪 Unit Test Coverage Summary – FoodRecognition Module
+
+The unit tests for the `FoodRecognition` module cover the following aspects:
+
+- **Flask application context**
+  - Proper handling of requests within an active Flask app context
+
+- **AI-based food image recognition**
+  - Recognition from blurred food images
+  - Recognition from high-resolution food images
+  - Handling of non-food images
+  - Handling of corrupted or unreadable images
+
+- **Response validation**
+  - Correct HTTP status codes
+  - Correct JSON response structure
+  - Proper extraction of recognized food names
+
+- **External dependency isolation**
+  - Gemini AI model fully mocked
+  - No real image uploads or external API calls
+
+These tests ensure that the image-to-food recognition pipeline behaves correctly across common and edge-case scenarios.
+# 🧪 Unit Test Coverage Summary – User Registration (Auth Module)
+
+The unit tests cover the following registration-related scenarios:
+
+- **Application setup**
+  - Flask app initialization with mocked environment variables
+  - Safe app startup with all external modules mocked
+
+- **Input validation**
+  - Empty registration fields
+  - Weak password detection
+  - Duplicate username detection
+
+- **Registration edge cases**
+  - Preventing registration when username already exists
+  - Ensuring OTP email is NOT sent if validation fails
+
+- **Successful registration flow**
+  - New user registration with valid data
+  - OTP generation and email sending
+  - Redirect to OTP confirmation step
+
+- **External dependency isolation**
+  - Database access mocked
+  - Email sending mocked
+  - Password strength checking mocked
+
+These tests ensure the registration flow handles both error cases and successful scenarios correctly without relying on real databases or email services.
+# 🧪 Unit Test Coverage Summary – Routing Module (Edge Cases)
+
+The unit tests cover the following routing-related scenarios:
+
+- **Flask context handling**
+  - Proper execution within an active Flask application context
+
+- **Input validation**
+  - Origin address provided as a number
+  - Destination provided as an invalid or weird string
+
+- **Address resolution logic**
+  - Same origin and destination handling
+  - Ambiguous destination address resolution
+  - Non-existent destination address handling
+
+- **Routing behavior**
+  - Normal routing flow with valid coordinates
+  - Handling of impossible routes (e.g. Vietnam → Italy)
+  - Proper error responses when routing service fails
+
+- **External dependency isolation**
+  - Geocoding mocked
+  - Database coordinate lookup mocked
+  - Routing service (ORS) mocked
+
+These tests ensure the routing logic behaves correctly across common edge cases and failure scenarios without relying on real map services.
