@@ -64,7 +64,7 @@
                 <h5 class="fw-bold mb-3">{{ lang.profile_write }}</h5>
                 <form method="POST" action="{{ url_for('your_account') }}" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <input type="text" class="form-control flat-input" name="food_name" placeholder="{{ lang.search_placeholder }}" required>
+                        <input type="text" class="form-control flat-input" name="food_name" placeholder="{{ lang.profile_title_post }}" required>
                     </div>
                     <div class="mb-3">
                         <textarea class="form-control flat-input" name="description" rows="3" placeholder="Review..." required></textarea>

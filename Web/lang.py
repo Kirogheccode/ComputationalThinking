@@ -83,6 +83,7 @@ translations = {
         "profile_empty_fav": "Danh sách yêu thích trống",
         "profile_explore": "Khám phá nhà hàng",
         "profile_fav_done": "Đã thích",
+        "profile_title_post": "Tên món hoặc tên quán",
 
         "chatbot_title": "Chatbot Gợi ý",
         "chatbot_food_suggest": "Gợi ý món ăn",
@@ -261,6 +262,7 @@ translations = {
         "profile_empty_fav": "Your favorite list is empty",
         "profile_explore": "Explore restaurants",
         "profile_fav_done": "Liked",
+        "profile_title_post": "Food or restaurant",
 
         "chatbot_title": "Food Suggestion Chatbot",
         "chatbot_food_suggest": "Food Suggestions",

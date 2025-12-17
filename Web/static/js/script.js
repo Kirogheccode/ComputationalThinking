@@ -398,7 +398,7 @@ function displayForMenu(container,data)
             <div class="collapse collapse-horizontal" id="${collapseId}">
                 <div class="recipe-info card card-body mt-0">
                     <p class="menu-foodname"><b>Dish</b>: ${meal.FoodName}</p> 
-                    <p class="menu-cultural"><b>Cutural Significance</b>: ${meal.CulturalSignificance}</p> 
+                    <p class="menu-cultural"><b>Cultural Significance</b>: ${meal.CulturalSignificance}</p> 
                 </div>
             </div>`;
             menuBox.appendChild(dropDownBox);

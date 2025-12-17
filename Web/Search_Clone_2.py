@@ -166,7 +166,7 @@ def is_open_now(hours_str):
 def handle_culture_query(prompt):
     print("-> Executing: Culture Query")
     model = genai.GenerativeModel('gemini-2.5-flash')
-    sys_msg = "You are a Vietnamese cultural expert. Always respond in the same language that the user used in their query. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
+    sys_msg = "You are a Vietnamese cultural expert. Always respond in the same language that the user used in their prompt. If the topic involves food taboos (e.g. Pork in Islam), explicitly mention them."
     return model.generate_content([sys_msg, prompt]).text
 
 
@@ -295,7 +295,7 @@ def handle_restaurant_recommendation(prompt, entities):
         "The JSON includes an 'img' field containing an image path. For example 'foody_images/img_name.jpg' "
         "The JSON includes a 'distance_km' field showing how far the restaurant is from the user. "
         "Mention this distance in your answer. "
-        "Always respond in the same language that the user used in their query."
+        "Always respond in the same language that the user used in their prompt."
         f"USER LOCATION: {location}\n"
         f"USER CUISINE: {cuisine}\n"
         f"USER BUDGET: {budget}\n"
@@ -381,7 +381,7 @@ def handle_food_recommendation(prompt, entities):
         "1. Recommend 3 specific authentic Vietnamese dishes (english reply) or if users mention certain dishes, focus the answer on them.\n"
         f"2. Warn if dish conflicts with restrictions (e.g. Pork/Halal), based on {DIET_RULES}.\n"
         "3. Provide estimated Calories/Protein/Carbs/Fat and cost."
-        "Always respond in the same language that the user used in their query."
+        "Always respond in the same language that the user used in their prompt."
     )
     response = model.generate_content(
         [sys_msg, prompt],
@@ -411,7 +411,7 @@ def handle_daily_menu(prompt, entities):
         f"Create a 1-Day Vietnamese Meal Plan (Breakfast, Lunch, Dinner) (english reply). Diet: {diet}.\n"
         "Return ONLY a valid JSON object with keys 'breakfast', 'lunch', 'dinner'.\n"
         "Value should be the Vietnamese dish name (e.g. 'Pho Bo'), avoid the options that users have to cook themselves.\n"
-        "Always respond in the same language that the user used in their query."
+        "Always respond in the same language that the user used in their prompt."
     )
     schema = {
         "type": "OBJECT",
